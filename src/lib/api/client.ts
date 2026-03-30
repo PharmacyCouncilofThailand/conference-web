@@ -20,6 +20,7 @@ export async function apiClient<T>(endpoint: string, options: RequestInit = {}):
         ...options,
         headers: {
             ...(!isFormData && { 'Content-Type': 'application/json' }),
+            'X-Source-App': 'conference-web',
             ...(token && { Authorization: `Bearer ${token}` }),
             ...options.headers,
         },
@@ -56,6 +57,7 @@ export async function apiClientWithToken<T>(endpoint: string, token: string, opt
         ...options,
         headers: {
             ...(!isFormData && { 'Content-Type': 'application/json' }),
+            'X-Source-App': 'conference-web',
             Authorization: `Bearer ${token}`,
             ...options.headers,
         },

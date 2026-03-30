@@ -38,7 +38,7 @@ export function PackageSelector({
     const formatPrice = (price: number) =>
         `${currencySymbol}${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    if (isAddonOnly && primaryTicketName) {
+    if (isAddonOnly) {
         return (
             <div className="space-y-3">
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-center gap-3 opacity-70">
@@ -46,7 +46,7 @@ export function PackageSelector({
                         <Check className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1">
-                        <div className="font-medium text-gray-700">{primaryTicketName}</div>
+                        <div className="font-medium text-gray-700">{primaryTicketName || 'ตั๋วหลัก'}</div>
                         <div className="text-xs text-gray-500">ซื้อแล้ว</div>
                     </div>
                     <Lock className="w-4 h-4 text-gray-400" />

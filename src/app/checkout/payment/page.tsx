@@ -10,6 +10,8 @@ import { Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
 
 interface CheckoutPaymentData {
     eventId: string;
+    originApp?: string;
+    returnTo?: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -40,6 +42,7 @@ export default function PaymentPage() {
     const { isLoggedIn, isLoading: authLoading } = useAuth();
     const formRef = useRef<HTMLFormElement>(null);
     const [status, setStatus] = useState<'loading' | 'submitting' | 'error'>('loading');
+    const [, setGateway] = useState<'paysolutions' | 'ktb' | null>(null);
     const [errorMessage, setErrorMessage] = useState('');
     const [formData, setFormData] = useState<{ actionUrl: string; fields: Record<string, string> } | null>(null);
     const hasSubmitted = useRef(false);
@@ -61,15 +64,20 @@ export default function PaymentPage() {
                 }
 
                 const data: CheckoutPaymentData = JSON.parse(saved);
+                const parsedEventId = Number(data.eventId);
+                const workshopSessionId = data.selectedWorkshopTopic
+                    ? Number(data.selectedWorkshopTopic)
+                    : undefined;
 
                 // Build create-intent request body
                 const requestBody = {
+                    eventId: parsedEventId,
                     packageId: data.isAddonOnly ? '' : data.selectedPackage,
                     addOnIds: data.selectedAddOns,
                     currency: data.currency || 'THB',
                     paymentMethod: data.paymentMethod,
                     promoCode: data.promoApplied ? data.promoCode : undefined,
-                    workshopSessionId: data.selectedWorkshopTopic,
+                    workshopSessionId: Number.isFinite(workshopSessionId) ? workshopSessionId : undefined,
                     dietaryRequirement: data.dietaryRequirement === 'other'
                         ? data.dietaryOtherText
                         : data.dietaryRequirement || undefined,
@@ -83,6 +91,10 @@ export default function PaymentPage() {
                     taxPostalCode: data.needTaxInvoice ? data.taxPostalCode : undefined,
                 };
 
+                if (!Number.isInteger(parsedEventId) || parsedEventId <= 0) {
+                    throw new Error('Invalid event context for checkout');
+                }
+
                 setStatus('submitting');
 
                 const result = await paymentsApi.createIntent(requestBody);
@@ -90,14 +102,44 @@ export default function PaymentPage() {
                 if (result.success && result.free) {
                     // Free registration — already completed on backend
                     sessionStorage.removeItem('checkout-payment-data');
+                    sessionStorage.removeItem('payment-gateway');
+                    sessionStorage.removeItem('payment-orderRef');
+                    sessionStorage.removeItem('payment-refno');
                     sessionStorage.setItem('payment-event-id', data.eventId);
-                    router.push(`/checkout/payment/result?free=1&orderNumber=${encodeURIComponent(result.orderNumber || '')}&regCode=${encodeURIComponent(result.regCode || '')}`);
+                    const resultParams = new URLSearchParams({
+                        free: '1',
+                        orderNumber: result.orderNumber || '',
+                        regCode: result.regCode || '',
+                    });
+
+                    if (data.originApp) {
+                        resultParams.set('originApp', data.originApp);
+                    }
+
+                    if (data.returnTo) {
+                        resultParams.set('returnTo', data.returnTo);
+                    }
+
+                    router.push(`/checkout/payment/result?${resultParams.toString()}`);
                     return;
                 }
 
                 if (result.success && result.redirectForm) {
-                    // Store refno for result page
-                    sessionStorage.setItem('payment-refno', result.refno);
+                    const resolvedGateway = result.gateway === 'ktb' ? 'ktb' : 'paysolutions';
+                    setGateway(resolvedGateway);
+                    sessionStorage.setItem('payment-gateway', resolvedGateway);
+                    sessionStorage.removeItem('payment-refno');
+                    sessionStorage.removeItem('payment-orderRef');
+
+                    if (resolvedGateway === 'ktb') {
+                        const orderRef = result.orderRef || result.refno;
+                        if (orderRef) {
+                            sessionStorage.setItem('payment-orderRef', orderRef);
+                        }
+                    } else if (result.refno) {
+                        sessionStorage.setItem('payment-refno', result.refno);
+                    }
+
                     sessionStorage.setItem('payment-event-id', data.eventId);
 
                     // Set form data for auto-submit
@@ -170,14 +212,14 @@ export default function PaymentPage() {
                         <ShieldCheck className="w-10 h-10 text-[#537547]" />
                     </div>
                     <h2 className="text-xl font-bold text-gray-800">กำลังนำคุณไปยังหน้าชำระเงิน</h2>
-                    <p className="text-gray-500 text-sm">ระบบกำลังเชื่อมต่อกับ Pay Solutions...</p>
+                    <p className="text-gray-500 text-sm">ระบบกำลังเชื่อมต่อกับ payment gateway...</p>
                     <Loader2 className="w-8 h-8 animate-spin text-[#537547] mx-auto" />
                     <p className="text-xs text-gray-400">กรุณาอย่าปิดหน้านี้</p>
                 </div>
             </div>
             <Footer />
 
-            {/* Hidden form for Pay Solutions redirect */}
+            {/* Hidden form for payment gateway redirect */}
             {formData && (
                 <form
                     ref={formRef}

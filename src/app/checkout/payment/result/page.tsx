@@ -14,6 +14,50 @@ type PaymentStatus = 'polling' | 'paid' | 'pending' | 'failed' | 'cancelled' | '
 const MAX_POLL_ATTEMPTS = 20;
 const POLL_INTERVAL_MS = 3000;
 
+function readCheckoutRedirectContext() {
+    if (typeof window === 'undefined') {
+        return { originApp: null as string | null, returnTo: null as string | null, websiteUrl: null as string | null };
+    }
+
+    try {
+        const raw = sessionStorage.getItem('checkout-payment-data');
+        if (!raw) {
+            return { originApp: null, returnTo: null, websiteUrl: null };
+        }
+
+        const parsed = JSON.parse(raw) as { originApp?: string; returnTo?: string; websiteUrl?: string };
+        return {
+            originApp: parsed.originApp || null,
+            returnTo: parsed.returnTo || null,
+            websiteUrl: parsed.websiteUrl || null,
+        };
+    } catch {
+        return { originApp: null, returnTo: null, websiteUrl: null };
+    }
+}
+
+function buildExternalReturnUrl(returnTo: string | null, params: Record<string, string | null | undefined>) {
+    if (!returnTo) return null;
+
+    try {
+        const url = new URL(returnTo, typeof window !== 'undefined' ? window.location.origin : undefined);
+
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            return null;
+        }
+
+        for (const [key, value] of Object.entries(params)) {
+            if (value) {
+                url.searchParams.set(key, value);
+            }
+        }
+
+        return url.toString();
+    } catch {
+        return null;
+    }
+}
+
 function PaymentResultInner() {
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -25,23 +69,64 @@ function PaymentResultInner() {
     const [amount, setAmount] = useState<string | null>(null);
     const [currency, setCurrency] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState('');
+    const [isReturning, setIsReturning] = useState(false);
+    const [countdown, setCountdown] = useState(10);
+    const countdownTimer = useRef<NodeJS.Timeout | null>(null);
     const pollCount = useRef(0);
     const pollTimer = useRef<NodeJS.Timeout | null>(null);
+    const redirectTimer = useRef<NodeJS.Timeout | null>(null);
 
-    // Get refno from URL params (Pay Solutions callback) or sessionStorage
     const refnoFromUrl = searchParams.get('refno') || searchParams.get('Refno');
+    const orderRefFromUrl = searchParams.get('orderRef') || searchParams.get('Ref');
+    const isFreeRegistration = searchParams.get('free') === '1';
+    const [redirectContext] = useState(() => {
+        const stored = readCheckoutRedirectContext();
+        return {
+            originApp: searchParams.get('originApp') || stored.originApp,
+            returnTo: searchParams.get('returnTo') || stored.returnTo,
+            websiteUrl: stored.websiteUrl,
+        };
+    });
     const refno = refnoFromUrl || (typeof window !== 'undefined' ? sessionStorage.getItem('payment-refno') : null);
+    const orderRef = orderRefFromUrl || (typeof window !== 'undefined' ? sessionStorage.getItem('payment-orderRef') : null);
+    const storedGateway = typeof window !== 'undefined' ? sessionStorage.getItem('payment-gateway') : null;
+    const gateway = ((searchParams.get('gateway')
+        || (orderRefFromUrl && !refnoFromUrl ? 'ktb' : storedGateway)
+        || 'paysolutions') as 'paysolutions' | 'ktb');
+    const paymentRef = gateway === 'ktb' ? orderRef : refno;
     const eventId = typeof window !== 'undefined' ? sessionStorage.getItem('payment-event-id') : null;
+    const originApp = redirectContext.originApp
+        || (typeof window !== 'undefined' ? sessionStorage.getItem('sso-origin-app') : null);
+    const returnTo = redirectContext.returnTo;
+    const storedWebsiteUrl = redirectContext.websiteUrl;
+    // Determine "back to website" URL: prefer websiteUrl from DB, fallback to returnTo
+    const backToWebsiteUrl = storedWebsiteUrl || returnTo || null;
+    const isSsoUser = !!originApp;
+
+    const clearPaymentSession = useCallback(() => {
+        sessionStorage.removeItem('checkout-payment-data');
+        sessionStorage.removeItem('payment-refno');
+        sessionStorage.removeItem('payment-orderRef');
+        sessionStorage.removeItem('payment-gateway');
+        sessionStorage.removeItem('payment-event-id');
+        if (eventId) {
+            sessionStorage.removeItem(`checkout-wizard-${eventId}`);
+        }
+    }, [eventId]);
 
     const pollVerify = useCallback(async () => {
-        if (!refno) {
+        if (!paymentRef) {
             setErrorMessage('ไม่พบข้อมูลการชำระเงิน');
             setStatus('error');
             return;
         }
 
         try {
-            const result = await paymentsApi.verify(refno);
+            const result = await paymentsApi.verify(
+                gateway === 'ktb'
+                    ? { gateway: 'ktb', orderRef: paymentRef }
+                    : { refno: paymentRef }
+            );
 
             if (result.success) {
                 switch (result.status) {
@@ -52,12 +137,7 @@ function PaymentResultInner() {
                         setAmount(result.amount || null);
                         setCurrency(result.currency || null);
                         // Cleanup sessionStorage
-                        sessionStorage.removeItem('checkout-payment-data');
-                        sessionStorage.removeItem('payment-refno');
-                        sessionStorage.removeItem('payment-event-id');
-                        if (eventId) {
-                            sessionStorage.removeItem(`checkout-wizard-${eventId}`);
-                        }
+                        clearPaymentSession();
                         return;
                     case 'failed':
                         setStatus('failed');
@@ -89,26 +169,23 @@ function PaymentResultInner() {
             setErrorMessage(msg);
             setStatus('error');
         }
-    }, [refno, eventId]);
+    }, [clearPaymentSession, gateway, paymentRef]);
 
     useEffect(() => {
         if (authLoading) return;
 
         // Free registration — show success immediately without polling
-        const isFree = searchParams.get('free') === '1';
-        if (isFree) {
+        if (isFreeRegistration) {
             setOrderNumber(searchParams.get('orderNumber') || null);
             setRegCode(searchParams.get('regCode') || null);
             setAmount('0');
             setCurrency('THB');
             setStatus('paid');
-            sessionStorage.removeItem('checkout-payment-data');
-            sessionStorage.removeItem('payment-refno');
-            sessionStorage.removeItem('payment-event-id');
+            clearPaymentSession();
             return;
         }
 
-        if (!refno) {
+        if (!paymentRef) {
             setErrorMessage('ไม่พบข้อมูลการชำระเงิน กรุณาเริ่มต้นใหม่');
             setStatus('error');
             return;
@@ -122,7 +199,38 @@ function PaymentResultInner() {
             }
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [authLoading, refno]);
+    }, [authLoading, clearPaymentSession, isFreeRegistration, paymentRef, pollVerify, searchParams]);
+
+    // SSO auto-redirect countdown: 10s after payment success
+    useEffect(() => {
+        if (status !== 'paid' || !isSsoUser || !backToWebsiteUrl) {
+            setIsReturning(false);
+            return;
+        }
+
+        setIsReturning(true);
+
+        countdownTimer.current = setInterval(() => {
+            setCountdown(prev => {
+                if (prev <= 1) {
+                    if (countdownTimer.current) clearInterval(countdownTimer.current);
+                    const targetUrl = buildExternalReturnUrl(backToWebsiteUrl, {
+                        status: 'registered',
+                        regCode,
+                        orderNumber,
+                    });
+                    window.location.assign(targetUrl || backToWebsiteUrl);
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+
+        return () => {
+            if (countdownTimer.current) clearInterval(countdownTimer.current);
+            if (redirectTimer.current) clearTimeout(redirectTimer.current);
+        };
+    }, [status, isSsoUser, backToWebsiteUrl, regCode, orderNumber]);
 
     const renderContent = () => {
         switch (status) {
@@ -179,13 +287,28 @@ function PaymentResultInner() {
 
                         <p className="text-xs text-gray-400">ใบเสร็จและรายละเอียดจะถูกส่งไปยังอีเมลที่ลงทะเบียน</p>
 
+                        {isReturning && countdown > 0 && (
+                            <div className="text-sm text-gray-500">
+                                กลับไปหน้าเว็บไซต์อัตโนมัติใน <span className="font-bold text-[#537547]">{countdown}</span> วินาที
+                            </div>
+                        )}
+
                         <div className="flex gap-3 justify-center pt-2">
-                            <Link
-                                href="/my-tickets"
-                                className="px-5 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
-                            >
-                                ดูตั๋วของฉัน
-                            </Link>
+                            {backToWebsiteUrl ? (
+                                <a
+                                    href={backToWebsiteUrl}
+                                    className="px-5 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                >
+                                    กลับไปหน้าเว็บไซต์
+                                </a>
+                            ) : (
+                                <Link
+                                    href="/my-tickets"
+                                    className="px-5 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                >
+                                    ดูตั๋วของฉัน
+                                </Link>
+                            )}
                             <Link
                                 href="/events"
                                 className="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors text-sm"

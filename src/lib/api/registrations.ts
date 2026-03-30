@@ -29,6 +29,20 @@ export interface CreateRegistrationData {
     licenseNumber?: string;
 }
 
+export interface FreeRegistrationRequest {
+    eventId: number;
+    packageId: string;
+}
+
+export interface FreeRegistrationResponse {
+    success: boolean;
+    data: {
+        regCode: string;
+        eventName: string;
+        ticketName: string;
+    };
+}
+
 // Registrations API
 export const registrationsApi = {
     create: (data: CreateRegistrationData) =>
@@ -39,6 +53,9 @@ export const registrationsApi = {
 
     listByEvent: (eventId: number) =>
         api.get<{ success: boolean; data: Registration[] }>(`/api/events/${eventId}/registrations`),
+
+    freeRegister: (data: FreeRegistrationRequest) =>
+        api.post<FreeRegistrationResponse>('/api/registrations/free', data),
 };
 
 // Check-in API

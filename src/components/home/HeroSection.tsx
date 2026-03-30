@@ -203,7 +203,7 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                                             <span className="flex items-center gap-1"><Award className="w-4 h-4 text-white/80" /> {currentEvent.cpeCredits} หน่วยกิต CPE</span>
                                         )}
                                     </div>
-                                    <Link href={`/checkout/${currentEvent.id}`}>
+                                    <Link href={`/events/${currentEvent.id}`}>
                                         <Button className="w-full bg-white text-[#537547] hover:bg-gray-100 rounded-xl font-semibold transition-transform hover:scale-[1.02] active:scale-95">
                                             ลงทะเบียนเข้าร่วม
                                             <ChevronRight className="w-4 h-4 ml-1" />

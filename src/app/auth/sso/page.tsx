@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -18,8 +18,11 @@ function SSOCallbackInner() {
   const { login, isLoggedIn } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(true);
+  const verifiedRef = useRef(false);
 
   useEffect(() => {
+    if (verifiedRef.current) return;
+
     const ssoToken = searchParams.get("sso");
     const redirectTo = sanitizeRedirect(searchParams.get("redirect"));
 
@@ -34,6 +37,8 @@ function SSOCallbackInner() {
       return;
     }
 
+    verifiedRef.current = true;
+
     const verifySSO = async () => {
       try {
         const res = await fetch(`${API_URL}/auth/sso-verify`, {
@@ -45,12 +50,18 @@ function SSOCallbackInner() {
         const data = await res.json();
 
         if (data.success) {
+          // Store SSO source app so downstream pages can detect SSO origin
+          if (data.sourceApp) {
+            sessionStorage.setItem('sso-origin-app', data.sourceApp);
+          }
           login(data.token, data.user);
           router.replace(redirectTo);
         } else {
+          verifiedRef.current = false;
           setError(data.error || "SSO verification failed");
         }
       } catch (err) {
+        verifiedRef.current = false;
         setError("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้");
       } finally {
         setIsVerifying(false);

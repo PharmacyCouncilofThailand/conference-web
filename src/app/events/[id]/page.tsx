@@ -1,8 +1,9 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getEventById } from '@/lib/services';
+import { paymentsApi } from '@/lib/api/payments';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -31,6 +32,7 @@ const formatDate = (dateStr: string | undefined): string => {
 
 export default function EventDetailPage() {
     const params = useParams();
+    const searchParams = useSearchParams();
     const id = params.id as string;
     const [selectedRound, setSelectedRound] = useState<string | null>(null);
     const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -60,20 +62,13 @@ export default function EventDetailPage() {
         );
     };
 
-    // Promo code state
-    const [promoCode, setPromoCode] = useState('');
-    const [promoApplied, setPromoApplied] = useState(false);
-    const [promoDiscount, setPromoDiscount] = useState<{ type: 'percentage' | 'fixed', value: number } | null>(null);
-    const [promoError, setPromoError] = useState<string | null>(null);
-    const [checkingPromo, setCheckingPromo] = useState(false);
-
-    // Add-on selection state
-    const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
     const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
 
     // User role from AuthContext
     const { user: authUser, isLoggedIn } = useAuth();
     const userRole = authUser?.role || 'public';
+    const originApp = searchParams.get('originApp');
+    const returnTo = searchParams.get('returnTo');
 
     // Helper: check if a ticket is visible to the current user based on allowedRoles
     const isTicketAllowedForUser = (ticket: { allowedRoles?: string[] }) => {
@@ -98,6 +93,25 @@ export default function EventDetailPage() {
         retry: 1,
     });
 
+    // Check if user already registered for this event
+    const { data: myTicketsData } = useQuery({
+        queryKey: ['my-tickets', id],
+        queryFn: () => paymentsApi.myTickets(Number(id)),
+        enabled: isLoggedIn && !!id,
+        retry: 1,
+    });
+
+    // Check if user has existing registration for this specific event
+    const existingPrimaryTicket = myTicketsData?.data?.find((ticket) => ticket.eventId === Number(id)) || null;
+    const hasExistingRegistration = !!existingPrimaryTicket;
+    const hasExistingPaidTicket = hasExistingRegistration && Number(existingPrimaryTicket.amount) > 0;
+    const existingTicketHeading = hasExistingPaidTicket ? 'คุณซื้อตั๋วแล้ว' : 'คุณลงทะเบียนแล้ว';
+    const existingTicketDescription = hasExistingPaidTicket
+        ? 'คุณได้ซื้อตั๋วงานนี้เรียบร้อยแล้ว'
+        : 'คุณได้ลงทะเบียนงานนี้เรียบร้อยแล้ว';
+    const existingTicketLabel = hasExistingPaidTicket ? 'ซื้อตั๋วแล้ว' : 'ลงทะเบียนแล้ว';
+    const existingTicketSummary = hasExistingPaidTicket ? 'คุณซื้อตั๋วงานนี้แล้ว' : 'คุณลงทะเบียนงานนี้แล้ว';
+
     // Toggle session selection
     const toggleSession = (sessionId: string) => {
         setSelectedSessions(prev =>
@@ -105,55 +119,6 @@ export default function EventDetailPage() {
                 ? prev.filter(id => id !== sessionId)
                 : [...prev, sessionId]
         );
-    };
-
-    // Toggle add-on selection
-    const toggleAddon = (addonId: string) => {
-        setSelectedAddons(prev =>
-            prev.includes(addonId)
-                ? prev.filter(id => id !== addonId)
-                : [...prev, addonId]
-        );
-    };
-
-    // Apply promo code
-    const handleApplyPromo = async () => {
-        if (!promoCode.trim()) return;
-        setCheckingPromo(true);
-        setPromoError(null);
-
-        try {
-            const { validatePromoCode } = await import('@/lib/services');
-            const result = await validatePromoCode(promoCode, id);
-            if (result.valid && result.discount) {
-                setPromoDiscount(result.discount);
-                setPromoApplied(true);
-            } else {
-                setPromoError(result.error || 'โค้ดส่วนลดไม่ถูกต้อง');
-            }
-        } catch {
-            setPromoError('เกิดข้อผิดพลาด กรุณาลองใหม่');
-        } finally {
-            setCheckingPromo(false);
-        }
-    };
-
-
-    // Clear promo code
-    const clearPromo = () => {
-        setPromoCode('');
-        setPromoApplied(false);
-        setPromoDiscount(null);
-        setPromoError(null);
-    };
-
-    // Calculate discounted price
-    const getDiscountedPrice = (price: number): number => {
-        if (!promoDiscount) return price;
-        if (promoDiscount.type === 'percentage') {
-            return price * (1 - promoDiscount.value / 100);
-        }
-        return Math.max(0, price - promoDiscount.value);
     };
 
     // Helper: check if a ticket is within its sale period
@@ -263,10 +228,32 @@ export default function EventDetailPage() {
 
     // Get add-on tickets (only show add-ons that are within their sale period)
     const addonTickets = event.ticketTypes?.filter(t => t.ticketCategory === 'addon' && isTicketAllowedForUser(t) && isTicketOnSale(t)) || [];
-    const selectedAddonTickets = event.ticketTypes?.filter(t => selectedAddons.includes(String(t.id))) || [];
-    const addonsTotal = selectedAddonTickets.reduce((sum, t) => sum + Number(t.price || 0), 0);
-    const basePrice = Number(autoSelectedTicket?.price || 0);
-    const totalPrice = getDiscountedPrice(basePrice) + addonsTotal;
+    const checkoutParams = new URLSearchParams();
+
+    if (autoSelectedTicket?.id) {
+        checkoutParams.set('ticket', String(autoSelectedTicket.id));
+    }
+
+    if (selectedSessions.length > 0) {
+        checkoutParams.set('sessions', selectedSessions.join(','));
+    }
+
+    if (originApp) {
+        checkoutParams.set('originApp', originApp);
+    }
+
+    if (returnTo) {
+        checkoutParams.set('returnTo', returnTo);
+    }
+
+    const checkoutQuery = checkoutParams.toString();
+    const checkoutHref = `/checkout/${event.id}${checkoutQuery ? `?${checkoutQuery}` : ''}`;
+
+    // Free event detection: if auto-selected ticket is price 0 and no paid addons selected
+    const isFreeEvent = autoSelectedTicket && Number(autoSelectedTicket.price) === 0;
+    const freeRegisterHref = `/register/${event.id}${originApp ? `?originApp=${originApp}` : ''}${returnTo ? `${originApp ? '&' : '?'}returnTo=${encodeURIComponent(returnTo)}` : ''}`;
+    const actionHref = isFreeEvent ? freeRegisterHref : checkoutHref;
+    const actionLabel = isFreeEvent ? 'ลงทะเบียนฟรี' : 'จองตั๋วเลย';
 
     return (
         <div className="min-h-screen bg-white text-gray-900 overflow-x-hidden">
@@ -365,9 +352,11 @@ export default function EventDetailPage() {
                                     <div className="text-xl font-bold text-gray-900">
                                         {currentRound?.capacity
                                             ? currentRound.capacity - (currentRound.registered || 0)
-                                            : event.maxCapacity
-                                                ? event.maxCapacity - (event.registeredCount || 0)
-                                                : 0}
+                                            : event.maxCapacity === 0
+                                                ? 'ไม่จำกัด'
+                                                : event.maxCapacity
+                                                    ? event.maxCapacity - (event.registeredCount || 0)
+                                                    : 0}
                                     </div>
                                 </div>
                             </div>
@@ -445,7 +434,7 @@ export default function EventDetailPage() {
                                                 </div>
                                                 <div className="flex items-center gap-3 flex-shrink-0">
                                                     <span className="px-2 py-1 bg-gray-200/60 rounded text-xs text-gray-600 font-medium whitespace-nowrap hidden sm:inline-block">
-                                                        {session.maxCapacity} seats
+                                                        {session.maxCapacity === 0 ? 'ไม่จำกัด' : `${session.maxCapacity} seats`}
                                                     </span>
                                                     <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-[#537547] hover:border-[#537547] transition-colors">
                                                         {expandedSessions.includes(String(session.id)) ? (
@@ -595,27 +584,7 @@ export default function EventDetailPage() {
                                 <div className="space-y-5">
                                     {/* Location Name & Details */}
                                     <div className="flex flex-col space-y-3 sm:space-y-4">
-                                        <h3 className="text-lg sm:text-xl font-bold text-gray-900">{currentRound?.location || event.location || 'TBA'}</h3>
-                                        <div className="flex flex-wrap gap-3 sm:gap-4">
-                                            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-full">
-                                                <div className="w-5 h-5 rounded-full bg-[#537547]/10 flex items-center justify-center flex-shrink-0">
-                                                    <CheckCircle className="w-3 h-3 text-[#537547]" />
-                                                </div>
-                                                <span>เดินทางสะดวกด้วยรถไฟฟ้า</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-full">
-                                                <div className="w-5 h-5 rounded-full bg-[#537547]/10 flex items-center justify-center flex-shrink-0">
-                                                    <CheckCircle className="w-3 h-3 text-[#537547]" />
-                                                </div>
-                                                <span>มีที่จอดรถ</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-full">
-                                                <div className="w-5 h-5 rounded-full bg-[#537547]/10 flex items-center justify-center flex-shrink-0">
-                                                    <CheckCircle className="w-3 h-3 text-[#537547]" />
-                                                </div>
-                                                <span>Wi-Fi ฟรี</span>
-                                            </div>
-                                        </div>
+                                        <h3 className="text-lg sm:text-xl font-bold text-gray-900">{currentRound?.location || event.location || 'TBA'}</h3>                            
                                     </div>
 
                                     {/* Google Maps Embed */}
@@ -731,36 +700,50 @@ export default function EventDetailPage() {
                                         <Ticket className="w-7 h-7 text-[#537547]" />
                                     </div>
                                     <div>
-                                        <div className="text-sm text-[#537547] font-medium">ที่นั่งเหลือ</div>
-                                        <div className="text-3xl font-bold text-gray-900">
-                                            {currentRound?.capacity ? currentRound.capacity - (currentRound.registered || 0) : event.maxCapacity ? event.maxCapacity - (event.registeredCount || 0) : 0}
-                                            <span className="text-lg font-normal text-gray-500"> / {currentRound?.capacity || event.maxCapacity || 0}</span>
+                                        {event.maxCapacity === 0 ? (
+                                            <>
+                                                <div className="text-sm text-[#537547] font-medium">ผู้ลงทะเบียน</div>
+                                                <div className="text-3xl font-bold text-gray-900">
+                                                    {event.registeredCount || 0}
+                                                    <span className="text-lg font-normal text-gray-500"> / ไม่จำกัด</span>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="text-sm text-[#537547] font-medium">ที่นั่งเหลือ</div>
+                                                <div className="text-3xl font-bold text-gray-900">
+                                                    {currentRound?.capacity ? currentRound.capacity - (currentRound.registered || 0) : event.maxCapacity ? event.maxCapacity - (event.registeredCount || 0) : 0}
+                                                    <span className="text-lg font-normal text-gray-500"> / {currentRound?.capacity || event.maxCapacity || 0}</span>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                                {/* Progress bar — hidden when unlimited */}
+                                {event.maxCapacity !== 0 && (
+                                    <div className="mt-4">
+                                        <div className="h-2.5 bg-white/50 rounded-full overflow-hidden shadow-inner">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-[#537547] to-[#6f7e0d] rounded-full transition-all duration-1000 ease-out"
+                                                style={{
+                                                    width: `${currentRound?.capacity
+                                                        ? ((currentRound.registered || 0) / currentRound.capacity) * 100
+                                                        : event.maxCapacity
+                                                            ? ((event.registeredCount || 0) / event.maxCapacity) * 100
+                                                            : 0
+                                                        }%`
+                                                }}
+                                            />
                                         </div>
+                                        <p className="text-xs text-gray-500 mt-2 font-medium">
+                                            {currentRound?.capacity
+                                                ? Math.round(((currentRound.registered || 0) / currentRound.capacity) * 100)
+                                                : event.maxCapacity
+                                                    ? Math.round(((event.registeredCount || 0) / event.maxCapacity) * 100)
+                                                    : 0}% sold
+                                        </p>
                                     </div>
-                                </div>
-                                {/* Progress bar */}
-                                <div className="mt-4">
-                                    <div className="h-2.5 bg-white/50 rounded-full overflow-hidden shadow-inner">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-[#537547] to-[#6f7e0d] rounded-full transition-all duration-1000 ease-out"
-                                            style={{
-                                                width: `${currentRound?.capacity
-                                                    ? ((currentRound.registered || 0) / currentRound.capacity) * 100
-                                                    : event.maxCapacity
-                                                        ? ((event.registeredCount || 0) / event.maxCapacity) * 100
-                                                        : 0
-                                                    }%`
-                                            }}
-                                        />
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-2 font-medium">
-                                        {currentRound?.capacity
-                                            ? Math.round(((currentRound.registered || 0) / currentRound.capacity) * 100)
-                                            : event.maxCapacity
-                                                ? Math.round(((event.registeredCount || 0) / event.maxCapacity) * 100)
-                                                : 0}% sold
-                                    </p>
-                                </div>
+                                )}
                             </div>
 
                             {/* Booking Card */}
@@ -829,33 +812,22 @@ export default function EventDetailPage() {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <div className="font-bold text-gray-900 text-lg">{autoSelectedTicket.name}</div>
-                                                    {autoSelectedTicket.available !== undefined && (
+                                                    {autoSelectedTicket.quota === 0 ? (
+                                                        <div className="text-xs text-gray-500 mt-1">ไม่จำกัด</div>
+                                                    ) : autoSelectedTicket.available !== undefined ? (
                                                         <div className="text-xs text-gray-500 mt-1">
                                                             เหลือ {autoSelectedTicket.available} ที่นั่ง
                                                         </div>
-                                                    )}
+                                                    ) : null}
                                                 </div>
                                                 <div className="text-right">
-                                                    {promoApplied && getDiscountedPrice(Number(autoSelectedTicket.price)) < Number(autoSelectedTicket.price) ? (
-                                                        <>
-                                                            <span className="text-gray-500 line-through text-sm block">
-                                                                ฿{Math.round(Number(autoSelectedTicket.price)).toLocaleString()}
-                                                            </span>
-                                                            <span className="text-2xl font-bold text-[#537547]">
-                                                                ฿{Math.round(getDiscountedPrice(Number(autoSelectedTicket.price))).toLocaleString()}
-                                                            </span>
-                                                        </>
-                                                    ) : (
-                                                        <span className="text-2xl font-bold text-[#537547]">
-                                                            ฿{Math.round(Number(autoSelectedTicket.price)).toLocaleString()}
-                                                        </span>
-                                                    )}
+                                                    <span className="text-2xl font-bold text-[#537547]">
+                                                        {Number(autoSelectedTicket.price) === 0 ? 'Free' : `฿${Math.round(Number(autoSelectedTicket.price)).toLocaleString()}`}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
                                     )}
-
-
 
                                     {/* Add-on Tickets Section */}
                                     {addonTickets.length > 0 && (
@@ -866,119 +838,61 @@ export default function EventDetailPage() {
                                             </div>
                                             <div className="space-y-2">
                                                 {addonTickets.map(addon => {
-                                                    const isSelected = selectedAddons.includes(String(addon.id));
-                                                    const isSoldOut = addon.available !== undefined && addon.available <= 0;
+                                                    const isSoldOut = addon.available !== undefined && addon.available <= 0 && addon.quota !== 0;
                                                     return (
-                                                        <button
+                                                        <div
                                                             key={addon.id}
-                                                            onClick={() => !isSoldOut && toggleAddon(String(addon.id))}
-                                                            disabled={isSoldOut}
                                                             className={cn(
-                                                                "w-full p-3 rounded-lg border text-left transition-all",
-                                                                isSoldOut ? "opacity-50 cursor-not-allowed bg-gray-100 border-gray-200" :
-                                                                    isSelected ? "bg-[#537547]/10 border-[#537547]" :
-                                                                        "bg-white border-gray-200 hover:border-[#537547]/50"
+                                                                "w-full p-3 rounded-lg border",
+                                                                isSoldOut ? "opacity-50 bg-gray-100 border-gray-200" : "bg-white border-gray-200"
                                                             )}
                                                         >
                                                             <div className="flex items-center justify-between">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className={cn(
-                                                                        "w-4 h-4 rounded border-2 flex items-center justify-center",
-                                                                        isSelected ? "border-[#537547] bg-[#537547]" : "border-gray-400"
-                                                                    )}>
-                                                                        {isSelected && <Check className="w-3 h-3 text-white" />}
-                                                                    </div>
-                                                                    <div>
-                                                                        <div className="font-medium text-gray-900 text-sm">{addon.name}</div>
-                                                                        <div className="text-xs text-gray-500">
-                                                                            {isSoldOut
-                                                                                ? <span className="text-red-400">เต็มแล้ว</span>
-                                                                                : `เหลือ ${addon.available ?? addon.quota} ที่นั่ง`
-                                                                            }
-                                                                        </div>
+                                                                <div>
+                                                                    <div className="font-medium text-gray-900 text-sm">{addon.name}</div>
+                                                                    <div className="text-xs text-gray-500">
+                                                                        {isSoldOut
+                                                                            ? <span className="text-red-400">เต็มแล้ว</span>
+                                                                            : (addon.quota === 0 ? 'ไม่จำกัด' : `เหลือ ${addon.available ?? addon.quota} ที่นั่ง`)
+                                                                        }
                                                                     </div>
                                                                 </div>
-                                                                <span className="text-[#537547] font-bold">+฿{Math.round(Number(addon.price)).toLocaleString()}</span>
+                                                                <span className="text-[#537547] font-bold text-sm">+฿{Math.round(Number(addon.price)).toLocaleString()}</span>
                                                             </div>
-                                                        </button>
+                                                        </div>
                                                     );
                                                 })}
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Total Price Summary */}
-                                    {(autoSelectedTicket || selectedAddonTickets.length > 0) && (
-                                        <div className="bg-[#537547]/10 p-4 rounded-xl border border-[#537547]/20">
-                                            {selectedAddonTickets.length > 0 && (
-                                                <div className="mb-2 pb-2 border-b border-gray-200 space-y-1">
-                                                    {selectedAddonTickets.map(addon => (
-                                                        <div key={addon.id} className="flex justify-between text-sm">
-                                                            <span className="text-[#537547]">+ {addon.name}</span>
-                                                            <span className="text-[#537547]">฿{Math.round(Number(addon.price)).toLocaleString()}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-gray-900">รวมทั้งหมด</span>
-                                                <span className="text-2xl font-bold text-[#537547]">
-                                                    ฿{Math.round(totalPrice).toLocaleString()}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Promo Code Section */}
-                                    <div className="pt-4 border-t border-gray-200">
-                                        <div className="text-sm text-gray-500 mb-2">โค้ดส่วนลด:</div>
-                                        {promoApplied ? (
-                                            <div className="bg-[#537547]/10 p-3 rounded-lg border border-[#537547]/20">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <span className="text-[#537547] font-medium">{promoCode.toUpperCase()}</span>
-                                                        <div className="text-xs text-[#537547]">
-                                                            {promoDiscount?.type === 'percentage'
-                                                                ? `ลด ${promoDiscount.value}%`
-                                                                : `ลด ฿${promoDiscount?.value}`}
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        onClick={clearPromo}
-                                                        className="text-red-400 hover:text-red-300 text-sm"
-                                                    >
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={promoCode}
-                                                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                                    placeholder="กรอกโค้ด"
-                                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-[#537547]"
-                                                    disabled={checkingPromo}
-                                                />
-                                                <Button
-                                                    onClick={handleApplyPromo}
-                                                    disabled={checkingPromo || !promoCode.trim()}
-                                                    className="bg-[#537547] hover:bg-[#456339] text-white px-4 text-sm"
-                                                >
-                                                    {checkingPromo ? '...' : 'ใช้'}
-                                                </Button>
-                                            </div>
-                                        )}
-                                        {promoError && (
-                                            <p className="text-red-400 text-xs mt-2">{promoError}</p>
-                                        )}
-                                    </div>
-
-
                                 </div>
 
-                                {isSaleNotStarted ? (
+                                {hasExistingRegistration ? (
+                                    <div className="space-y-3">
+                                        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                                            <div className="flex items-center gap-2 text-green-700 mb-1">
+                                                <CheckCircle className="w-5 h-5" />
+                                                <span className="font-semibold">{existingTicketHeading}</span>
+                                            </div>
+                                            <p className="text-sm text-green-600">{existingTicketDescription}</p>
+                                        </div>
+                                        {addonTickets.length > 0 && (
+                                            <Link href={`/checkout/${event.id}?mode=addon`} className="block">
+                                                <Button className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]">
+                                                    <Ticket className="w-5 h-5 mr-2" />
+                                                    ซื้อ Add-on เพิ่มเติม
+                                                </Button>
+                                            </Link>
+                                        )}
+                                        <Link href="/my-tickets" className="block">
+                                            <Button variant="outline" className="w-full h-12 text-base font-semibold border-green-600 text-green-700 hover:bg-green-50 rounded-xl transition-all">
+                                                <Ticket className="w-4 h-4 mr-2" />
+                                                ดูตั๋วของฉัน
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                ) : isSaleNotStarted ? (
                                     <Button disabled className="w-full h-14 text-lg font-bold bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed">
                                         ยังไม่เปิดจำหน่าย
                                     </Button>
@@ -992,11 +906,11 @@ export default function EventDetailPage() {
                                     </Button>
                                 ) : (
                                     <Link
-                                        href={`/checkout/${event.id}?ticket=${autoSelectedTicket?.id || ''}${selectedSessions.length > 0 ? `&sessions=${selectedSessions.join(',')}` : ''}${selectedAddons.length > 0 ? `&addons=${selectedAddons.join(',')}` : ''}${promoApplied ? `&promo=${promoCode}` : ''}`}
+                                        href={actionHref}
                                         className="block"
                                     >
                                         <Button className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]">
-                                            จองตั๋วเลย
+                                            {actionLabel}
                                         </Button>
                                     </Link>
                                 )}
@@ -1008,7 +922,7 @@ export default function EventDetailPage() {
                                 )}
 
                                 <p className="text-xs text-center text-gray-500 mt-3">
-                                    ชำระเงินปลอดภัย • ยืนยันทันที
+                                    {isFreeEvent ? 'ไม่มีค่าใช้จ่าย • ยืนยันทันที' : 'ชำระเงินปลอดภัย • ยืนยันทันที'}
                                 </p>
                             </div>
 
@@ -1031,7 +945,23 @@ export default function EventDetailPage() {
                 {/* Mobile Sticky Bottom Bar */}
                 <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-2xl border-t border-gray-200/80 p-4 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
                     <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
-                        {isSaleNotStarted ? (
+                        {hasExistingRegistration ? (
+                            <>
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle className="w-5 h-5 text-green-600" />
+                                    <div>
+                                        <div className="text-xs text-green-600">{existingTicketLabel}</div>
+                                        <div className="text-sm font-bold text-green-700">{existingTicketSummary}</div>
+                                    </div>
+                                </div>
+                                <Link href="/my-tickets" className="flex-1 max-w-[160px]">
+                                    <Button className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95">
+                                        <Ticket className="w-4 h-4 mr-1" />
+                                        ดูตั๋ว
+                                    </Button>
+                                </Link>
+                            </>
+                        ) : isSaleNotStarted ? (
                             <>
                                 <div>
                                     <div className="text-xs text-amber-600">ยังไม่เปิดจำหน่าย</div>
@@ -1075,17 +1005,27 @@ export default function EventDetailPage() {
                         ) : (
                             <>
                                 <div>
-                                    <div className="text-xs text-gray-500">รวมทั้งหมด</div>
+                                    <div className="text-xs text-gray-500">ราคาเริ่มต้น</div>
                                     <div className="text-xl font-bold text-[#537547]">
-                                        ฿{Math.round(totalPrice).toLocaleString()}
+                                        {autoSelectedTicket
+                                            ? (Number(autoSelectedTicket.price) === 0 ? 'Free' : `฿${Math.round(Number(autoSelectedTicket.price)).toLocaleString()}`)
+                                            : '-'}
                                     </div>
                                 </div>
-                                <Button
-                                    onClick={() => setMobileBookingOpen(true)}
-                                    className="flex-1 max-w-[200px] bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95"
-                                >
-                                    เลือกตั๋ว & จอง
-                                </Button>
+                                {isFreeEvent ? (
+                                    <Link href={freeRegisterHref} className="flex-1 max-w-[200px]">
+                                        <Button className="flex-1 bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95">
+                                            ลงทะเบียนฟรี
+                                        </Button>
+                                    </Link>
+                                ) : (
+                                    <Button
+                                        onClick={() => setMobileBookingOpen(true)}
+                                        className="flex-1 max-w-[200px] bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+                                    >
+                                        จองตั๋วเลย
+                                    </Button>
+                                )}
                             </>
                         )}
                     </div>
@@ -1162,20 +1102,9 @@ export default function EventDetailPage() {
                                                     )}
                                                 </div>
                                                 <div className="text-right">
-                                                    {promoApplied && getDiscountedPrice(Number(autoSelectedTicket.price)) < Number(autoSelectedTicket.price) ? (
-                                                        <>
-                                                            <span className="text-gray-500 line-through text-sm block">
-                                                                ฿{Math.round(Number(autoSelectedTicket.price)).toLocaleString()}
-                                                            </span>
-                                                            <span className="text-2xl font-bold text-[#537547]">
-                                                                ฿{Math.round(getDiscountedPrice(Number(autoSelectedTicket.price))).toLocaleString()}
-                                                            </span>
-                                                        </>
-                                                    ) : (
-                                                        <span className="text-2xl font-bold text-[#537547]">
-                                                            ฿{Math.round(Number(autoSelectedTicket.price)).toLocaleString()}
-                                                        </span>
-                                                    )}
+                                                    <span className="text-2xl font-bold text-[#537547]">
+                                                        {Number(autoSelectedTicket.price) === 0 ? 'Free' : `฿${Math.round(Number(autoSelectedTicket.price)).toLocaleString()}`}
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1190,103 +1119,33 @@ export default function EventDetailPage() {
                                             </div>
                                             <div className="space-y-2">
                                                 {addonTickets.map(addon => {
-                                                    const isSelected = selectedAddons.includes(String(addon.id));
                                                     const isSoldOut = addon.available !== undefined && addon.available <= 0;
                                                     return (
-                                                        <button
+                                                        <div
                                                             key={addon.id}
-                                                            onClick={() => !isSoldOut && toggleAddon(String(addon.id))}
-                                                            disabled={isSoldOut}
                                                             className={cn(
-                                                                "w-full p-3 rounded-lg border text-left transition-all",
-                                                                isSoldOut ? "opacity-50 cursor-not-allowed bg-gray-100 border-gray-200" :
-                                                                    isSelected ? "bg-[#537547]/10 border-[#537547]" :
-                                                                        "bg-white border-gray-200 hover:border-[#537547]/50"
+                                                                "w-full p-3 rounded-lg border",
+                                                                isSoldOut ? "opacity-50 bg-gray-100 border-gray-200" : "bg-white border-gray-200"
                                                             )}
                                                         >
                                                             <div className="flex items-center justify-between">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className={cn(
-                                                                        "w-4 h-4 rounded border-2 flex items-center justify-center",
-                                                                        isSelected ? "border-[#537547] bg-[#537547]" : "border-gray-400"
-                                                                    )}>
-                                                                        {isSelected && <Check className="w-3 h-3 text-white" />}
-                                                                    </div>
-                                                                    <div>
-                                                                        <div className="font-medium text-gray-900 text-sm">{addon.name}</div>
+                                                                <div>
+                                                                    <div className="font-medium text-gray-900 text-sm">{addon.name}</div>
+                                                                    <div className="text-xs text-gray-500">
+                                                                        {isSoldOut
+                                                                            ? <span className="text-red-400">เต็มแล้ว</span>
+                                                                            : (addon.quota === 0 ? 'ไม่จำกัด' : `เหลือ ${addon.available ?? addon.quota} ที่นั่ง`)
+                                                                        }
                                                                     </div>
                                                                 </div>
-                                                                <span className="text-[#537547] font-bold">+฿{Math.round(Number(addon.price)).toLocaleString()}</span>
+                                                                <span className="text-[#537547] font-bold text-sm">+฿{Math.round(Number(addon.price)).toLocaleString()}</span>
                                                             </div>
-                                                        </button>
+                                                        </div>
                                                     );
                                                 })}
                                             </div>
                                         </div>
                                     )}
-
-                                    {/* Total Price Summary */}
-                                    {(autoSelectedTicket || selectedAddonTickets.length > 0) && (
-                                        <div className="bg-[#537547]/10 p-4 rounded-xl border border-[#537547]/20 mt-4">
-                                            {selectedAddonTickets.length > 0 && (
-                                                <div className="mb-2 pb-2 border-b border-[#537547]/20 space-y-1">
-                                                    {selectedAddonTickets.map(addon => (
-                                                        <div key={addon.id} className="flex justify-between text-sm">
-                                                            <span className="text-[#537547]">+ {addon.name}</span>
-                                                            <span className="text-[#537547]">฿{Math.round(Number(addon.price)).toLocaleString()}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            <div className="flex justify-between items-center">
-                                                <span className="font-bold text-gray-900">รวมทั้งหมด</span>
-                                                <span className="text-2xl font-bold text-[#537547]">
-                                                    ฿{Math.round(totalPrice).toLocaleString()}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Promo Code Section */}
-                                    <div className="pt-4 border-t border-gray-200">
-                                        <div className="text-sm text-gray-500 mb-2">โค้ดส่วนลด:</div>
-                                        {promoApplied ? (
-                                            <div className="bg-[#537547]/10 p-3 rounded-lg border border-[#537547]/20">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <span className="text-[#537547] font-medium">{promoCode.toUpperCase()}</span>
-                                                        <div className="text-xs text-[#537547]">
-                                                            {promoDiscount?.type === 'percentage'
-                                                                ? `ลด ${promoDiscount.value}%`
-                                                                : `ลด ฿${promoDiscount?.value}`}
-                                                        </div>
-                                                    </div>
-                                                    <button onClick={clearPromo} className="text-red-400 hover:text-red-300 text-sm">
-                                                        <X className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={promoCode}
-                                                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                                    placeholder="กรอกโค้ด"
-                                                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:border-[#537547]"
-                                                    disabled={checkingPromo}
-                                                />
-                                                <Button
-                                                    onClick={handleApplyPromo}
-                                                    disabled={checkingPromo || !promoCode.trim()}
-                                                    className="bg-[#537547] hover:bg-[#456339] text-white px-4 text-sm"
-                                                >
-                                                    {checkingPromo ? '...' : 'ใช้'}
-                                                </Button>
-                                            </div>
-                                        )}
-                                        {promoError && <p className="text-red-400 text-xs mt-2">{promoError}</p>}
-                                    </div>
                                 </div>
                             </div>
 
@@ -1306,12 +1165,12 @@ export default function EventDetailPage() {
                                     </Button>
                                 ) : (
                                     <Link
-                                        href={`/checkout/${event.id}?ticket=${autoSelectedTicket?.id || ''}${selectedSessions.length > 0 ? `&sessions=${selectedSessions.join(',')}` : ''}${selectedAddons.length > 0 ? `&addons=${selectedAddons.join(',')}` : ''}${promoApplied ? `&promo=${promoCode}` : ''}`}
+                                        href={actionHref}
                                         className="block"
                                         onClick={() => setMobileBookingOpen(false)}
                                     >
                                         <Button className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all active:scale-[0.98]">
-                                            ยืนยันการจองตั๋ว
+                                            {isFreeEvent ? 'ลงทะเบียนฟรี' : 'จองตั๋วเลย'}
                                         </Button>
                                     </Link>
                                 )}

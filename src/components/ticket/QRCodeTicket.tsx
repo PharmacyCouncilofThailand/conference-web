@@ -129,7 +129,7 @@ export function QRCodeTicketCompact({
 
     return (
         <div
-            className="bg-white p-2 rounded-lg cursor-pointer hover:shadow-lg transition-shadow"
+            className="relative bg-white p-2 rounded-lg cursor-pointer hover:shadow-lg transition-all group"
             onClick={onClick}
         >
             <QRCodeSVG
@@ -140,6 +140,16 @@ export function QRCodeTicketCompact({
                 bgColor="#ffffff"
                 fgColor="#000000"
             />
+            <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 group-hover:bg-black/10 transition-all">
+                <div className="bg-white/90 rounded-full p-1.5 shadow-sm opacity-60 group-hover:opacity-100 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-700">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        <line x1="11" y1="8" x2="11" y2="14" />
+                        <line x1="8" y1="11" x2="14" y2="11" />
+                    </svg>
+                </div>
+            </div>
         </div>
     );
 }

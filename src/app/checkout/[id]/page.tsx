@@ -27,6 +27,8 @@ export default function CheckoutPage() {
     const router = useRouter();
     const eventId = params.id as string;
     const modeParam = searchParams.get('mode');
+    const originApp = searchParams.get('originApp');
+    const returnTo = searchParams.get('returnTo');
 
     const { user, token, isLoggedIn, isLoading: authLoading } = useAuth();
 
@@ -53,9 +55,9 @@ export default function CheckoutPage() {
 
     // Fetch purchase status (for addon-only detection)
     const { data: purchasesData } = useQuery({
-        queryKey: ['my-purchases'],
-        queryFn: () => paymentsApi.myPurchases(),
-        enabled: isLoggedIn,
+        queryKey: ['my-purchases', eventId],
+        queryFn: () => paymentsApi.myPurchases(Number(eventId)),
+        enabled: isLoggedIn && !!eventId,
     });
 
     const purchases = purchasesData?.data;
@@ -66,6 +68,11 @@ export default function CheckoutPage() {
     }, [user?.delegateType]);
 
     const currency: 'THB' | 'USD' = isThai ? 'THB' : 'USD';
+    const currentCheckoutPath = useMemo(() => {
+        const currentParams = new URLSearchParams(searchParams.toString());
+        const query = currentParams.toString();
+        return `/checkout/${eventId}${query ? `?${query}` : ''}`;
+    }, [eventId, searchParams]);
 
     // Auto-detect addon-only mode
     useEffect(() => {
@@ -106,18 +113,38 @@ export default function CheckoutPage() {
     // Redirect to login if not authenticated
     useEffect(() => {
         if (!authLoading && !isLoggedIn) {
-            router.push(`/login?redirect=/checkout/${eventId}`);
+            router.push(`/login?redirect=${encodeURIComponent(currentCheckoutPath)}`);
         }
-    }, [authLoading, isLoggedIn, eventId, router]);
+    }, [authLoading, currentCheckoutPath, isLoggedIn, router]);
 
     // Build package and addon options from event ticket types
     const { packageOptions, addonOptions } = useMemo(() => {
         if (!event?.ticketTypes) return { packageOptions: [], addonOptions: [] };
 
+        const userRole = user?.role || 'public';
+        const isTicketAllowedForUser = (tt: { allowedRoles?: string[] }) => {
+            if (!tt.allowedRoles || tt.allowedRoles.length === 0) return true;
+            const role = userRole === 'public' ? 'general' : userRole;
+            return tt.allowedRoles.includes(role);
+        };
+
+        const isTicketOnSale = (tt: { salesStart?: string; saleStartDate?: string; salesEnd?: string; saleEndDate?: string }) => {
+            const now = new Date();
+            const start = tt.salesStart || tt.saleStartDate;
+            const end = tt.salesEnd || tt.saleEndDate;
+            if (start && now < new Date(start)) return false;
+            if (end && now > new Date(end)) return false;
+            return true;
+        };
+
         const pkgs: PackageOption[] = [];
         const addons: AddonOption[] = [];
 
         for (const tt of event.ticketTypes) {
+            if (!isTicketAllowedForUser(tt)) continue;
+            if (!isTicketOnSale(tt)) continue;
+
+            const priority: string = (tt as any).priority ?? 'regular';
             const baseOption = {
                 id: String(tt.id),
                 groupName: tt.groupName || tt.name,
@@ -130,6 +157,7 @@ export default function CheckoutPage() {
                 originalPrice: tt.originalPrice ? Number(tt.originalPrice) : null,
                 available: (tt.quota || 0) - (tt.soldCount || 0),
                 isActive: tt.isActive !== false,
+                priority,
             };
 
             if (tt.category === 'primary') {
@@ -155,8 +183,11 @@ export default function CheckoutPage() {
             }
         }
 
+        const priorityOrder: Record<string, number> = { early_bird: 0, regular: 1 };
+        pkgs.sort((a, b) => (priorityOrder[(a as any).priority] ?? 1) - (priorityOrder[(b as any).priority] ?? 1));
+
         return { packageOptions: pkgs, addonOptions: addons };
-    }, [event?.ticketTypes, currency]);
+    }, [event?.ticketTypes, currency, user?.role]);
 
     // Smart back link
     const backUrl = useMemo(() => {
@@ -175,6 +206,7 @@ export default function CheckoutPage() {
 
         try {
             const result = await paymentsApi.preview({
+                eventId: Number(eventId),
                 packageId: checkoutData.isAddonOnly ? '' : checkoutData.selectedPackage,
                 addOnIds: checkoutData.selectedAddOns,
                 currency,
@@ -215,6 +247,9 @@ export default function CheckoutPage() {
                 ...checkoutData,
                 eventId,
                 currency,
+                originApp,
+                returnTo,
+                websiteUrl: event?.websiteUrl || null,
             }));
 
             router.push('/checkout/payment');
@@ -224,7 +259,7 @@ export default function CheckoutPage() {
         } finally {
             setIsSubmitting(false);
         }
-    }, [canProceedToPayment, isSubmitting, checkoutData, eventId, currency, router]);
+    }, [canProceedToPayment, isSubmitting, checkoutData, eventId, currency, originApp, returnTo, event?.websiteUrl, router]);
 
     // Loading states
     if (authLoading || eventLoading) {

@@ -4,51 +4,54 @@ import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
 import {
-    User, Mail, Phone, Building2, IdCard, Edit3,
-    Shield, Calendar, CheckCircle, ArrowLeft,
-    Stethoscope, LogOut, Loader2, Ticket, Clock, XCircle, AlertCircle, Receipt
+    User, Mail, Phone, Building2, IdCard,
+    Calendar, CheckCircle, ArrowLeft,
+    LogOut, Loader2, Ticket, Clock, XCircle, AlertCircle, Receipt
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserRegistrations, UserRegistration } from '@/lib/services';
 import { QRCodeTicket, QRCodeTicketCompact } from '@/components/ticket/QRCodeTicket';
-import { cn, getUserRoleLabel, getUserRoleBadgeColor } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 type MenuTab = 'profile' | 'tickets' | 'payment';
 type PaymentStatus = 'all' | 'pending' | 'completed' | 'failed' | 'cancelled';
 
+function resolveMenuTab(value: string | null): MenuTab {
+    if (value === 'tickets' || value === 'payment' || value === 'profile') {
+        return value;
+    }
+    return 'profile';
+}
+
 export default function ProfilePage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user, isLoggedIn, isLoading: authLoading, logout, token } = useAuth();
+    const requestedTab = resolveMenuTab(searchParams.get('tab'));
 
-    const [activeTab, setActiveTab] = useState<MenuTab>('profile');
+    const [activeTab, setActiveTab] = useState<MenuTab>(requestedTab);
     const [paymentStatusFilter, setPaymentStatusFilter] = useState<PaymentStatus>('all');
     const [viewingQrTicket, setViewingQrTicket] = useState<UserRegistration | null>(null);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [editForm, setEditForm] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        organization: '',
-    });
     const [mounted, setMounted] = useState(false);
 
     // Trigger entrance animation
     useEffect(() => {
         requestAnimationFrame(() => setMounted(true));
     }, []);
+
+    useEffect(() => {
+        setActiveTab(requestedTab);
+    }, [requestedTab]);
 
     // Real data from API
     const [registrations, setRegistrations] = useState<UserRegistration[]>([]);
@@ -85,24 +88,6 @@ export default function ProfilePage() {
             router.push('/login');
         }
     }, [authLoading, isLoggedIn, router]);
-
-    // Update edit form when user changes
-    useEffect(() => {
-        if (user) {
-            setEditForm({
-                name: user.name || '',
-                email: user.email || '',
-                phone: '',
-                organization: '',
-            });
-        }
-    }, [user]);
-
-    const handleEditSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Note: Profile update API should be called here when implemented
-        setIsEditModalOpen(false);
-    };
 
     const handleLogout = () => {
         logout();
@@ -141,8 +126,6 @@ export default function ProfilePage() {
         return null;
     }
 
-    const isPharmacist = ['thpro', 'interpro', 'thstd', 'interstd'].includes(user.role);
-
     const menuItems = [
         { key: 'profile' as MenuTab, label: 'Profile', icon: User },
         { key: 'tickets' as MenuTab, label: 'My Ticket', icon: Ticket },
@@ -179,26 +162,12 @@ export default function ProfilePage() {
                             <div className="bg-white border border-gray-200 shadow-sm rounded-3xl p-6 sticky top-24">
                                 {/* Profile Avatar */}
                                 <div className="text-center mb-6">
-                                    <div className="relative inline-block">
+                                    <div className="inline-block">
                                         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#6f7e0d] to-[#537547] flex items-center justify-center text-white text-3xl font-bold mx-auto border-4 border-white shadow-md">
                                             {user.name?.charAt(0).toUpperCase() || 'U'}
                                         </div>
-                                        {(user.role === 'admin' || user.role === 'staff') && (
-                                            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                                                <Shield className="w-3 h-3 text-white" />
-                                            </div>
-                                        )}
                                     </div>
                                     <h2 className="text-lg font-bold text-gray-900 mt-3">{user.name}</h2>
-                                    <div className="flex items-center justify-center gap-2 mt-2">
-                                        <span className={cn(
-                                            'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border',
-                                            getUserRoleBadgeColor(user.role), 'border-current/30'
-                                        )}>
-                                            {isPharmacist && <Stethoscope className="w-3 h-3" />}
-                                            {getUserRoleLabel(user.role)}
-                                        </span>
-                                    </div>
                                 </div>
 
                                 {/* Menu Items */}
@@ -285,15 +254,10 @@ export default function ProfilePage() {
                                                 <div className="w-10 h-10 rounded-xl bg-[#6f7e0d]/10 flex items-center justify-center">
                                                     <Mail className="w-5 h-5 text-[#6f7e0d]" />
                                                 </div>
-                                                <div className="flex-1">
+                                                <div>
                                                     <div className="text-sm text-gray-500">อีเมล</div>
                                                     <div className="font-medium text-gray-900">{user.email}</div>
                                                 </div>
-                                                <button
-                                                    className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                                                >
-                                                    <Edit3 className="w-4 h-4 text-gray-400" />
-                                                </button>
                                             </div>
 
                                             {/* Phone */}
@@ -301,83 +265,24 @@ export default function ProfilePage() {
                                                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
                                                     <Phone className="w-5 h-5 text-blue-600" />
                                                 </div>
-                                                <div className="flex-1">
+                                                <div>
                                                     <div className="text-sm text-gray-500">เบอร์โทรศัพท์</div>
                                                     <div className="font-medium text-gray-900">{user.phone || '-'}</div>
                                                 </div>
-                                                <button
-                                                    onClick={() => setIsEditModalOpen(true)}
-                                                    className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                                                >
-                                                    <Edit3 className="w-4 h-4 text-gray-400" />
-                                                </button>
                                             </div>
 
-                                            {/* User ID */}
+                                            {/* Pharmacy License */}
                                             <div className="flex items-center gap-4 py-4 border-b border-gray-100">
                                                 <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
                                                     <IdCard className="w-5 h-5 text-purple-600" />
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm text-gray-500">User ID</div>
-                                                    <div className="font-medium font-mono text-gray-900">{user.id || '-'}</div>
+                                                    <div className="text-sm text-gray-500">เลขใบอนุญาต</div>
+                                                    <div className="font-medium text-gray-900">
+                                                        {user.pharmacyLicenseId ? `ภ. ${user.pharmacyLicenseId}` : '-'}
+                                                    </div>
                                                 </div>
                                             </div>
-
-                                            {/* Role */}
-                                            <div className="flex items-center gap-4 py-4 border-b border-gray-100">
-                                                <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
-                                                    <Shield className="w-5 h-5 text-teal-600" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-sm text-gray-500">บทบาท</div>
-                                                    <div className="font-medium text-gray-900">{getUserRoleLabel(user.role)}</div>
-                                                </div>
-                                            </div>
-
-                                            {/* Pharmacy License */}
-                                            {isPharmacist && (
-                                                <div className="flex items-center gap-4 py-4 border-b border-gray-100">
-                                                    <div className="w-10 h-10 rounded-xl bg-[#537547]/10 flex items-center justify-center">
-                                                        <Stethoscope className="w-5 h-5 text-[#537547]" />
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-sm text-gray-500">เลขใบอนุญาต</div>
-                                                        <div className="font-medium text-gray-900">{user.pharmacyLicenseId || '-'}</div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Quick Links */}
-                                        <div className="mt-8 grid md:grid-cols-2 gap-4">
-                                            <Link href="/events" className="block">
-                                                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 hover:border-[#6f7e0d]/30 hover:bg-[#6f7e0d]/5 transition-all group">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-12 h-12 rounded-xl bg-[#6f7e0d]/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                            <Calendar className="w-6 h-6 text-[#6f7e0d]" />
-                                                        </div>
-                                                        <div>
-                                                            <div className="font-bold">ดูงานประชุม</div>
-                                                            <div className="text-sm text-gray-400">ค้นหางานประชุมที่น่าสนใจ</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </Link>
-
-                                            <Link href="/contact" className="block">
-                                                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 hover:border-blue-500/30 hover:bg-blue-50/50 transition-all group">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                            <Mail className="w-6 h-6 text-blue-600" />
-                                                        </div>
-                                                        <div>
-                                                            <div className="font-bold text-gray-900">ติดต่อเรา</div>
-                                                            <div className="text-sm text-gray-500">ต้องการความช่วยเหลือ?</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </Link>
                                         </div>
                                     </div>
                                 )}
@@ -411,7 +316,7 @@ export default function ProfilePage() {
                                             <div className="space-y-4">
                                                 {myTickets.map((ticket) => (
                                                     <div
-                                                        key={ticket.id}
+                                                        key={ticket.regCode}
                                                         className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5 hover:border-[#6f7e0d]/50 hover:shadow-md transition-all"
                                                     >
                                                         <div className="flex justify-between items-start">
@@ -432,26 +337,23 @@ export default function ProfilePage() {
                                                                 <div className="mt-2 text-xs text-gray-400 font-mono">{ticket.regCode}</div>
                                                             </div>
                                                             <div className="flex flex-col items-end gap-3">
-                                                                <span className={cn(
-                                                                    "inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border",
-                                                                    ticket.status === 'confirmed'
-                                                                        ? "bg-[#537547]/10 text-[#537547] border-[#537547]/30"
-                                                                        : "bg-yellow-50 text-yellow-700 border-yellow-200"
-                                                                )}>
-                                                                    {ticket.status === 'confirmed' ? <CheckCircle className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
-                                                                    {ticket.status === 'confirmed' ? (ticket.ticketType?.name || 'Ticket') : 'Waiting Payment'}
-                                                                </span>
                                                                 {ticket.status === 'confirmed' ? (
                                                                     <QRCodeTicketCompact
                                                                         regCode={ticket.regCode}
                                                                         onClick={() => setViewingQrTicket(ticket)}
                                                                     />
                                                                 ) : (
-                                                                    <Link href={`/checkout/${ticket.event?.id}?ticket=${ticket.ticketType?.id}&round=${ticket.event?.id}`} className="mt-2">
-                                                                        <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0">
-                                                                            Pay Now
-                                                                        </Button>
-                                                                    </Link>
+                                                                    <>
+                                                                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border bg-yellow-50 text-yellow-700 border-yellow-200">
+                                                                            <Clock className="w-4 h-4" />
+                                                                            Waiting Payment
+                                                                        </span>
+                                                                        <Link href={`/checkout/${ticket.event?.id}?ticket=${ticket.ticketType?.id}&round=${ticket.event?.id}`} className="mt-2">
+                                                                            <Button size="sm" className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0">
+                                                                                Pay Now
+                                                                            </Button>
+                                                                        </Link>
+                                                                    </>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -592,7 +494,6 @@ export default function ProfilePage() {
 
             <Footer />
 
-            {/* Edit Profile Modal */}
             {/* QR Code View Modal */}
             <Dialog open={!!viewingQrTicket} onOpenChange={(open) => !open && setViewingQrTicket(null)}>
                 <DialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-md shadow-xl">
@@ -611,79 +512,6 @@ export default function ProfilePage() {
                             />
                         </div>
                     )}
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-md shadow-xl">
-                    <DialogHeader>
-                        <DialogTitle className="text-xl text-[#6f7e0d]">แก้ไขข้อมูลส่วนตัว</DialogTitle>
-                        <DialogDescription className="text-gray-500">
-                            อัปเดตข้อมูลของคุณ
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <form onSubmit={handleEditSubmit} className="space-y-4 mt-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name" className="text-gray-700">ชื่อ-นามสกุล</Label>
-                            <Input
-                                id="name"
-                                value={editForm.name}
-                                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                                className="bg-gray-50 border-gray-200 focus:border-[#537547]"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="email" className="text-gray-700">อีเมล</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                value={editForm.email}
-                                disabled
-                                className="bg-gray-100 border-gray-200 text-gray-500"
-                            />
-                            <p className="text-xs text-gray-500">ไม่สามารถแก้ไขอีเมลได้</p>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="phone" className="text-gray-700">เบอร์โทรศัพท์</Label>
-                            <Input
-                                id="phone"
-                                value={editForm.phone}
-                                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                                className="bg-gray-50 border-gray-200 focus:border-[#537547]"
-                                placeholder="08X-XXX-XXXX"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="organization" className="text-gray-700">หน่วยงาน/องค์กร</Label>
-                            <Input
-                                id="organization"
-                                value={editForm.organization}
-                                onChange={(e) => setEditForm({ ...editForm, organization: e.target.value })}
-                                className="bg-gray-50 border-gray-200 focus:border-[#537547]"
-                            />
-                        </div>
-
-                        <DialogFooter className="mt-6">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setIsEditModalOpen(false)}
-                                className="border-gray-200 text-gray-600 hover:bg-gray-50"
-                            >
-                                ยกเลิก
-                            </Button>
-                            <Button
-                                type="submit"
-                                className="bg-[#537547] hover:bg-[#6f7e0d] text-white"
-                            >
-                                บันทึก
-                            </Button>
-                        </DialogFooter>
-                    </form>
                 </DialogContent>
             </Dialog>
         </div>

@@ -62,6 +62,12 @@ export default function EventsPage() {
         return filteredEvents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
     }, [filteredEvents, currentPage]);
 
+    const getEventImageUrl = (event: Event) => {
+        const imageUrl = event.imageUrl?.trim();
+        const coverImage = event.coverImage?.trim();
+        return imageUrl || coverImage || null;
+    };
+
     // Reset to page 1 when search or filter changes
     const handleSearch = (value: string) => {
         setSearchQuery(value);
@@ -202,7 +208,13 @@ export default function EventsPage() {
                                 <div className="flex flex-col md:flex-row gap-8 items-center">
                                     {/* Thumbnail */}
                                     <div className="w-full md:w-64 h-48 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative">
-                                        <img src={event.imageUrl || event.coverImage} alt={event.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                        {getEventImageUrl(event) ? (
+                                            <img src={getEventImageUrl(event)!} alt={event.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#537547]/10 to-[#6f7e0d]/10 text-[#537547]">
+                                                <Calendar className="w-12 h-12 opacity-60" />
+                                            </div>
+                                        )}
                                         <div className="absolute top-3 left-3 bg-black/60 backdrop-blur px-3 py-1 rounded-lg text-xs font-bold text-white border border-white/10">
                                             {event.eventType === 'single_room' ? 'Single Session' : 'Multi Sessions'}
                                         </div>
@@ -224,40 +236,35 @@ export default function EventsPage() {
                                             <p className="text-gray-500 text-sm line-clamp-2 md:line-clamp-none">{event.description}</p>
                                         </div>
 
-                                        <div className="flex flex-col md:flex-row gap-4 md:gap-8 text-sm text-gray-600 justify-center md:justify-start">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-[#537547]/10 flex items-center justify-center text-[#537547] group-hover:bg-[#537547]/20 transition-colors">
-                                                    <Clock className="w-4 h-4" />
-                                                </div>
-                                                <div className="text-left">
-                                                    <div className="text-xs text-gray-400">เวลา</div>
-                                                    <div>{event.startDate ? new Date(event.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Bangkok' }) : 'TBA'}</div>
-                                                </div>
+                                        <div className="flex flex-col gap-2 text-sm text-gray-600">
+                                            {/* Row 1: Date + Time */}
+                                            <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start">
+                                                <span className="inline-flex items-center gap-1.5 bg-[#537547]/8 text-[#537547] px-3 py-1.5 rounded-full font-medium text-xs">
+                                                    <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                                                    {event.rounds?.[0]?.date
+                                                        ? new Date(event.rounds[0].date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok' })
+                                                        : (event.startDate ? new Date(event.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok' }) : 'TBA')}
+                                                </span>
+                                                {event.startDate && (
+                                                    <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full text-xs">
+                                                        <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                                                        {new Date(event.startDate).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Bangkok' })} น.
+                                                    </span>
+                                                )}
                                             </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-[#537547]/10 flex items-center justify-center text-[#537547] group-hover:bg-[#537547]/20 transition-colors">
-                                                    <Calendar className="w-4 h-4" />
+                                            {/* Row 2: Location */}
+                                            {(event.rounds?.[0]?.location || event.location) && (
+                                                <div className="flex items-start gap-1.5 justify-center md:justify-start text-gray-500">
+                                                    <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-[#537547]" />
+                                                    <span className="text-xs leading-relaxed line-clamp-2">{event.rounds?.[0]?.location || event.location}</span>
                                                 </div>
-                                                <div className="text-left">
-                                                    <div className="text-xs text-gray-400">วันที่</div>
-                                                    <div>{event.rounds?.[0]?.date ? new Date(event.rounds[0].date).toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok' }) : (event.startDate ? new Date(event.startDate).toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok' }) : 'TBA')}</div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-8 h-8 rounded-full bg-[#537547]/10 flex items-center justify-center text-[#537547] group-hover:bg-[#537547]/20 transition-colors">
-                                                    <MapPin className="w-4 h-4" />
-                                                </div>
-                                                <div className="text-left">
-                                                    <div className="text-xs text-gray-400">สถานที่</div>
-                                                    <div>{event.rounds?.[0]?.location || event.location || 'TBA'}</div>
-                                                </div>
-                                            </div>
+                                            )}
                                         </div>
                                     </div>
 
                                     {/* Action */}
                                     <div className="flex-shrink-0">
-                                        <Link href={`/checkout/${event.id}`}>
+                                        <Link href={`/events/${event.id}`}>
                                             <Button className="h-12 px-8 rounded-full bg-[#537547] hover:bg-[#456339] text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-95">
                                                 ลงทะเบียน <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
                                             </Button>

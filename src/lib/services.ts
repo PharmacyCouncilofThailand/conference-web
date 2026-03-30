@@ -97,6 +97,7 @@ function mapApiEventToEvent(apiEvent: any): Event {
         documents: apiEvent.documents || [],
         rounds: apiEvent.rounds || [],
         schedule: apiEvent.schedule || [],
+        websiteUrl: apiEvent.websiteUrl || null,
     };
 }
 
@@ -250,18 +251,28 @@ export async function getUserRegistrations(token: string): Promise<UserRegistrat
         });
         if (!res.ok) return [];
         const data = await res.json();
-        if (!data.success || !data.data?.registration) return [];
-        // Map API response to UserRegistration format
-        const reg = data.data.registration;
-        return [{
-            id: 0,
+        if (!data.success || !Array.isArray(data.data)) return [];
+        return data.data.map((reg: any) => ({
+            id: reg.eventId || 0,
             regCode: reg.regCode || '',
             status: reg.status || '',
             createdAt: reg.purchasedAt || '',
-            event: null,
-            ticketType: reg.ticketName ? { id: 0, name: reg.ticketName, price: reg.amount || '0' } : null,
-            payment: null,
-        }];
+            event: reg.eventName ? {
+                id: reg.eventId,
+                eventName: reg.eventName,
+                startDate: reg.eventStartDate || '',
+                endDate: reg.eventEndDate || null,
+                location: reg.eventLocation || null,
+                imageUrl: reg.eventImageUrl || null,
+            } : null,
+            ticketType: reg.ticketName ? { id: reg.ticketTypeId || 0, name: reg.ticketName, price: reg.amount || '0' } : null,
+            payment: reg.receiptUrl ? {
+                id: 0,
+                amount: reg.amount || '0',
+                status: 'paid',
+                paidAt: reg.purchasedAt || null,
+            } : null,
+        }));
     } catch {
         return [];
     }
