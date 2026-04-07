@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -17,15 +17,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 // ──────────── Schemas ────────────
 const loginSchema = z.object({
-    email: z.string().email('กรุณากรอกอีเมลให้ถูกต้อง').optional().or(z.literal('')),
-    pharmacyLicenseId: z.string().optional().or(z.literal('')),
+    email: z.string().email('กรุณากรอกอีเมลให้ถูกต้อง'),
     password: z.string().min(6, 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'),
-}).refine(data => data.email || data.pharmacyLicenseId, {
-    message: "กรุณากรอกข้อมูลเพื่อเข้าสู่ระบบ",
-    path: ["email"]
 });
 
 const registerSchema = z.object({
@@ -47,11 +44,14 @@ type LoginForm = z.infer<typeof loginSchema>;
 type RegisterForm = z.infer<typeof registerSchema>;
 
 const accountTypes = [
-    { value: 'thaiProfessional' as const, label: 'เภสัชกร', icon: Briefcase, description: 'Thai Professional' },
-    { value: 'generalPublic' as const, label: 'บุคคลทั่วไป', icon: User, description: 'General Public' },
+    { value: 'pharmacist' as const, label: 'เภสัชกร', icon: Stethoscope, description: 'สำหรับเภสัชกรที่ต้องการสะสมหน่วยกิต CPE' },
+    { value: 'medicalProfessional' as const, label: 'บุคลากรทางการแพทย์', icon: Briefcase, description: 'แพทย์ พยาบาล และบุคลากรทางการแพทย์อื่นๆ' },
+    { value: 'postgraduateStudent' as const, label: 'นักศึกษาบัณฑิตศึกษา', icon: GraduationCap, description: 'นักศึกษาระดับปริญญาโท-เอก' },
+    { value: 'undergraduateStudent' as const, label: 'นักศึกษาปริญญาตรี', icon: GraduationCap, description: 'นักศึกษาเภสัชศาสตร์และสาขาที่เกี่ยวข้อง' },
+    { value: 'generalPublic' as const, label: 'บุคคลทั่วไป', icon: User, description: 'ผู้สนใจทั่วไป' },
 ];
 
-type AccountType = 'thaiProfessional' | 'generalPublic';
+type AccountType = 'pharmacist' | 'medicalProfessional' | 'postgraduateStudent' | 'undergraduateStudent' | 'generalPublic';
 
 // ──────────── Main Component ────────────
 export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'login' | 'register' }) {
@@ -73,19 +73,21 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
     const [loginError, setLoginError] = useState<string | null>(null);
     const [loginLoading, setLoginLoading] = useState(false);
     const [showLoginPassword, setShowLoginPassword] = useState(false);
-    const [loginType, setLoginType] = useState<'pharmacist' | 'general'>('pharmacist');
+    const [loginRecaptchaToken, setLoginRecaptchaToken] = useState<string | null>(null);
+    const loginRecaptchaRef = useRef<ReCAPTCHA>(null);
 
     const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
 
     const onLoginSubmit = async (data: LoginForm) => {
         setLoginLoading(true);
         setLoginError(null);
+        if (!loginRecaptchaToken) {
+            setLoginError('กรุณายืนยันว่าคุณไม่ใช่บอท');
+            setLoginLoading(false);
+            return;
+        }
         try {
-            const response = await authApi.login(
-                loginType === 'general' ? data.email : undefined,
-                data.password,
-                loginType === 'pharmacist' ? data.pharmacyLicenseId : undefined
-            );
+            const response = await authApi.login(data.email, data.password, loginRecaptchaToken || undefined);
             const authUser = {
                 id: response.user.id,
                 email: response.user.email,
@@ -108,6 +110,8 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
             } else {
                 setLoginError(errorMessage);
             }
+            loginRecaptchaRef.current?.reset();
+            setLoginRecaptchaToken(null);
         } finally {
             setLoginLoading(false);
         }
@@ -117,7 +121,11 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
     const [registerError, setRegisterError] = useState<string | null>(null);
     const [registerLoading, setRegisterLoading] = useState(false);
     const [showRegisterPassword, setShowRegisterPassword] = useState(false);
-    const [accountType, setAccountType] = useState<AccountType>('thaiProfessional');
+    const [accountType, setAccountType] = useState<AccountType | null>(null);
+    const [registerStep, setRegisterStep] = useState<1 | 2>(1);
+    const [termsAccepted, setTermsAccepted] = useState(false);
+    const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+    const recaptchaRef = useRef<ReCAPTCHA>(null);
 
     const registerForm = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) });
 
@@ -125,8 +133,28 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
         setRegisterLoading(true);
         setRegisterError(null);
         try {
-            if (accountType === 'thaiProfessional' && !data.pharmacyLicenseId) {
+            if (!termsAccepted) {
+                setRegisterError('กรุณายอมรับเงื่อนไขการใช้งานและนโยบายความเป็นส่วนตัว');
+                setRegisterLoading(false);
+                return;
+            }
+            if (!recaptchaToken) {
+                setRegisterError('กรุณายืนยันว่าคุณไม่ใช่บอท');
+                setRegisterLoading(false);
+                return;
+            }
+            if (accountType === 'pharmacist' && !data.pharmacyLicenseId) {
                 setRegisterError('กรุณากรอกเลขใบอนุญาตสำหรับเภสัชกร');
+                setRegisterLoading(false);
+                return;
+            }
+            if ((accountType === 'postgraduateStudent' || accountType === 'undergraduateStudent') && !data.organization) {
+                setRegisterError('กรุณากรอกชื่อมหาวิทยาลัย');
+                setRegisterLoading(false);
+                return;
+            }
+            if (!accountType) {
+                setRegisterError('กรุณาเลือกประเภทบัญชี');
                 setRegisterLoading(false);
                 return;
             }
@@ -135,20 +163,38 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
             formData.append('lastName', data.lastName);
             formData.append('email', data.email);
             formData.append('password', data.password);
-            formData.append('accountType', accountType);
+            formData.append('accountType', accountType as string);
             formData.append('source', 'conference-web');
+            formData.append('country', 'Thailand');
             if (data.phone) formData.append('phone', data.phone);
             if (data.organization) formData.append('organization', data.organization);
             if (data.idCard) formData.append('idCard', data.idCard);
             if (data.pharmacyLicenseId) formData.append('pharmacyLicenseId', data.pharmacyLicenseId);
+            if (recaptchaToken) formData.append('recaptchaToken', recaptchaToken);
 
-            await authApi.register(formData);
-            // Switch to login mode after successful registration
+            const response = await authApi.register(formData);
+            // Auto-login with token from register response
+            if (response.token && response.user) {
+                const authUser = {
+                    id: response.user.id,
+                    email: response.user.email,
+                    firstName: response.user.firstName,
+                    lastName: response.user.lastName,
+                    role: response.user.role,
+                    name: `${response.user.firstName} ${response.user.lastName}`,
+                };
+                authLogin(response.token, authUser);
+                router.push('/');
+                return;
+            }
+            // Fallback: switch to login mode
             setMode('login');
             setLoginError(null);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
             setRegisterError(errorMessage);
+            recaptchaRef.current?.reset();
+            setRecaptchaToken(null);
         } finally {
             setRegisterLoading(false);
         }
@@ -158,8 +204,20 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
         setMode(newMode);
         setLoginError(null);
         setRegisterError(null);
+        setRegisterStep(1);
+        setAccountType(null);
+        setTermsAccepted(false);
         // Update URL without full navigation
         window.history.replaceState(null, '', newMode === 'login' ? '/login' : '/register');
+    };
+
+    const selectAccountType = (type: AccountType) => {
+        setAccountType(type);
+        setRegisterStep(2);
+    };
+
+    const goBackToRoleSelection = () => {
+        setRegisterStep(1);
     };
 
     const isRegister = mode === 'register';
@@ -283,19 +341,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                     <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-lg">
                         <div className="text-center mb-6">
                             <h1 className="text-3xl font-bold mb-2 text-[#6f7e0d]">เข้าสู่ระบบ</h1>
-                            <p className="text-gray-500 text-sm">เลือกประเภทการเข้าสู่ระบบ</p>
-                        </div>
-
-                        {/* Login Type Tabs */}
-                        <div className="flex gap-2 p-1 bg-gray-100 rounded-2xl mb-6">
-                            <button type="button" onClick={() => { setLoginType('pharmacist'); setLoginError(null); }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition-all ${loginType === 'pharmacist' ? 'bg-[#537547] text-white shadow-lg' : 'text-gray-500 hover:text-[#6f7e0d]'}`}>
-                                <Stethoscope className="w-4 h-4" /><span>เภสัชกร</span>
-                            </button>
-                            <button type="button" onClick={() => { setLoginType('general'); setLoginError(null); }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-medium transition-all duration-300 ${loginType === 'general' ? 'bg-[#537547] text-white shadow-lg' : 'text-gray-500 hover:text-[#6f7e0d]'}`}>
-                                <User className="w-4 h-4" /><span>บุคคลทั่วไป</span>
-                            </button>
+                            <p className="text-gray-500 text-sm">กรอกอีเมลและรหัสผ่านเพื่อเข้าสู่ระบบ</p>
                         </div>
 
                         {loginError && (
@@ -304,38 +350,17 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                             </div>
                         )}
 
-                        {loginType === 'pharmacist' && (
-                            <div className="mb-5 bg-[#537547]/10 border border-[#537547]/20 rounded-xl p-3 text-sm text-[#537547] flex items-center gap-2 font-medium">
-                                <GraduationCap className="w-4 h-4 flex-shrink-0" />
-                                <span>เข้าสู่ระบบเพื่อสะสมหน่วยกิต CPE อัตโนมัติ</span>
-                            </div>
-                        )}
-
                         <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
-                            {loginType === 'general' ? (
-                                <div className="space-y-2">
-                                    <Label htmlFor="login-email" className="text-gray-700">อีเมล</Label>
-                                    <div className="relative">
-                                        <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-500" />
-                                        <Input id="login-email" type="email" placeholder="name@example.com"
-                                            className="pl-12 h-12 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] focus:ring-[#537547]/20 text-[#6f7e0d] placeholder:text-gray-400"
-                                            {...loginForm.register('email')} />
-                                    </div>
-                                    {loginForm.formState.errors.email && <p className="text-sm text-red-400">{loginForm.formState.errors.email.message}</p>}
+                            <div className="space-y-2">
+                                <Label htmlFor="login-email" className="text-gray-700">อีเมล</Label>
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-500" />
+                                    <Input id="login-email" type="email" placeholder="name@example.com"
+                                        className="pl-12 h-12 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] focus:ring-[#537547]/20 text-[#6f7e0d] placeholder:text-gray-400"
+                                        {...loginForm.register('email')} />
                                 </div>
-                            ) : (
-                                <div className="space-y-2">
-                                    <Label htmlFor="login-license" className="text-gray-700">เลขใบอนุญาต</Label>
-                                    <div className="relative">
-                                        <Stethoscope className="absolute left-4 top-3.5 h-5 w-5 text-gray-500" />
-                                        <Input id="login-license" type="text" placeholder="ภ.XXXXX"
-                                            className="pl-12 h-12 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] focus:ring-[#537547]/20 text-[#6f7e0d] placeholder:text-gray-400"
-                                            {...loginForm.register('pharmacyLicenseId')} />
-                                    </div>
-                                    {loginForm.formState.errors.pharmacyLicenseId && <p className="text-sm text-red-400">{loginForm.formState.errors.pharmacyLicenseId.message}</p>}
-                                    {loginForm.formState.errors.email && !loginForm.formState.errors.pharmacyLicenseId && <p className="text-sm text-red-400">{loginForm.formState.errors.email.message}</p>}
-                                </div>
-                            )}
+                                {loginForm.formState.errors.email && <p className="text-sm text-red-400">{loginForm.formState.errors.email.message}</p>}
+                            </div>
 
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
@@ -353,6 +378,16 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     </button>
                                 </div>
                                 {loginForm.formState.errors.password && <p className="text-sm text-red-400">{loginForm.formState.errors.password.message}</p>}
+                            </div>
+
+                            <div className="flex justify-center">
+                                <ReCAPTCHA
+                                    ref={loginRecaptchaRef}
+                                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+                                    onChange={(token) => { setLoginRecaptchaToken(token); if (token) setLoginError(null); }}
+                                    onExpired={() => setLoginRecaptchaToken(null)}
+                                    theme="light"
+                                />
                             </div>
 
                             <Button type="submit" className="w-full h-12 bg-[#537547] hover:bg-[#456339] rounded-xl font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-md" disabled={loginLoading}>
@@ -395,8 +430,12 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
 
                     <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-lg">
                         <div className="text-center mb-6">
-                            <h1 className="text-3xl font-bold mb-2 text-[#6f7e0d]">สร้างบัญชีผู้ใช้</h1>
-                            <p className="text-gray-500 text-sm">กรอกข้อมูลเพื่อลงทะเบียน</p>
+                            <h1 className="text-3xl font-bold mb-2 text-[#6f7e0d]">
+                                {registerStep === 1 ? 'เลือกประเภทบัญชี' : 'สร้างบัญชีผู้ใช้'}
+                            </h1>
+                            <p className="text-gray-500 text-sm">
+                                {registerStep === 1 ? 'กรุณาเลือกประเภทผู้ใช้งานเพื่อดำเนินการต่อ' : 'กรอกข้อมูลเพื่อลงทะเบียน'}
+                            </p>
                         </div>
 
                         {registerError && (
@@ -405,22 +444,63 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                             </div>
                         )}
 
-                        {/* Account Type Selector */}
-                        <div className="mb-6">
-                            <Label className="text-gray-700 mb-3 block">ประเภทบัญชี</Label>
-                            <div className="grid grid-cols-2 gap-2">
+                        {/* Step 1: Account Type Selection */}
+                        {registerStep === 1 && (
+                            <div className="space-y-4">
                                 {accountTypes.map((type) => {
                                     const Icon = type.icon;
                                     return (
-                                        <button key={type.value} type="button" onClick={() => setAccountType(type.value)}
-                                            className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all text-sm ${accountType === type.value
-                                                ? 'bg-[#537547]/10 border-[#537547]/50 text-[#537547] font-medium'
-                                                : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'}`}>
-                                            <Icon className="w-4 h-4 flex-shrink-0" /><span>{type.label}</span>
+                                        <button key={type.value} type="button" onClick={() => selectAccountType(type.value)}
+                                            className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-200 bg-white hover:border-[#537547]/50 hover:bg-[#537547]/5 text-left transition-all group">
+                                            <div className="w-12 h-12 rounded-xl bg-[#537547]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#537547]/20 transition-colors">
+                                                <Icon className="w-6 h-6 text-[#537547]" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="font-semibold text-gray-900">{type.label}</div>
+                                                <div className="text-sm text-gray-500">{type.description}</div>
+                                            </div>
+                                            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#537547] group-hover:translate-x-1 transition-all" />
                                         </button>
                                     );
                                 })}
+                                <div className="text-center pt-4 border-t border-gray-100">
+                                    <p className="text-sm text-gray-500">
+                                        มีบัญชีอยู่แล้ว?{' '}
+                                        <button type="button" onClick={() => switchMode('login')} className="text-[#537547] hover:text-[#456339] font-medium">
+                                            เข้าสู่ระบบ
+                                        </button>
+                                    </p>
+                                </div>
                             </div>
+                        )}
+
+                        {/* Step 2: Registration Form */}
+                        {registerStep === 2 && (
+                        <>
+                        {/* Selected Type Indicator */}
+                        <div className="mb-6 flex items-center justify-between bg-[#537547]/5 border border-[#537547]/20 rounded-xl p-4">
+                            <div className="flex items-center gap-3">
+                                {accountType && (() => {
+                                    const selectedType = accountTypes.find(t => t.value === accountType);
+                                    if (!selectedType) return null;
+                                    const Icon = selectedType.icon;
+                                    return (
+                                        <>
+                                            <div className="w-10 h-10 rounded-lg bg-[#537547]/10 flex items-center justify-center">
+                                                <Icon className="w-5 h-5 text-[#537547]" />
+                                            </div>
+                                            <div>
+                                                <div className="text-xs text-gray-500 uppercase tracking-wide">ประเภทบัญชี</div>
+                                                <div className="font-medium text-[#537547]">{selectedType.label}</div>
+                                            </div>
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                            <button type="button" onClick={goBackToRoleSelection}
+                                className="text-sm text-[#537547] hover:text-[#456339] font-medium px-3 py-1.5 rounded-lg hover:bg-[#537547]/10 transition-colors">
+                                เปลี่ยน
+                            </button>
                         </div>
 
                         <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
@@ -468,15 +548,22 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 </div>
                             </div>
 
+                            {accountType !== 'generalPublic' && (
                             <div className="space-y-2">
-                                <Label htmlFor="reg-organization" className="text-gray-700">หน่วยงาน/องค์กร <span className="text-gray-400">(ไม่บังคับ)</span></Label>
+                                <Label htmlFor="reg-organization" className="text-gray-700">
+                                    {accountType === 'postgraduateStudent' || accountType === 'undergraduateStudent'
+                                        ? <>มหาวิทยาลัย <span className="text-red-500">*</span></>
+                                        : <>หน่วยงาน/องค์กร <span className="text-gray-400">(ไม่บังคับ)</span></>}
+                                </Label>
                                 <div className="relative">
                                     <Building2 className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
-                                    <Input id="reg-organization" placeholder="โรงพยาบาล/บริษัท..."
+                                    <Input id="reg-organization"
+                                        placeholder={accountType === 'postgraduateStudent' || accountType === 'undergraduateStudent' ? 'ชื่อมหาวิทยาลัย...' : 'โรงพยาบาล/บริษัท...'}
                                         className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
                                         {...registerForm.register('organization')} />
                                 </div>
                             </div>
+                            )}
 
                             <div className="space-y-2">
                                 <Label htmlFor="reg-idCard" className="text-gray-700">เลขบัตรประชาชน <span className="text-gray-400">(13 หลัก)</span></Label>
@@ -485,7 +572,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     {...registerForm.register('idCard')} />
                             </div>
 
-                            {accountType === 'thaiProfessional' && (
+                            {accountType === 'pharmacist' && (
                                 <div className="space-y-2">
                                     <Label htmlFor="reg-pharmacyLicenseId" className="text-gray-700">เลขใบอนุญาต <span className="text-red-500">*</span></Label>
                                     <Input id="reg-pharmacyLicenseId" placeholder="ภ.XXXXX"
@@ -526,13 +613,23 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                             </div>
 
                             <div className="flex items-start gap-3 py-2">
-                                <input type="checkbox" id="terms" className="mt-1 w-4 h-4 rounded border-gray-300 bg-white text-[#537547] focus:ring-[#537547] accent-[#537547]" />
+                                <input type="checkbox" id="terms" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 bg-white text-[#537547] focus:ring-[#537547] accent-[#537547]" />
                                 <label htmlFor="terms" className="text-sm text-gray-500">
                                     I agree to the{' '}
                                     <Link href="/terms" className="text-[#537547] hover:text-[#456339]">Terms of Service</Link>
                                     {' '}and{' '}
                                     <Link href="/privacy" className="text-[#537547] hover:text-[#456339]">Privacy Policy</Link>
                                 </label>
+                            </div>
+
+                            <div className="flex justify-center">
+                                <ReCAPTCHA
+                                    ref={recaptchaRef}
+                                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+                                    onChange={(token) => { setRecaptchaToken(token); if (token) setRegisterError(null); }}
+                                    onExpired={() => setRecaptchaToken(null)}
+                                    theme="light"
+                                />
                             </div>
 
                             <Button type="submit" className="w-full h-12 bg-[#537547] hover:bg-[#456339] text-white rounded-xl font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-md" disabled={registerLoading}>
@@ -543,12 +640,9 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 )}
                             </Button>
                         </form>
+                        </>
+                        )}
                     </div>
-
-                    <p className="text-center text-gray-500 mt-6">
-                        มีบัญชีอยู่แล้ว?{' '}
-                        <button onClick={() => switchMode('login')} className="text-[#537547] hover:text-[#456339] font-medium transition-colors">เข้าสู่ระบบ</button>
-                    </p>
                 </div>
             </div>}
 
@@ -580,17 +674,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-lg">
                                 <div className="text-center mb-4">
                                     <h1 className="text-2xl font-bold mb-1 text-[#6f7e0d]">เข้าสู่ระบบ</h1>
-                                </div>
-
-                                <div className="flex gap-2 p-1 bg-gray-100 rounded-2xl mb-5">
-                                    <button type="button" onClick={() => { setLoginType('pharmacist'); setLoginError(null); }}
-                                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${loginType === 'pharmacist' ? 'bg-[#537547] text-white shadow-lg' : 'text-gray-500'}`}>
-                                        <Stethoscope className="w-4 h-4" /><span>เภสัชกร</span>
-                                    </button>
-                                    <button type="button" onClick={() => { setLoginType('general'); setLoginError(null); }}
-                                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-medium transition-all ${loginType === 'general' ? 'bg-[#537547] text-white shadow-lg' : 'text-gray-500'}`}>
-                                        <User className="w-4 h-4" /><span>บุคคลทั่วไป</span>
-                                    </button>
+                                    <p className="text-gray-500 text-sm">กรอกอีเมลและรหัสผ่าน</p>
                                 </div>
 
                                 {loginError && (
@@ -600,27 +684,16 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 )}
 
                                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                                    {loginType === 'general' ? (
-                                        <div className="space-y-2">
-                                            <Label htmlFor="m-login-email" className="text-gray-700">อีเมล</Label>
-                                            <div className="relative">
-                                                <Mail className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
-                                                <Input id="m-login-email" type="email" placeholder="name@example.com"
-                                                    className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-[#6f7e0d] placeholder:text-gray-400"
-                                                    {...loginForm.register('email')} />
-                                            </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="m-login-email" className="text-gray-700">อีเมล</Label>
+                                        <div className="relative">
+                                            <Mail className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
+                                            <Input id="m-login-email" type="email" placeholder="name@example.com"
+                                                className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-[#6f7e0d] placeholder:text-gray-400"
+                                                {...loginForm.register('email')} />
                                         </div>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            <Label htmlFor="m-login-license" className="text-gray-700">เลขใบอนุญาต</Label>
-                                            <div className="relative">
-                                                <Stethoscope className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
-                                                <Input id="m-login-license" type="text" placeholder="ภ.XXXXX"
-                                                    className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-[#6f7e0d] placeholder:text-gray-400"
-                                                    {...loginForm.register('pharmacyLicenseId')} />
-                                            </div>
-                                        </div>
-                                    )}
+                                        {loginForm.formState.errors.email && <p className="text-sm text-red-400">{loginForm.formState.errors.email.message}</p>}
+                                    </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="m-login-password" className="text-gray-700">รหัสผ่าน</Label>
@@ -634,6 +707,18 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                                 {showLoginPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                             </button>
                                         </div>
+                                        {loginForm.formState.errors.password && <p className="text-sm text-red-400">{loginForm.formState.errors.password.message}</p>}
+                                    </div>
+
+                                    <div className="flex justify-center">
+                                        <ReCAPTCHA
+                                            ref={loginRecaptchaRef}
+                                            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+                                            onChange={(token) => { setLoginRecaptchaToken(token); if (token) setLoginError(null); }}
+                                            onExpired={() => setLoginRecaptchaToken(null)}
+                                            theme="light"
+                                            size="compact"
+                                        />
                                     </div>
 
                                     <Button type="submit" className="w-full h-11 bg-[#537547] hover:bg-[#456339] rounded-xl font-semibold shadow-lg" disabled={loginLoading}>
@@ -647,7 +732,12 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                         {mode === 'register' && (
                             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-lg">
                                 <div className="text-center mb-4">
-                                    <h1 className="text-2xl font-bold mb-1 text-[#6f7e0d]">สร้างบัญชีผู้ใช้</h1>
+                                    <h1 className="text-2xl font-bold mb-1 text-[#6f7e0d]">
+                                        {registerStep === 1 ? 'เลือกประเภทบัญชี' : 'สร้างบัญชีผู้ใช้'}
+                                    </h1>
+                                    <p className="text-gray-500 text-xs">
+                                        {registerStep === 1 ? 'กรุณาเลือกประเภทผู้ใช้งาน' : 'กรอกข้อมูลเพื่อลงทะเบียน'}
+                                    </p>
                                 </div>
 
                                 {registerError && (
@@ -656,21 +746,52 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     </div>
                                 )}
 
-                                <div className="mb-5">
-                                    <Label className="text-gray-700 mb-2 block">ประเภทบัญชี</Label>
-                                    <div className="grid grid-cols-2 gap-2">
+                                {/* Mobile Step 1: Account Type Selection */}
+                                {registerStep === 1 && (
+                                    <div className="space-y-3">
                                         {accountTypes.map((type) => {
                                             const Icon = type.icon;
                                             return (
-                                                <button key={type.value} type="button" onClick={() => setAccountType(type.value)}
-                                                    className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all text-sm ${accountType === type.value
-                                                        ? 'bg-[#537547]/10 border-[#537547]/50 text-[#537547] font-medium'
-                                                        : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
-                                                    <Icon className="w-4 h-4 flex-shrink-0" /><span>{type.label}</span>
+                                                <button key={type.value} type="button" onClick={() => selectAccountType(type.value)}
+                                                    className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-gray-200 bg-white hover:border-[#537547]/50 text-left transition-all group">
+                                                    <div className="w-10 h-10 rounded-lg bg-[#537547]/10 flex items-center justify-center flex-shrink-0">
+                                                        <Icon className="w-5 h-5 text-[#537547]" />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="font-medium text-gray-900 text-sm">{type.label}</div>
+                                                        <div className="text-xs text-gray-500">{type.description}</div>
+                                                    </div>
+                                                    <ArrowRight className="w-4 h-4 text-gray-400" />
                                                 </button>
                                             );
                                         })}
                                     </div>
+                                )}
+
+                                {/* Mobile Step 2: Registration Form */}
+                                {registerStep === 2 && (
+                                <>
+                                {/* Selected Type Indicator */}
+                                <div className="mb-4 flex items-center justify-between bg-[#537547]/5 border border-[#537547]/20 rounded-xl p-3">
+                                    <div className="flex items-center gap-2">
+                                        {accountType && (() => {
+                                            const selectedType = accountTypes.find(t => t.value === accountType);
+                                            if (!selectedType) return null;
+                                            const Icon = selectedType.icon;
+                                            return (
+                                                <>
+                                                    <div className="w-8 h-8 rounded-lg bg-[#537547]/10 flex items-center justify-center">
+                                                        <Icon className="w-4 h-4 text-[#537547]" />
+                                                    </div>
+                                                    <span className="font-medium text-[#537547] text-sm">{selectedType.label}</span>
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+                                    <button type="button" onClick={goBackToRoleSelection}
+                                        className="text-xs text-[#537547] font-medium px-2 py-1 rounded hover:bg-[#537547]/10">
+                                        เปลี่ยน
+                                    </button>
                                 </div>
 
                                 <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-3">
@@ -695,12 +816,26 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                         <Input id="m-reg-phone" placeholder="08XXXXXXXX" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400" {...registerForm.register('phone')} />
                                     </div>
 
+                                    {accountType !== 'generalPublic' && (
+                                    <div className="space-y-1">
+                                        <Label htmlFor="m-reg-org" className="text-gray-700 text-sm">
+                                            {accountType === 'postgraduateStudent' || accountType === 'undergraduateStudent'
+                                                ? <>มหาวิทยาลัย <span className="text-red-500">*</span></>
+                                                : <>หน่วยงาน/องค์กร <span className="text-gray-400">(ไม่บังคับ)</span></>}
+                                        </Label>
+                                        <Input id="m-reg-org"
+                                            placeholder={accountType === 'postgraduateStudent' || accountType === 'undergraduateStudent' ? 'ชื่อมหาวิทยาลัย...' : 'โรงพยาบาล/บริษัท...'}
+                                            className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                            {...registerForm.register('organization')} />
+                                    </div>
+                                    )}
+
                                     <div className="space-y-1">
                                         <Label htmlFor="m-reg-idCard" className="text-gray-700 text-sm">เลขบัตรประชาชน</Label>
                                         <Input id="m-reg-idCard" placeholder="X-XXXX-XXXXX-XX-X" maxLength={13} className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400" {...registerForm.register('idCard')} />
                                     </div>
 
-                                    {accountType === 'thaiProfessional' && (
+                                    {accountType === 'pharmacist' && (
                                         <div className="space-y-1">
                                             <Label htmlFor="m-reg-license" className="text-gray-700 text-sm">เลขใบอนุญาต <span className="text-red-500">*</span></Label>
                                             <Input id="m-reg-license" placeholder="ภ.XXXXX" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400" {...registerForm.register('pharmacyLicenseId')} />
@@ -728,10 +863,23 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                         </div>
                                     </div>
 
+                                    <div className="flex justify-center">
+                                        <ReCAPTCHA
+                                            ref={recaptchaRef}
+                                            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+                                            onChange={(token) => { setRecaptchaToken(token); if (token) setRegisterError(null); }}
+                                            onExpired={() => setRecaptchaToken(null)}
+                                            theme="light"
+                                            size="compact"
+                                        />
+                                    </div>
+
                                     <Button type="submit" className="w-full h-11 bg-[#537547] hover:bg-[#456339] text-white rounded-xl font-semibold shadow-lg" disabled={registerLoading}>
                                         {registerLoading ? 'กำลังสร้างบัญชี...' : 'สร้างบัญชี'}
                                     </Button>
                                 </form>
+                                </>
+                                )}
                             </div>
                         )}
                     </div>

@@ -8,6 +8,7 @@ interface User {
     firstName: string;
     lastName: string;
     role: string;
+    studentLevel?: string | null;
     country?: string | null;
     delegateType?: string;
     isThai?: boolean;

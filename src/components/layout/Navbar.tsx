@@ -148,7 +148,7 @@ export function Navbar() {
                             <Link href="/login">
                                 <Button variant="ghost" className="text-white hover:text-white hover:bg-white/15">เข้าสู่ระบบ</Button>
                             </Link>
-                            <Link href="/events">
+                            <Link href="/register">
                                 <Button className="bg-white text-[#537547] hover:bg-white/90 border-0 rounded-full px-6 font-semibold">ลงทะเบียน</Button>
                             </Link>
                         </div>

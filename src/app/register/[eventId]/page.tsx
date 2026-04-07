@@ -72,24 +72,31 @@ export default function FreeRegisterPage() {
     }, [result, isSsoUser, backToWebsiteUrl]);
 
     // Determine the packageId based on user role (same logic as event detail page)
+    // packageId maps directly to role for ticket matching
     const packageId = useMemo(() => {
         const roleToPackage: Record<string, string> = {
-            thstd: 'student',
-            interstd: 'student',
-            thpro: 'professional',
-            interpro: 'professional',
+            pharmacist: 'pharmacist',
+            medical_professional: 'medical_professional',
+            student: 'student',
+            general: 'general',
         };
-        return roleToPackage[userRole] || 'student';
+        return roleToPackage[userRole] || 'pharmacist';
     }, [userRole]);
 
     // Find the auto-selected free ticket for this user
+    const userStudentLevel = authUser?.studentLevel || null;
     const freeTicket = useMemo(() => {
         if (!event?.ticketTypes) return null;
 
-        const isTicketAllowedForUser = (ticket: { allowedRoles?: string[] }) => {
+        const isTicketAllowedForUser = (ticket: { allowedRoles?: string[]; allowedStudentLevels?: string[] }) => {
             if (!ticket.allowedRoles || ticket.allowedRoles.length === 0) return true;
             const role = userRole === 'public' ? 'general' : userRole;
-            return ticket.allowedRoles.includes(role);
+            if (!ticket.allowedRoles.includes(role)) return false;
+            // For student tickets, also check studentLevel if specified
+            if (role === 'student' && ticket.allowedStudentLevels && ticket.allowedStudentLevels.length > 0 && userStudentLevel) {
+                return ticket.allowedStudentLevels.includes(userStudentLevel);
+            }
+            return true;
         };
 
         const isTicketOnSale = (ticket: { salesStart?: string; salesEnd?: string }) => {

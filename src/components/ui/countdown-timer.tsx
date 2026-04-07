@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 
 interface CountdownTimerProps {
     targetDate: string;
+    endDate?: string;
     className?: string;
 }
 
@@ -14,7 +15,7 @@ interface TimeLeft {
     seconds: number;
 }
 
-export function CountdownTimer({ targetDate, className = '' }: CountdownTimerProps) {
+export function CountdownTimer({ targetDate, endDate, className = '' }: CountdownTimerProps) {
     const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
     const [mounted, setMounted] = useState(false);
 
@@ -46,9 +47,20 @@ export function CountdownTimer({ targetDate, className = '' }: CountdownTimerPro
         return null;
     }
 
-    const isPast = new Date(targetDate).getTime() < new Date().getTime();
+    const now = new Date().getTime();
+    const startPast = new Date(targetDate).getTime() < now;
+    const endPast = endDate ? new Date(endDate).getTime() < now : startPast;
 
-    if (isPast) {
+    if (startPast && !endPast) {
+        return (
+            <div className={`text-center ${className}`}>
+                <div className="text-sm text-gray-400 mb-2">Event Status</div>
+                <div className="text-lg font-bold text-[#537547]">Event is ongoing</div>
+            </div>
+        );
+    }
+
+    if (endPast) {
         return (
             <div className={`text-center ${className}`}>
                 <div className="text-sm text-gray-400 mb-2">Event Status</div>

@@ -81,11 +81,26 @@ function mapApiEventToEvent(apiEvent: any): Event {
                     }
                 }
             }
+            // Parse allowedStudentLevels - same logic as allowedRoles
+            let allowedStudentLevels: string[] = [];
+            if (t.allowedStudentLevels) {
+                if (Array.isArray(t.allowedStudentLevels)) {
+                    allowedStudentLevels = t.allowedStudentLevels;
+                } else if (typeof t.allowedStudentLevels === 'string') {
+                    try {
+                        const parsed = JSON.parse(t.allowedStudentLevels);
+                        allowedStudentLevels = Array.isArray(parsed) ? parsed : [];
+                    } catch {
+                        allowedStudentLevels = t.allowedStudentLevels.split(',').map((l: string) => l.trim()).filter(Boolean);
+                    }
+                }
+            }
             return {
                 ...t,
                 ticketCategory: t.ticketCategory || t.category,
                 category: t.priority || t.category,
                 allowedRoles,
+                allowedStudentLevels,
                 salesStart: t.salesStart || t.saleStartDate || undefined,
                 salesEnd: t.salesEnd || t.saleEndDate || undefined,
             };

@@ -21,6 +21,7 @@ interface LoginResponse {
 
 interface RegisterResponse {
     success: boolean;
+    token?: string;
     user: {
         id: number;
         email: string;
@@ -33,8 +34,8 @@ interface RegisterResponse {
 
 // Auth API
 export const authApi = {
-    login: (email: string | undefined, password: string, pharmacyLicenseId?: string) =>
-        api.post<LoginResponse>('/auth/login', { email, password, pharmacyLicenseId }),
+    login: (email: string, password: string, recaptchaToken?: string) =>
+        api.post<LoginResponse>('/auth/login', { email, password, ...(recaptchaToken && { recaptchaToken }) }),
 
     register: (formData: FormData) =>
         apiClient<RegisterResponse>('/auth/register', {

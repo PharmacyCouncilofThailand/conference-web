@@ -70,14 +70,20 @@ export default function EventDetailPage() {
     const originApp = searchParams.get('originApp');
     const returnTo = searchParams.get('returnTo');
 
-    // Helper: check if a ticket is visible to the current user based on allowedRoles
-    const isTicketAllowedForUser = (ticket: { allowedRoles?: string[] }) => {
+    // Helper: check if a ticket is visible to the current user based on allowedRoles and studentLevel
+    const userStudentLevel = authUser?.studentLevel || null;
+    const isTicketAllowedForUser = (ticket: { allowedRoles?: string[]; allowedStudentLevels?: string[] }) => {
         // If no allowedRoles defined, ticket is visible to everyone
         if (!ticket.allowedRoles || ticket.allowedRoles.length === 0) return true;
         // Map userRole to the backend role format
         // 'public' (not logged in) or 'general' => matches 'general' ticket roles
         const role = userRole === 'public' ? 'general' : userRole;
-        return ticket.allowedRoles.includes(role);
+        if (!ticket.allowedRoles.includes(role)) return false;
+        // For student tickets, also check studentLevel if specified
+        if (role === 'student' && ticket.allowedStudentLevels && ticket.allowedStudentLevels.length > 0 && userStudentLevel) {
+            return ticket.allowedStudentLevels.includes(userStudentLevel);
+        }
+        return true;
     };
 
     const { data: event, isLoading, isError } = useQuery({
@@ -323,7 +329,7 @@ export default function EventDetailPage() {
                 <div className="lg:hidden space-y-4 mb-6">
                     {/* Countdown Timer */}
                     {event.startDate && (
-                        <CountdownTimer targetDate={event.startDate} />
+                        <CountdownTimer targetDate={event.startDate} endDate={event.endDate} />
                     )}
 
                     {/* Quick Info Cards */}
@@ -673,7 +679,7 @@ export default function EventDetailPage() {
                         <div className={`sticky top-24 space-y-6 scroll-animate slide-right ${sidebarVisible ? 'is-visible' : ''}`}>
                             {/* Countdown Timer */}
                             {event.startDate && (
-                                <CountdownTimer targetDate={event.startDate} />
+                                <CountdownTimer targetDate={event.startDate} endDate={event.endDate} />
                             )}
 
                             {/* CPE Credits Badge */}

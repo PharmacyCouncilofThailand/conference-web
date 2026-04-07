@@ -64,6 +64,7 @@ export interface TicketType {
     maxPerOrder?: number;
     benefits?: string[];
     allowedRoles?: string[];
+    allowedStudentLevels?: string[];
 }
 
 export interface Round {

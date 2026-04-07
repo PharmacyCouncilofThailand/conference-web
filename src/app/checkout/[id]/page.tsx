@@ -122,10 +122,16 @@ export default function CheckoutPage() {
         if (!event?.ticketTypes) return { packageOptions: [], addonOptions: [] };
 
         const userRole = user?.role || 'public';
-        const isTicketAllowedForUser = (tt: { allowedRoles?: string[] }) => {
+        const userStudentLevel = user?.studentLevel || null;
+        const isTicketAllowedForUser = (tt: { allowedRoles?: string[]; allowedStudentLevels?: string[] }) => {
             if (!tt.allowedRoles || tt.allowedRoles.length === 0) return true;
             const role = userRole === 'public' ? 'general' : userRole;
-            return tt.allowedRoles.includes(role);
+            if (!tt.allowedRoles.includes(role)) return false;
+            // For student tickets, also check studentLevel if specified
+            if (role === 'student' && tt.allowedStudentLevels && tt.allowedStudentLevels.length > 0 && userStudentLevel) {
+                return tt.allowedStudentLevels.includes(userStudentLevel);
+            }
+            return true;
         };
 
         const isTicketOnSale = (tt: { salesStart?: string; saleStartDate?: string; salesEnd?: string; saleEndDate?: string }) => {
