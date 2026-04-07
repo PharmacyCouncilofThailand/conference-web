@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import ReCAPTCHA from 'react-google-recaptcha';
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 
 // ──────────── Schemas ────────────
 const loginSchema = z.object({
@@ -74,14 +74,15 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
     const [loginLoading, setLoginLoading] = useState(false);
     const [showLoginPassword, setShowLoginPassword] = useState(false);
     const [loginRecaptchaToken, setLoginRecaptchaToken] = useState<string | null>(null);
-    const loginRecaptchaRef = useRef<ReCAPTCHA>(null);
+    const loginTurnstileRef = useRef<TurnstileInstance>(null);
+    const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
 
     const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
 
     const onLoginSubmit = async (data: LoginForm) => {
         setLoginLoading(true);
         setLoginError(null);
-        if (!loginRecaptchaToken) {
+        if (turnstileSiteKey && !loginRecaptchaToken) {
             setLoginError('กรุณายืนยันว่าคุณไม่ใช่บอท');
             setLoginLoading(false);
             return;
@@ -110,7 +111,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
             } else {
                 setLoginError(errorMessage);
             }
-            loginRecaptchaRef.current?.reset();
+            loginTurnstileRef.current?.reset();
             setLoginRecaptchaToken(null);
         } finally {
             setLoginLoading(false);
@@ -125,7 +126,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
     const [registerStep, setRegisterStep] = useState<1 | 2>(1);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-    const recaptchaRef = useRef<ReCAPTCHA>(null);
+    const registerTurnstileRef = useRef<TurnstileInstance>(null);
 
     const registerForm = useForm<RegisterForm>({ resolver: zodResolver(registerSchema) });
 
@@ -138,7 +139,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                 setRegisterLoading(false);
                 return;
             }
-            if (!recaptchaToken) {
+            if (turnstileSiteKey && !recaptchaToken) {
                 setRegisterError('กรุณายืนยันว่าคุณไม่ใช่บอท');
                 setRegisterLoading(false);
                 return;
@@ -193,7 +194,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'สมัครสมาชิกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
             setRegisterError(errorMessage);
-            recaptchaRef.current?.reset();
+            registerTurnstileRef.current?.reset();
             setRecaptchaToken(null);
         } finally {
             setRegisterLoading(false);
@@ -380,15 +381,17 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 {loginForm.formState.errors.password && <p className="text-sm text-red-400">{loginForm.formState.errors.password.message}</p>}
                             </div>
 
+                            {turnstileSiteKey && (
                             <div className="flex justify-center">
-                                <ReCAPTCHA
-                                    ref={loginRecaptchaRef}
-                                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-                                    onChange={(token) => { setLoginRecaptchaToken(token); if (token) setLoginError(null); }}
-                                    onExpired={() => setLoginRecaptchaToken(null)}
-                                    theme="light"
+                                <Turnstile
+                                    ref={loginTurnstileRef}
+                                    siteKey={turnstileSiteKey}
+                                    onSuccess={(token) => { setLoginRecaptchaToken(token); setLoginError(null); }}
+                                    onExpire={() => setLoginRecaptchaToken(null)}
+                                    onError={() => setLoginRecaptchaToken(null)}
                                 />
                             </div>
+                            )}
 
                             <Button type="submit" className="w-full h-12 bg-[#537547] hover:bg-[#456339] rounded-xl font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-md" disabled={loginLoading}>
                                 {loginLoading ? (
@@ -622,15 +625,17 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 </label>
                             </div>
 
+                            {turnstileSiteKey && (
                             <div className="flex justify-center">
-                                <ReCAPTCHA
-                                    ref={recaptchaRef}
-                                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-                                    onChange={(token) => { setRecaptchaToken(token); if (token) setRegisterError(null); }}
-                                    onExpired={() => setRecaptchaToken(null)}
-                                    theme="light"
+                                <Turnstile
+                                    ref={registerTurnstileRef}
+                                    siteKey={turnstileSiteKey}
+                                    onSuccess={(token) => { setRecaptchaToken(token); setRegisterError(null); }}
+                                    onExpire={() => setRecaptchaToken(null)}
+                                    onError={() => setRecaptchaToken(null)}
                                 />
                             </div>
+                            )}
 
                             <Button type="submit" className="w-full h-12 bg-[#537547] hover:bg-[#456339] text-white rounded-xl font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-md" disabled={registerLoading}>
                                 {registerLoading ? (
@@ -710,16 +715,18 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                         {loginForm.formState.errors.password && <p className="text-sm text-red-400">{loginForm.formState.errors.password.message}</p>}
                                     </div>
 
+                                    {turnstileSiteKey && (
                                     <div className="flex justify-center">
-                                        <ReCAPTCHA
-                                            ref={loginRecaptchaRef}
-                                            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-                                            onChange={(token) => { setLoginRecaptchaToken(token); if (token) setLoginError(null); }}
-                                            onExpired={() => setLoginRecaptchaToken(null)}
-                                            theme="light"
-                                            size="compact"
+                                        <Turnstile
+                                            ref={loginTurnstileRef}
+                                            siteKey={turnstileSiteKey}
+                                            onSuccess={(token) => { setLoginRecaptchaToken(token); setLoginError(null); }}
+                                            onExpire={() => setLoginRecaptchaToken(null)}
+                                            onError={() => setLoginRecaptchaToken(null)}
+                                            options={{ size: 'compact' }}
                                         />
                                     </div>
+                                    )}
 
                                     <Button type="submit" className="w-full h-11 bg-[#537547] hover:bg-[#456339] rounded-xl font-semibold shadow-lg" disabled={loginLoading}>
                                         {loginLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
@@ -863,16 +870,18 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                         </div>
                                     </div>
 
+                                    {turnstileSiteKey && (
                                     <div className="flex justify-center">
-                                        <ReCAPTCHA
-                                            ref={recaptchaRef}
-                                            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-                                            onChange={(token) => { setRecaptchaToken(token); if (token) setRegisterError(null); }}
-                                            onExpired={() => setRecaptchaToken(null)}
-                                            theme="light"
-                                            size="compact"
+                                        <Turnstile
+                                            ref={registerTurnstileRef}
+                                            siteKey={turnstileSiteKey}
+                                            onSuccess={(token) => { setRecaptchaToken(token); setRegisterError(null); }}
+                                            onExpire={() => setRecaptchaToken(null)}
+                                            onError={() => setRecaptchaToken(null)}
+                                            options={{ size: 'compact' }}
                                         />
                                     </div>
+                                    )}
 
                                     <Button type="submit" className="w-full h-11 bg-[#537547] hover:bg-[#456339] text-white rounded-xl font-semibold shadow-lg" disabled={registerLoading}>
                                         {registerLoading ? 'กำลังสร้างบัญชี...' : 'สร้างบัญชี'}
