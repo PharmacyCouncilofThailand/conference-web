@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,21 @@ function resolveMenuTab(value: string | null): MenuTab {
 }
 
 export default function ProfilePage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-center">
+                    <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto mb-4" />
+                    <p className="text-gray-400">กำลังโหลด...</p>
+                </div>
+            </div>
+        }>
+            <ProfilePageContent />
+        </Suspense>
+    );
+}
+
+function ProfilePageContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user, isLoggedIn, isLoading: authLoading, logout, token } = useAuth();
