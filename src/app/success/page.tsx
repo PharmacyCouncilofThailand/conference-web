@@ -89,7 +89,7 @@ function SuccessContent() {
     if (status === 'loading') {
         return (
             <div className="min-h-[60vh] flex flex-col items-center justify-center">
-                <Loader2 className="w-12 h-12 animate-spin text-emerald-500 mb-4" />
+                <Loader2 className="w-12 h-12 animate-spin text-[#8a8a00] mb-4" />
                 <h2 className="text-xl font-bold">กำลังตรวจสอบการชำระเงิน...</h2>
             </div>
         );
@@ -133,26 +133,26 @@ function SuccessContent() {
     return (
         <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
             <div className="relative mb-8">
-                <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full animate-pulse" />
-                <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#8a8a00]/20 blur-3xl rounded-full animate-pulse" />
+                <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-[#8a8a00] to-[#737300] flex items-center justify-center">
                     <CheckCircle className="w-12 h-12 text-white" />
                 </div>
             </div>
-            <div className="inline-block px-4 py-1 bg-green-500/20 text-green-400 rounded-full text-sm mb-4">ชำระเงินสำเร็จ</div>
+            <div className="inline-block px-4 py-1 bg-[#8a8a00]/20 text-[#8a8a00] rounded-full text-sm mb-4">ชำระเงินสำเร็จ</div>
             <h1 className="text-3xl sm:text-4xl font-bold mb-4">ลงทะเบียนเรียบร้อยแล้ว!</h1>
             <p className="text-gray-400 mb-8 max-w-lg">เราได้ส่งรายละเอียดพร้อม QR Code ไปยังอีเมลของคุณแล้ว</p>
 
             <div className="grid sm:grid-cols-2 gap-4 max-w-md mb-8">
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-left">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center"><Mail className="w-5 h-5 text-emerald-400" /></div>
+                        <div className="w-10 h-10 rounded-lg bg-[#8a8a00]/20 flex items-center justify-center"><Mail className="w-5 h-5 text-[#8a8a00]" /></div>
                         <div className="text-sm font-medium">ตรวจสอบอีเมล</div>
                     </div>
                     <p className="text-xs text-gray-400">อีเมลยืนยันถูกส่งแล้ว</p>
                 </div>
                 <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-left">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center"><QrCode className="w-5 h-5 text-green-400" /></div>
+                        <div className="w-10 h-10 rounded-lg bg-[#8a8a00]/20 flex items-center justify-center"><QrCode className="w-5 h-5 text-[#8a8a00]" /></div>
                         <div className="text-sm font-medium">QR Code</div>
                     </div>
                     <p className="text-xs text-gray-400">ใช้ Check-in วันงาน</p>
@@ -167,7 +167,7 @@ function SuccessContent() {
                         {registration.addons.map((addon: RegistrationAddon) => (
                             <div key={addon.id} className="flex justify-between text-sm">
                                 <span className="text-gray-300">{addon.name}</span>
-                                <span className="text-emerald-400">฿{parseFloat(addon.price).toLocaleString()}</span>
+                                <span className="text-[#8a8a00]">฿{parseFloat(addon.price).toLocaleString()}</span>
                             </div>
                         ))}
                     </div>
@@ -187,7 +187,7 @@ function SuccessContent() {
 
             <div className="flex gap-4">
                 <Link href="/"><Button variant="outline">กลับหน้าหลัก</Button></Link>
-                <Link href="/events"><Button className="bg-gradient-to-r from-emerald-600 to-green-600">ดูงานอื่นๆ</Button></Link>
+                <Link href="/events"><Button className="bg-gradient-to-r from-[#8a8a00] to-[#737300]">ดูงานอื่นๆ</Button></Link>
             </div>
         </div>
     );
@@ -199,7 +199,7 @@ export default function SuccessPage() {
             <Navbar />
             <main className="pt-24 pb-12 px-4 sm:px-6">
                 <div className="container mx-auto max-w-4xl">
-                    <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>}>
+                    <Suspense fallback={<div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#8a8a00]" /></div>}>
                         <SuccessContent />
                     </Suspense>
                 </div>

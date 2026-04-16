@@ -15,7 +15,7 @@ export default function CancelPage() {
                     <div className="min-h-[60vh] flex flex-col items-center justify-center text-center">
                         <div className="relative mb-8">
                             <div className="absolute inset-0 bg-teal-500/20 blur-3xl rounded-full" />
-                            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center">
+                            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-teal-500 to-[#737300] flex items-center justify-center">
                                 <XCircle className="w-12 h-12 text-white" />
                             </div>
                         </div>
@@ -34,13 +34,13 @@ export default function CancelPage() {
 
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Link href="/events"><Button variant="outline"><ArrowLeft className="w-4 h-4 mr-2" />กลับไปหน้างาน</Button></Link>
-                            <Button onClick={() => window.history.back()} className="bg-gradient-to-r from-emerald-600 to-green-600">
+                            <Button onClick={() => window.history.back()} className="bg-gradient-to-r from-[#8a8a00] to-[#737300]">
                                 <RefreshCcw className="w-4 h-4 mr-2" />ลองใหม่อีกครั้ง
                             </Button>
                         </div>
 
                         <p className="text-xs text-gray-500 mt-8">
-                            หากต้องการความช่วยเหลือ <Link href="/contact" className="text-emerald-400 hover:underline">ติดต่อทีมงาน</Link>
+                            หากต้องการความช่วยเหลือ <Link href="/contact" className="text-[#8a8a00] hover:underline">ติดต่อทีมงาน</Link>
                         </p>
                     </div>
                 </div>

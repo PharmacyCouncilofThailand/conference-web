@@ -42,29 +42,29 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white text-[#6f7e0d] flex">
+        <div className="min-h-screen bg-white text-[#737300] flex">
             {/* Left Side - Decorative */}
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
                 {/* Background Effects */}
                 <div className="absolute inset-0">
-                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-600/30 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-green-600/30 rounded-full blur-[120px]" />
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#8a8a00]/30 rounded-full blur-[120px]" />
+                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#737300]/30 rounded-full blur-[120px]" />
                 </div>
 
                 {/* Content */}
                 <div className="relative z-10 flex flex-col justify-center items-center w-full p-12">
                     <div className="flex items-center gap-3 mb-8">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#8a8a00] to-[#737300] flex items-center justify-center shadow-lg shadow-[#8a8a00]/30">
                             <Sparkles className="w-6 h-6 text-white" />
                         </div>
-                        <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-green-500">
+                        <span className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#8a8a00] to-[#a0a030]">
                             สภาเภสัชกรรม
                         </span>
                     </div>
 
                     <h2 className="text-4xl font-bold text-center mb-4 leading-tight">
                         ลืมรหัสผ่าน?<br />
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-400">
+                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#8a8a00] via-[#a0a030] to-[#8a8a00]">
                             ไม่ต้องกังวล
                         </span>
                     </h2>
@@ -74,10 +74,10 @@ export default function ForgotPasswordPage() {
 
                     {/* Illustration */}
                     <div className="mt-12 relative">
-                        <div className="w-64 h-64 bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/10">
-                            <Mail className="w-24 h-24 text-emerald-400" />
+                        <div className="w-64 h-64 bg-gradient-to-br from-[#8a8a00]/20 to-[#737300]/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-white/10">
+                            <Mail className="w-24 h-24 text-[#8a8a00]" />
                         </div>
-                        <div className="absolute -top-4 -right-4 w-16 h-16 bg-green-500/30 rounded-full animate-ping" />
+                        <div className="absolute -top-4 -right-4 w-16 h-16 bg-[#8a8a00]/30 rounded-full animate-ping" />
                     </div>
                 </div>
             </div>
@@ -86,8 +86,8 @@ export default function ForgotPasswordPage() {
             <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative">
                 {/* Background gradient for mobile */}
                 <div className="absolute inset-0 lg:hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-600/20 rounded-full blur-[100px]" />
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-green-600/20 rounded-full blur-[100px]" />
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-[#8a8a00]/20 rounded-full blur-[100px]" />
+                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#737300]/20 rounded-full blur-[100px]" />
                 </div>
 
                 <div className="w-full max-w-md relative z-10">
@@ -99,10 +99,10 @@ export default function ForgotPasswordPage() {
 
                     {/* Mobile Logo */}
                     <div className="lg:hidden flex items-center justify-center gap-2 mb-8">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-600 to-green-600 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#8a8a00] to-[#737300] flex items-center justify-center">
                             <Sparkles className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-green-500">
+                        <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#8a8a00] to-[#a0a030]">
                             สภาเภสัชกรรม
                         </span>
                     </div>
@@ -132,7 +132,7 @@ export default function ForgotPasswordPage() {
                                                 id="email"
                                                 type="email"
                                                 placeholder="name@example.com"
-                                                className="pl-12 h-12 bg-black/30 border-white/10 rounded-xl focus:border-emerald-500 focus:ring-emerald-500/20 text-white placeholder:text-gray-500"
+                                                className="pl-12 h-12 bg-black/30 border-white/10 rounded-xl focus:border-[#8a8a00] focus:ring-[#8a8a00]/20 text-white placeholder:text-gray-500"
                                                 {...register('email')}
                                             />
                                         </div>
@@ -143,7 +143,7 @@ export default function ForgotPasswordPage() {
 
                                     <Button
                                         type="submit"
-                                        className="w-full h-12 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 rounded-xl font-semibold shadow-lg shadow-emerald-900/30 transition-all hover:shadow-emerald-900/50 hover:-translate-y-0.5"
+                                        className="w-full h-12 bg-gradient-to-r from-[#8a8a00] to-[#737300] hover:from-[#737300] hover:to-[#686805] rounded-xl font-semibold shadow-lg shadow-[#737300]/30 transition-all hover:shadow-[#737300]/50 hover:-translate-y-0.5"
                                         disabled={isLoading}
                                     >
                                         {isLoading ? (
@@ -163,13 +163,13 @@ export default function ForgotPasswordPage() {
                         ) : (
                             /* Success State */
                             <div className="text-center py-6">
-                                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
+                                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[#8a8a00] to-[#737300] flex items-center justify-center">
                                     <CheckCircle className="w-10 h-10 text-white" />
                                 </div>
                                 <h2 className="text-2xl font-bold mb-2">ส่งอีเมลเรียบร้อย!</h2>
                                 <p className="text-gray-400 mb-6">
                                     เราได้ส่งลิงก์สำหรับรีเซ็ตรหัสผ่านไปที่<br />
-                                    <span className="text-emerald-400 font-medium">{getValues('email')}</span>
+                                    <span className="text-[#8a8a00] font-medium">{getValues('email')}</span>
                                 </p>
                                 <p className="text-sm text-gray-500 mb-6">
                                     กรุณาตรวจสอบกล่องจดหมาย (และ Spam folder)
@@ -184,7 +184,7 @@ export default function ForgotPasswordPage() {
                                         ส่งอีเมลอีกครั้ง
                                     </Button>
                                     <Link href="/login" className="block">
-                                        <Button className="w-full h-12 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 rounded-xl font-semibold">
+                                        <Button className="w-full h-12 bg-gradient-to-r from-[#8a8a00] to-[#737300] hover:from-[#737300] hover:to-[#686805] rounded-xl font-semibold">
                                             กลับไปหน้าเข้าสู่ระบบ
                                         </Button>
                                     </Link>
@@ -196,7 +196,7 @@ export default function ForgotPasswordPage() {
                     {/* Help Link */}
                     <p className="text-center text-gray-400 mt-8">
                         ยังมีปัญหา?{' '}
-                        <Link href="/contact" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
+                        <Link href="/contact" className="text-[#8a8a00] hover:text-[#a0a030] font-medium transition-colors">
                             ติดต่อเรา
                         </Link>
                     </p>

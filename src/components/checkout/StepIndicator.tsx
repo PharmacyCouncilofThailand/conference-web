@@ -32,9 +32,9 @@ export function StepIndicator({ steps, currentStep, onStepClick }: StepIndicator
                             <div
                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
                                     isCompleted
-                                        ? 'bg-[#537547] text-white'
+                                        ? 'bg-[#8a8a00] text-white'
                                         : isCurrent
-                                            ? 'bg-[#537547] text-white ring-4 ring-[#537547]/20'
+                                            ? 'bg-[#8a8a00] text-white ring-4 ring-[#8a8a00]/20'
                                             : 'bg-gray-200 text-gray-500'
                                 }`}
                             >
@@ -43,9 +43,9 @@ export function StepIndicator({ steps, currentStep, onStepClick }: StepIndicator
                             <span
                                 className={`text-xs sm:text-sm font-medium hidden sm:inline ${
                                     isCurrent
-                                        ? 'text-[#537547]'
+                                        ? 'text-[#8a8a00]'
                                         : isCompleted
-                                            ? 'text-gray-700 group-hover:text-[#537547]'
+                                            ? 'text-gray-700 group-hover:text-[#8a8a00]'
                                             : 'text-gray-400'
                                 }`}
                             >
@@ -57,7 +57,7 @@ export function StepIndicator({ steps, currentStep, onStepClick }: StepIndicator
                             <div className="flex-1 mx-2 sm:mx-4">
                                 <div
                                     className={`h-0.5 rounded-full transition-colors ${
-                                        isCompleted ? 'bg-[#537547]' : 'bg-gray-200'
+                                        isCompleted ? 'bg-[#8a8a00]' : 'bg-gray-200'
                                     }`}
                                 />
                             </div>

@@ -29,7 +29,7 @@ export function getUserRoleLabel(role: string): string {
 export function getUserRoleBadgeColor(role: string): string {
     switch (role) {
         case 'pharmacist':
-            return 'bg-[#537547]/20 text-[#537547]';
+            return 'bg-[#8a8a00]/20 text-[#8a8a00]';
         case 'medical_professional':
             return 'bg-indigo-100 text-indigo-600';
         case 'student':

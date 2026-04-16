@@ -42,7 +42,7 @@ export function PackageSelector({
         return (
             <div className="space-y-3">
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-center gap-3 opacity-70">
-                    <div className="w-6 h-6 rounded-full bg-[#537547] flex items-center justify-center flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-[#8a8a00] flex items-center justify-center flex-shrink-0">
                         <Check className="w-4 h-4 text-white" />
                     </div>
                     <div className="flex-1">
@@ -69,10 +69,10 @@ export function PackageSelector({
                         disabled={isSoldOut}
                         className={`w-full text-left border rounded-xl p-4 transition-all duration-200 ${
                             isSelected
-                                ? 'border-[#537547] bg-[#537547]/5 ring-2 ring-[#537547]/20'
+                                ? 'border-[#8a8a00] bg-[#8a8a00]/5 ring-2 ring-[#8a8a00]/20'
                                 : isSoldOut
                                     ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                                    : 'border-gray-200 bg-white hover:border-[#537547]/40 hover:shadow-sm'
+                                    : 'border-gray-200 bg-white hover:border-[#8a8a00]/40 hover:shadow-sm'
                         }`}
                     >
                         <div className="flex items-start justify-between gap-3">
@@ -80,7 +80,7 @@ export function PackageSelector({
                                 <div
                                     className={`w-5 h-5 mt-0.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
                                         isSelected
-                                            ? 'border-[#537547] bg-[#537547]'
+                                            ? 'border-[#8a8a00] bg-[#8a8a00]'
                                             : 'border-gray-300'
                                     }`}
                                 >
@@ -107,7 +107,7 @@ export function PackageSelector({
                                         <ul className="mt-2 space-y-1">
                                             {pkg.features.map((f, i) => (
                                                 <li key={i} className="text-xs text-gray-500 flex items-center gap-1.5">
-                                                    <Check className="w-3 h-3 text-[#537547]" />
+                                                    <Check className="w-3 h-3 text-[#8a8a00]" />
                                                     {f}
                                                 </li>
                                             ))}
@@ -121,7 +121,7 @@ export function PackageSelector({
                                         {formatPrice(pkg.originalPrice)}
                                     </div>
                                 )}
-                                <div className={`font-bold ${isSelected ? 'text-[#537547]' : 'text-gray-900'}`}>
+                                <div className={`font-bold ${isSelected ? 'text-[#8a8a00]' : 'text-gray-900'}`}>
                                     {formatPrice(pkg.price)}
                                 </div>
                             </div>

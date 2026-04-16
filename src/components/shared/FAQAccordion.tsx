@@ -33,7 +33,7 @@ export function FAQAccordion({ items, className = '' }: FAQAccordionProps) {
                     >
                         <span className="font-medium pr-4">{item.question}</span>
                         {expandedIndex === index ? (
-                            <ChevronUp className="w-5 h-5 text-[#537547] flex-shrink-0" />
+                            <ChevronUp className="w-5 h-5 text-[#8a8a00] flex-shrink-0" />
                         ) : (
                             <ChevronDown className="w-5 h-5 text-gray-400 flex-shrink-0" />
                         )}

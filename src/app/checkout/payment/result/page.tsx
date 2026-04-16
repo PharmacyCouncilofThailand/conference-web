@@ -237,8 +237,8 @@ function PaymentResultInner() {
             case 'polling':
                 return (
                     <div className="text-center space-y-4">
-                        <div className="w-20 h-20 mx-auto bg-[#537547]/10 rounded-full flex items-center justify-center">
-                            <Loader2 className="w-10 h-10 animate-spin text-[#537547]" />
+                        <div className="w-20 h-20 mx-auto bg-[#8a8a00]/10 rounded-full flex items-center justify-center">
+                            <Loader2 className="w-10 h-10 animate-spin text-[#8a8a00]" />
                         </div>
                         <h2 className="text-xl font-bold text-gray-800">กำลังตรวจสอบการชำระเงิน</h2>
                         <p className="text-gray-500 text-sm">กรุณารอสักครู่ ระบบกำลังตรวจสอบสถานะ...</p>
@@ -265,7 +265,7 @@ function PaymentResultInner() {
                                 {regCode && (
                                     <div className="flex justify-between">
                                         <span className="text-gray-500">รหัสลงทะเบียน</span>
-                                        <span className="font-mono font-bold text-[#537547]">{regCode}</span>
+                                        <span className="font-mono font-bold text-[#8a8a00]">{regCode}</span>
                                     </div>
                                 )}
                                 {orderNumber && (
@@ -289,7 +289,7 @@ function PaymentResultInner() {
 
                         {isReturning && countdown > 0 && (
                             <div className="text-sm text-gray-500">
-                                กลับไปหน้าเว็บไซต์อัตโนมัติใน <span className="font-bold text-[#537547]">{countdown}</span> วินาที
+                                กลับไปหน้าเว็บไซต์อัตโนมัติใน <span className="font-bold text-[#8a8a00]">{countdown}</span> วินาที
                             </div>
                         )}
 
@@ -297,14 +297,14 @@ function PaymentResultInner() {
                             {backToWebsiteUrl ? (
                                 <a
                                     href={backToWebsiteUrl}
-                                    className="px-5 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                    className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
                                 >
                                     กลับไปหน้าเว็บไซต์
                                 </a>
                             ) : (
                                 <Link
                                     href="/my-tickets"
-                                    className="px-5 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                    className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
                                 >
                                     ดูตั๋วของฉัน
                                 </Link>
@@ -337,7 +337,7 @@ function PaymentResultInner() {
                                     setStatus('polling');
                                     pollVerify();
                                 }}
-                                className="px-5 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
                             >
                                 ตรวจสอบอีกครั้ง
                             </button>
@@ -363,7 +363,7 @@ function PaymentResultInner() {
                             {eventId && (
                                 <Link
                                     href={`/checkout/${eventId}`}
-                                    className="px-5 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                    className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
                                 >
                                     ลองชำระเงินอีกครั้ง
                                 </Link>
@@ -390,7 +390,7 @@ function PaymentResultInner() {
                             {eventId && (
                                 <Link
                                     href={`/checkout/${eventId}`}
-                                    className="px-5 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                    className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
                                 >
                                     กลับไปชำระเงิน
                                 </Link>
@@ -422,7 +422,7 @@ function PaymentResultInner() {
                             </button>
                             <Link
                                 href="/events"
-                                className="px-5 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
                             >
                                 กลับหน้าหลัก
                             </Link>
@@ -453,8 +453,8 @@ export default function PaymentResultPage() {
                     <Navbar />
                     <div className="flex-grow flex items-center justify-center px-4 py-20">
                         <div className="text-center space-y-4">
-                            <div className="w-20 h-20 mx-auto bg-[#537547]/10 rounded-full flex items-center justify-center">
-                                <Loader2 className="w-10 h-10 animate-spin text-[#537547]" />
+                            <div className="w-20 h-20 mx-auto bg-[#8a8a00]/10 rounded-full flex items-center justify-center">
+                                <Loader2 className="w-10 h-10 animate-spin text-[#8a8a00]" />
                             </div>
                             <p className="text-gray-500 text-sm">กำลังโหลด...</p>
                         </div>

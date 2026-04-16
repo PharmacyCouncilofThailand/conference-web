@@ -45,7 +45,7 @@ export class ErrorBoundary extends Component<Props, State> {
                             <AlertTriangle className="w-8 h-8 text-red-500" />
                         </div>
 
-                        <h2 className="text-2xl font-bold text-[#6f7e0d] mb-2">
+                        <h2 className="text-2xl font-bold text-[#737300] mb-2">
                             เกิดข้อผิดพลาด
                         </h2>
 
@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<Props, State> {
                         <div className="flex gap-3 justify-center">
                             <button
                                 onClick={this.handleReset}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#537547] hover:bg-[#456339] text-white rounded-lg transition-colors"
+                                className="flex items-center gap-2 px-4 py-2 bg-[#8a8a00] hover:bg-[#456339] text-white rounded-lg transition-colors"
                             >
                                 <RefreshCw className="w-4 h-4" />
                                 ลองใหม่

@@ -37,32 +37,32 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 68 81% 27%;
+    --foreground: 60 100% 23%;
 
     --card: 0 0% 100%;
-    --card-foreground: 68 81% 27%;
+    --card-foreground: 60 100% 23%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 68 81% 27%;
+    --popover-foreground: 60 100% 23%;
 
-    --primary: 141 23% 37%;
+    --primary: 60 100% 27%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 141 10% 93%;
-    --secondary-foreground: 68 81% 27%;
+    --secondary: 60 10% 93%;
+    --secondary-foreground: 60 100% 23%;
 
-    --muted: 141 10% 95%;
-    --muted-foreground: 141 5% 45%;
+    --muted: 60 10% 95%;
+    --muted-foreground: 60 5% 45%;
 
-    --accent: 141 10% 93%;
-    --accent-foreground: 141 23% 22%;
+    --accent: 60 10% 93%;
+    --accent-foreground: 60 60% 22%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 141 10% 85%;
-    --input: 141 10% 85%;
-    --ring: 141 23% 37%;
+    --border: 60 10% 85%;
+    --input: 60 10% 85%;
+    --ring: 60 100% 27%;
 
     --radius: 0.75rem;
   }
@@ -91,11 +91,11 @@
 
 /* Custom Gradients */
 @utility text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-[#537547] to-[#6a9a5b];
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-[#8a8a00] to-[#a0a030];
 }
 
 @utility bg-gradient-primary {
-  @apply bg-gradient-to-r from-[#537547] to-[#6a9a5b] hover:from-[#456339] hover:to-[#537547] text-white;
+  @apply bg-gradient-to-r from-[#8a8a00] to-[#a0a030] hover:from-[#737300] hover:to-[#8a8a00] text-white;
 }
 
 /* Marquee Animation */

@@ -54,14 +54,14 @@ export function EventBanner({
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                     {startDate && (
                         <span className="flex items-center gap-1.5">
-                            <Calendar className="w-4 h-4 text-[#537547]" />
+                            <Calendar className="w-4 h-4 text-[#8a8a00]" />
                             {formatDate(startDate)}
                             {endDate && ` - ${formatDate(endDate)}`}
                         </span>
                     )}
                     {location && (
                         <span className="flex items-center gap-1.5">
-                            <MapPin className="w-4 h-4 text-[#537547]" />
+                            <MapPin className="w-4 h-4 text-[#8a8a00]" />
                             {location}
                         </span>
                     )}
@@ -78,7 +78,7 @@ export function EventBanner({
 
                 <Link
                     href={backUrl}
-                    className="inline-flex items-center gap-1.5 text-sm text-[#537547] hover:text-[#456339] transition-colors"
+                    className="inline-flex items-center gap-1.5 text-sm text-[#8a8a00] hover:text-[#456339] transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
                     {backLabel}

@@ -84,18 +84,18 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                     <div className="space-y-8">
                         {/* Official Badge */}
                         <div
-                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#537547]/10 border border-[#537547]/20 scroll-animate fade-up ${mounted ? 'is-visible' : ''}`}
+                            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#8a8a00]/10 border border-[#8a8a00]/20 scroll-animate fade-up ${mounted ? 'is-visible' : ''}`}
                         >
-                            <Shield className="w-4 h-4 text-[#537547]" />
-                            <span className="text-sm text-[#537547] font-medium">องค์กรวิชาชีพเภสัชกรรม</span>
+                            <Shield className="w-4 h-4 text-[#8a8a00]" />
+                            <span className="text-sm text-[#8a8a00] font-medium">องค์กรวิชาชีพเภสัชกรรม</span>
                         </div>
 
                         <h1
-                            className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-[#6f7e0d] scroll-animate fade-up stagger-1 ${mounted ? 'is-visible' : ''}`}
+                            className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-[#737300] scroll-animate fade-up stagger-1 ${mounted ? 'is-visible' : ''}`}
                         >
                             สภาเภสัชกรรม
                             <br />
-                            <span className="text-[#537547]">
+                            <span className="text-[#8a8a00]">
                                 แห่งประเทศไทย
                             </span>
                         </h1>
@@ -110,14 +110,14 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                         {/* CTA Buttons */}
                         <div className={`flex flex-wrap gap-4 scroll-animate fade-up stagger-3 ${mounted ? 'is-visible' : ''}`}>
                             <Link href="/events">
-                                <Button size="lg" className="h-14 px-8 bg-[#537547] text-white hover:bg-[#456339] rounded-xl shadow-lg font-semibold transition-transform hover:scale-105 active:scale-95">
+                                <Button size="lg" className="h-14 px-8 bg-[#8a8a00] text-white hover:bg-[#456339] rounded-xl shadow-lg font-semibold transition-transform hover:scale-105 active:scale-95">
                                     <Calendar className="w-5 h-5 mr-2" />
                                     ดูงานประชุมทั้งหมด
                                 </Button>
                             </Link>
                             {!isLoggedIn && (
                                 <Link href="/login">
-                                    <Button size="lg" variant="outline" className="h-14 px-8 rounded-xl border-[#537547]/30 hover:bg-[#537547]/5 text-[#537547] transition-transform hover:scale-105 active:scale-95">
+                                    <Button size="lg" variant="outline" className="h-14 px-8 rounded-xl border-[#8a8a00]/30 hover:bg-[#8a8a00]/5 text-[#8a8a00] transition-transform hover:scale-105 active:scale-95">
                                         เข้าสู่ระบบสมาชิก
                                         <ArrowRight className="w-4 h-4 ml-2" />
                                     </Button>
@@ -128,15 +128,15 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                         {/* Quick Stats */}
                         <div className={`grid grid-cols-3 gap-6 pt-4 scroll-animate fade-up stagger-4 ${mounted ? 'is-visible' : ''}`}>
                             <div className="text-center">
-                                <div className="text-3xl font-bold text-[#537547]">{yearsCounter.count}+</div>
+                                <div className="text-3xl font-bold text-[#8a8a00]">{yearsCounter.count}+</div>
                                 <div className="text-sm text-gray-500">ปีแห่งความไว้วางใจ</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-3xl font-bold text-[#537547]">{(membersCounter.count / 1000).toFixed(0)}K+</div>
+                                <div className="text-3xl font-bold text-[#8a8a00]">{(membersCounter.count / 1000).toFixed(0)}K+</div>
                                 <div className="text-sm text-gray-500">เภสัชกรทั่วประเทศ</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-3xl font-bold text-[#537547]">{eventsCounter.count}+</div>
+                                <div className="text-3xl font-bold text-[#8a8a00]">{eventsCounter.count}+</div>
                                 <div className="text-sm text-gray-500">งานประชุมที่จัด</div>
                             </div>
                         </div>
@@ -191,7 +191,7 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
 
                                 {/* Event Info Overlay */}
                                 <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
-                                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#537547] rounded-full text-sm font-medium text-white mb-3">
+                                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#8a8a00] rounded-full text-sm font-medium text-white mb-3">
                                         <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
                                         เปิดรับสมัครแล้ว
                                     </div>
@@ -204,7 +204,7 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                                         )}
                                     </div>
                                     <Link href={`/events/${currentEvent.id}`}>
-                                        <Button className="w-full bg-white text-[#537547] hover:bg-gray-100 rounded-xl font-semibold transition-transform hover:scale-[1.02] active:scale-95">
+                                        <Button className="w-full bg-white text-[#8a8a00] hover:bg-gray-100 rounded-xl font-semibold transition-transform hover:scale-[1.02] active:scale-95">
                                             ลงทะเบียนเข้าร่วม
                                             <ChevronRight className="w-4 h-4 ml-1" />
                                         </Button>
@@ -230,7 +230,7 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 z-30">
                                         <div
                                             key={currentIndex}
-                                            className="h-full bg-[#537547] rounded-r-full"
+                                            className="h-full bg-[#8a8a00] rounded-r-full"
                                             style={{
                                                 animation: `carousel-progress ${CAROUSEL_INTERVAL}ms linear`,
                                             }}

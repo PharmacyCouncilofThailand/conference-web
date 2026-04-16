@@ -272,7 +272,7 @@ export default function CheckoutPage() {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="text-center space-y-3">
-                    <Loader2 className="w-10 h-10 animate-spin text-[#537547] mx-auto" />
+                    <Loader2 className="w-10 h-10 animate-spin text-[#8a8a00] mx-auto" />
                     <p className="text-gray-500 text-sm">กำลังโหลด...</p>
                 </div>
             </div>
@@ -287,7 +287,7 @@ export default function CheckoutPage() {
                     <div className="text-center space-y-4">
                         <AlertCircle className="w-16 h-16 text-red-400 mx-auto" />
                         <h2 className="text-xl font-bold text-gray-700">ไม่พบ Event</h2>
-                        <Link href="/events" className="text-[#537547] hover:underline text-sm">
+                        <Link href="/events" className="text-[#8a8a00] hover:underline text-sm">
                             กลับหน้ารายการ
                         </Link>
                     </div>
@@ -335,7 +335,7 @@ export default function CheckoutPage() {
                             {currentStep === 1 && (
                                 <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-5">
                                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                        <User className="w-5 h-5 text-[#537547]" />
+                                        <User className="w-5 h-5 text-[#8a8a00]" />
                                         ข้อมูลส่วนตัว
                                     </h3>
 
@@ -347,7 +347,7 @@ export default function CheckoutPage() {
                                                 value={checkoutData.firstName}
                                                 onChange={(e) => updateCheckoutData({ firstName: e.target.value })}
                                                 placeholder="John"
-                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                                             />
                                         </div>
                                         <div className="space-y-1.5">
@@ -357,7 +357,7 @@ export default function CheckoutPage() {
                                                 value={checkoutData.lastName}
                                                 onChange={(e) => updateCheckoutData({ lastName: e.target.value })}
                                                 placeholder="Doe"
-                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                                             />
                                         </div>
                                     </div>
@@ -366,7 +366,7 @@ export default function CheckoutPage() {
                                         <div className="space-y-1.5">
                                             <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
                                                 <Mail className="w-3.5 h-3.5" /> อีเมล <span className="text-red-500">*</span>
-                                                {isLoggedIn && <Lock className="w-3 h-3 text-[#537547]" />}
+                                                {isLoggedIn && <Lock className="w-3 h-3 text-[#8a8a00]" />}
                                             </label>
                                             <input
                                                 type="email"
@@ -374,7 +374,7 @@ export default function CheckoutPage() {
                                                 onChange={(e) => updateCheckoutData({ email: e.target.value })}
                                                 placeholder="john@example.com"
                                                 disabled={isLoggedIn}
-                                                className={`w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none ${isLoggedIn ? 'opacity-70 cursor-not-allowed bg-gray-50' : ''}`}
+                                                className={`w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none ${isLoggedIn ? 'opacity-70 cursor-not-allowed bg-gray-50' : ''}`}
                                             />
                                         </div>
                                         <div className="space-y-1.5">
@@ -386,7 +386,7 @@ export default function CheckoutPage() {
                                                 value={checkoutData.phone}
                                                 onChange={(e) => updateCheckoutData({ phone: e.target.value })}
                                                 placeholder="0812345678"
-                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                                className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                                             />
                                         </div>
                                     </div>
@@ -400,7 +400,7 @@ export default function CheckoutPage() {
                                             value={checkoutData.country}
                                             onChange={(e) => updateCheckoutData({ country: e.target.value })}
                                             placeholder="Thailand"
-                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                                         />
                                     </div>
 
@@ -409,7 +409,7 @@ export default function CheckoutPage() {
                                             type="button"
                                             onClick={nextStep}
                                             disabled={!isCurrentStepValid()}
-                                            className="px-6 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            className="px-6 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             ถัดไป
                                         </button>
@@ -472,7 +472,7 @@ export default function CheckoutPage() {
                                             type="button"
                                             onClick={nextStep}
                                             disabled={!isCurrentStepValid()}
-                                            className="px-6 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            className="px-6 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             ถัดไป
                                         </button>
@@ -510,7 +510,7 @@ export default function CheckoutPage() {
                                             type="button"
                                             onClick={nextStep}
                                             disabled={!isCurrentStepValid()}
-                                            className="px-6 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            className="px-6 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             ถัดไป
                                         </button>

@@ -53,8 +53,8 @@ export function FeaturedEvents({ events }: FeaturedEventsProps) {
                     className={`flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4 scroll-animate fade-up ${headerVisible ? 'is-visible' : ''}`}
                 >
                     <div>
-                        <span className="text-[#537547] text-sm font-bold uppercase tracking-wider">งานที่กำลังจะมาถึง</span>
-                        <h2 className="text-3xl md:text-4xl font-bold mt-2 text-[#6f7e0d]">งานประชุมวิชาการ</h2>
+                        <span className="text-[#8a8a00] text-sm font-bold uppercase tracking-wider">งานที่กำลังจะมาถึง</span>
+                        <h2 className="text-3xl md:text-4xl font-bold mt-2 text-[#737300]">งานประชุมวิชาการ</h2>
                     </div>
                     <div className="flex items-center gap-3">
                         {events.length > 0 && (
@@ -99,7 +99,7 @@ export function FeaturedEvents({ events }: FeaturedEventsProps) {
                                     className="flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[calc(33.333%-16px)] snap-start"
                                 >
                                     <div
-                                        className={`group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#537547]/50 transition-all hover:-translate-y-2 shadow-sm hover:shadow-xl h-full scroll-animate fade-up stagger-${index + 1} ${cardsVisible ? 'is-visible' : ''}`}
+                                        className={`group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#8a8a00]/50 transition-all hover:-translate-y-2 shadow-sm hover:shadow-xl h-full scroll-animate fade-up stagger-${index + 1} ${cardsVisible ? 'is-visible' : ''}`}
                                     >
                                         <div className="aspect-video relative overflow-hidden">
                                             <img
@@ -113,13 +113,13 @@ export function FeaturedEvents({ events }: FeaturedEventsProps) {
                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                             />
                                             {event.cpeCredits && Number(event.cpeCredits) > 0 && (
-                                                <div className="absolute top-3 right-3 bg-[#537547] text-white px-3 py-1 rounded-full text-sm font-medium shadow-md">
+                                                <div className="absolute top-3 right-3 bg-[#8a8a00] text-white px-3 py-1 rounded-full text-sm font-medium shadow-md">
                                                     {event.cpeCredits} CPE
                                                 </div>
                                             )}
                                         </div>
                                         <div className="p-5">
-                                            <h3 className="text-lg font-bold mb-2 text-[#6f7e0d] group-hover:text-[#537547] transition-colors line-clamp-2">
+                                            <h3 className="text-lg font-bold mb-2 text-[#737300] group-hover:text-[#8a8a00] transition-colors line-clamp-2">
                                                 {event.name || event.title}
                                             </h3>
                                             <div className="flex flex-wrap gap-3 text-sm text-gray-500">

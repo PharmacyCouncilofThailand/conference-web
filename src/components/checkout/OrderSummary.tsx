@@ -78,7 +78,7 @@ export function OrderSummary({
     return (
         <div className="bg-white border border-gray-200 rounded-2xl shadow-lg sticky top-24">
             <div className="p-5 border-b border-gray-100">
-                <h3 className="font-bold text-[#6f7e0d]">สรุปรายการ</h3>
+                <h3 className="font-bold text-[#737300]">สรุปรายการ</h3>
             </div>
 
             <div className="p-5 space-y-4">
@@ -95,7 +95,7 @@ export function OrderSummary({
                 )}
 
                 {isAddonOnly && (
-                    <div className="text-xs text-[#537547] font-medium">ซื้อ Add-on เพิ่ม</div>
+                    <div className="text-xs text-[#8a8a00] font-medium">ซื้อ Add-on เพิ่ม</div>
                 )}
 
                 {/* Add-ons */}
@@ -104,8 +104,8 @@ export function OrderSummary({
                         <div className="text-xs text-gray-500 uppercase tracking-wide">Add-ons</div>
                         {selectedAddonItems.map((addon) => (
                             <div key={addon.id} className="flex justify-between text-sm">
-                                <span className="text-[#537547]">+ {addon.name}</span>
-                                <span className="text-[#537547]">{formatPrice(addon.price)}</span>
+                                <span className="text-[#8a8a00]">+ {addon.name}</span>
+                                <span className="text-[#8a8a00]">{formatPrice(addon.price)}</span>
                             </div>
                         ))}
                     </div>
@@ -147,7 +147,7 @@ export function OrderSummary({
                             (Processing Fee {formatPrice(feeBreakdown.processingFee)} + VAT 7% {formatPrice(feeBreakdown.processingVat)})
                         </div>
 
-                        <div className="flex justify-between items-center text-lg font-bold text-[#537547] pt-3 border-t border-[#537547]/20">
+                        <div className="flex justify-between items-center text-lg font-bold text-[#8a8a00] pt-3 border-t border-[#8a8a00]/20">
                             <span>ยอดชำระสุทธิ</span>
                             <span>{formatPrice(feeBreakdown.total)}</span>
                         </div>
@@ -160,7 +160,7 @@ export function OrderSummary({
                     type="button"
                     onClick={onSubmit}
                     disabled={!canSubmit || isSubmitting}
-                    className="w-full h-12 bg-[#537547] hover:bg-[#456339] text-white font-semibold rounded-xl shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
+                    className="w-full h-12 bg-[#8a8a00] hover:bg-[#456339] text-white font-semibold rounded-xl shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
                 >
                     {isSubmitting ? (
                         <>

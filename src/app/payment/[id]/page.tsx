@@ -47,7 +47,7 @@ export default function PaymentPage() {
     }, [method, cardSuccess]);
 
 
-    if (!event) return <div className="min-h-screen bg-white text-[#6f7e0d] flex items-center justify-center">Loading...</div>;
+    if (!event) return <div className="min-h-screen bg-white text-[#737300] flex items-center justify-center">Loading...</div>;
 
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -60,9 +60,9 @@ export default function PaymentPage() {
             <div className="min-h-screen bg-background text-foreground flex flex-col">
                 <Navbar />
                 <div className="flex-grow pt-32 pb-20 px-4 md:px-6 relative flex items-center justify-center">
-                    <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-green-900/20 to-transparent -z-10" />
+                    <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#737300]/20 to-transparent -z-10" />
                     <Card className="max-w-md w-full bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl text-center p-6">
-                        <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-500/50 animate-in zoom-in duration-500">
+                        <div className="w-20 h-20 bg-[#8a8a00] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[#8a8a00]/50 animate-in zoom-in duration-500">
                             <CheckCircle className="w-10 h-10 text-white" />
                         </div>
                         <h2 className="text-3xl font-bold mb-2">Payment Successful!</h2>
@@ -75,7 +75,7 @@ export default function PaymentPage() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-400">Amount Paid</span>
-                                <span className="font-bold text-green-400">฿{parseFloat(amount).toLocaleString()}</span>
+                                <span className="font-bold text-[#8a8a00]">฿{parseFloat(amount).toLocaleString()}</span>
                             </div>
                         </div>
 
@@ -123,12 +123,12 @@ export default function PaymentPage() {
             <Navbar />
 
             <div className="flex-grow pt-32 pb-20 px-4 md:px-6 relative flex items-center justify-center">
-                <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-emerald-900/20 to-transparent -z-10" />
+                <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#737300]/20 to-transparent -z-10" />
 
                 <Card className="max-w-md w-full bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl">
                     <CardHeader className="text-center pb-2">
-                        <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-                            <QrCode className="w-8 h-8 text-green-400" />
+                        <div className="w-16 h-16 rounded-full bg-[#8a8a00]/20 flex items-center justify-center mx-auto mb-4">
+                            <QrCode className="w-8 h-8 text-[#8a8a00]" />
                         </div>
                         <CardTitle className="text-2xl font-bold">Scan to Pay</CardTitle>
                         <p className="text-gray-400 text-sm">Please scan the QR code to complete your registration.</p>
@@ -148,7 +148,7 @@ export default function PaymentPage() {
                         {/* Amount & Timer */}
                         <div className="text-center space-y-1">
                             <div className="text-sm text-gray-400">Total Amount</div>
-                            <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-500">
+                            <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#8a8a00] to-[#a0a030]">
                                 ฿{parseFloat(amount).toLocaleString()}
                             </div>
                             <div className="flex items-center justify-center gap-2 text-xs text-teal-400 mt-2 bg-teal-900/20 py-1 px-3 rounded-full w-fit mx-auto">
@@ -169,7 +169,7 @@ export default function PaymentPage() {
                             <div className="flex justify-between items-center pt-2 border-t border-white/10">
                                 <span className="text-gray-400">Ref. No.</span>
                                 <div className="flex items-center gap-2">
-                                    <span className="font-mono text-emerald-300">{refNo}</span>
+                                    <span className="font-mono text-[#8a8a00]">{refNo}</span>
                                     <button onClick={() => copyToClipboard(refNo)} className="hover:text-white"><Copy className="w-3 h-3" /></button>
                                 </div>
                             </div>
@@ -177,7 +177,7 @@ export default function PaymentPage() {
                     </CardContent>
 
                     <CardFooter className="flex flex-col gap-3">
-                        <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                        <Button className="w-full bg-[#8a8a00] hover:bg-[#737300] text-white">
                             <Download className="w-4 h-4 mr-2" /> Save QR Code
                         </Button>
                         <Link href="/" className="w-full">

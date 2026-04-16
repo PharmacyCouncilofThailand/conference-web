@@ -59,7 +59,7 @@ function CheckoutForm({ amount, regCode, email, onSuccess, onError }: Omit<Strip
         <form onSubmit={handleSubmit} className="space-y-6">
             {!isElementReady && (
                 <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#537547]" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[#8a8a00]" />
                     <span className="ml-2 text-gray-400">Loading payment form...</span>
                 </div>
             )}
@@ -85,7 +85,7 @@ function CheckoutForm({ amount, regCode, email, onSuccess, onError }: Omit<Strip
             <Button
                 type="submit"
                 disabled={!stripe || isProcessing || !isElementReady}
-                className="w-full h-14 bg-[#537547] hover:bg-[#456339] text-white font-bold text-lg rounded-xl disabled:opacity-50 shadow-lg"
+                className="w-full h-14 bg-[#8a8a00] hover:bg-[#737300] text-white font-bold text-lg rounded-xl disabled:opacity-50 shadow-lg"
             >
                 {isProcessing ? (
                     <>
@@ -110,7 +110,7 @@ export function StripePaymentForm({ clientSecret, amount, regCode, email, onSucc
     if (!mounted) {
         return (
             <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                <Loader2 className="w-8 h-8 animate-spin text-[#8a8a00]" />
             </div>
         );
     }
@@ -118,7 +118,7 @@ export function StripePaymentForm({ clientSecret, amount, regCode, email, onSucc
     const appearance = {
         theme: 'stripe' as const,
         variables: {
-            colorPrimary: '#537547',
+            colorPrimary: '#8a8a00',
             colorBackground: '#ffffff',
             colorText: '#1f2937',
             colorTextSecondary: '#6b7280',
@@ -133,8 +133,8 @@ export function StripePaymentForm({ clientSecret, amount, regCode, email, onSucc
                 border: '1px solid #e5e7eb',
             },
             '.Input:focus': {
-                border: '1px solid #537547',
-                boxShadow: '0 0 0 1px #537547',
+                border: '1px solid #8a8a00',
+                boxShadow: '0 0 0 1px #8a8a00',
             },
             '.Label': {
                 color: '#374151',
@@ -144,8 +144,8 @@ export function StripePaymentForm({ clientSecret, amount, regCode, email, onSucc
                 border: '1px solid #e5e7eb',
             },
             '.Tab--selected': {
-                backgroundColor: 'rgba(83, 117, 71, 0.1)',
-                border: '1px solid #537547',
+                backgroundColor: 'rgba(138, 138, 0, 0.1)',
+                border: '1px solid #8a8a00',
             },
         },
     };

@@ -11,7 +11,7 @@ export function CTASection() {
     return (
         <section ref={ref} className="py-20 px-6">
             <div className="container mx-auto text-center">
-                <h2 className={`text-3xl md:text-4xl font-bold mb-4 text-[#6f7e0d] scroll-animate fade-up ${isVisible ? 'is-visible' : ''}`}>
+                <h2 className={`text-3xl md:text-4xl font-bold mb-4 text-[#737300] scroll-animate fade-up ${isVisible ? 'is-visible' : ''}`}>
                     พร้อมเข้าร่วมงานประชุมหรือยัง?
                 </h2>
                 <p className={`text-gray-500 mb-8 max-w-xl mx-auto scroll-animate fade-up stagger-1 ${isVisible ? 'is-visible' : ''}`}>
@@ -21,7 +21,7 @@ export function CTASection() {
                     <Link href="/events">
                         <Button
                             size="lg"
-                            className="h-14 px-10 bg-[#537547] hover:bg-[#456339] text-white rounded-xl transition-transform hover:scale-105 active:scale-95"
+                            className="h-14 px-10 bg-[#8a8a00] hover:bg-[#456339] text-white rounded-xl transition-transform hover:scale-105 active:scale-95"
                         >
                             <Calendar className="w-5 h-5 mr-2" />
                             ดูงานประชุมทั้งหมด

@@ -224,7 +224,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
     const isRegister = mode === 'register';
 
     return (
-        <div className="min-h-screen bg-white text-[#6f7e0d] flex overflow-hidden relative">
+        <div className="min-h-screen bg-white text-[#737300] flex overflow-hidden relative">
 
             {/* ══════════════ DECORATIVE PANEL ══════════════ */}
             {!isMobile && <div
@@ -234,12 +234,12 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                 <div className="relative w-full h-full overflow-hidden">
                     {/* Background */}
                     <div className="absolute inset-0">
-                        <div className="absolute inset-0 bg-gradient-to-br from-[#5a8249] via-[#4a6e3d] to-[#3a5730]" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#8a8a00] via-[#737300] to-[#686805]" />
                         {/* Subtle pattern overlay */}
                         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
                         {/* Ambient glow orbs */}
-                        <div className="absolute -top-32 -right-32 w-[400px] h-[400px] bg-[#8ab87a]/20 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '6s' }} />
-                        <div className="absolute -bottom-40 -left-32 w-[450px] h-[450px] bg-[#3d6b2e]/30 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s', animationDelay: '2s' }} />
+                        <div className="absolute -top-32 -right-32 w-[400px] h-[400px] bg-[#a0a030]/20 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '6s' }} />
+                        <div className="absolute -bottom-40 -left-32 w-[450px] h-[450px] bg-[#686805]/30 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s', animationDelay: '2s' }} />
                         <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] bg-white/[0.03] rounded-full blur-[80px] animate-pulse" style={{ animationDuration: '7s', animationDelay: '1s' }} />
                     </div>
 
@@ -334,14 +334,14 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                     }`}
             >
                 <div className="w-full max-w-md relative z-10">
-                    <Link href="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#6f7e0d] mb-6 transition-colors group">
+                    <Link href="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#737300] mb-6 transition-colors group">
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         <span>กลับหน้าหลัก</span>
                     </Link>
 
                     <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-lg">
                         <div className="text-center mb-6">
-                            <h1 className="text-3xl font-bold mb-2 text-[#6f7e0d]">เข้าสู่ระบบ</h1>
+                            <h1 className="text-3xl font-bold mb-2 text-[#737300]">เข้าสู่ระบบ</h1>
                             <p className="text-gray-500 text-sm">กรอกอีเมลและรหัสผ่านเพื่อเข้าสู่ระบบ</p>
                         </div>
 
@@ -357,7 +357,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-3.5 h-5 w-5 text-gray-500" />
                                     <Input id="login-email" type="email" placeholder="name@example.com"
-                                        className="pl-12 h-12 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] focus:ring-[#537547]/20 text-[#6f7e0d] placeholder:text-gray-400"
+                                        className="pl-12 h-12 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] focus:ring-[#8a8a00]/20 text-[#737300] placeholder:text-gray-400"
                                         {...loginForm.register('email')} />
                                 </div>
                                 {loginForm.formState.errors.email && <p className="text-sm text-red-400">{loginForm.formState.errors.email.message}</p>}
@@ -366,12 +366,12 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
                                     <Label htmlFor="login-password" className="text-gray-700">รหัสผ่าน</Label>
-                                    <Link href="/forgot-password" className="text-sm text-[#537547] hover:text-[#456339] transition-colors">ลืมรหัสผ่าน?</Link>
+                                    <Link href="/forgot-password" className="text-sm text-[#8a8a00] hover:text-[#737300] transition-colors">ลืมรหัสผ่าน?</Link>
                                 </div>
                                 <div className="relative">
                                     <Lock className="absolute left-4 top-3.5 h-5 w-5 text-gray-500" />
                                     <Input id="login-password" type={showLoginPassword ? "text" : "password"} placeholder="••••••••"
-                                        className="pl-12 pr-12 h-12 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] focus:ring-[#537547]/20 text-[#6f7e0d] placeholder:text-gray-400"
+                                        className="pl-12 pr-12 h-12 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] focus:ring-[#8a8a00]/20 text-[#737300] placeholder:text-gray-400"
                                         {...loginForm.register('password')} />
                                     <button type="button" onClick={() => setShowLoginPassword(!showLoginPassword)}
                                         className="absolute right-4 top-3.5 text-gray-500 hover:text-gray-300 transition-colors">
@@ -393,7 +393,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                             </div>
                             )}
 
-                            <Button type="submit" className="w-full h-12 bg-[#537547] hover:bg-[#456339] rounded-xl font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-md" disabled={loginLoading}>
+                            <Button type="submit" className="w-full h-12 bg-[#8a8a00] hover:bg-[#737300] rounded-xl font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-md" disabled={loginLoading}>
                                 {loginLoading ? (
                                     <span className="flex items-center gap-2"><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />กำลังเข้าสู่ระบบ...</span>
                                 ) : (
@@ -415,7 +415,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
 
                     <p className="text-center text-gray-500 mt-8">
                         ยังไม่มีบัญชี?{' '}
-                        <button onClick={() => switchMode('register')} className="text-[#537547] hover:text-[#456339] font-medium transition-colors">สมัครสมาชิก</button>
+                        <button onClick={() => switchMode('register')} className="text-[#8a8a00] hover:text-[#737300] font-medium transition-colors">สมัครสมาชิก</button>
                     </p>
                 </div>
             </div>}
@@ -433,7 +433,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
 
                     <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-lg">
                         <div className="text-center mb-6">
-                            <h1 className="text-3xl font-bold mb-2 text-[#6f7e0d]">
+                            <h1 className="text-3xl font-bold mb-2 text-[#737300]">
                                 {registerStep === 1 ? 'เลือกประเภทบัญชี' : 'สร้างบัญชีผู้ใช้'}
                             </h1>
                             <p className="text-gray-500 text-sm">
@@ -454,22 +454,22 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     const Icon = type.icon;
                                     return (
                                         <button key={type.value} type="button" onClick={() => selectAccountType(type.value)}
-                                            className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-200 bg-white hover:border-[#537547]/50 hover:bg-[#537547]/5 text-left transition-all group">
-                                            <div className="w-12 h-12 rounded-xl bg-[#537547]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#537547]/20 transition-colors">
-                                                <Icon className="w-6 h-6 text-[#537547]" />
+                                            className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-gray-200 bg-white hover:border-[#8a8a00]/50 hover:bg-[#8a8a00]/5 text-left transition-all group">
+                                            <div className="w-12 h-12 rounded-xl bg-[#8a8a00]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#8a8a00]/20 transition-colors">
+                                                <Icon className="w-6 h-6 text-[#8a8a00]" />
                                             </div>
                                             <div className="flex-1">
                                                 <div className="font-semibold text-gray-900">{type.label}</div>
                                                 <div className="text-sm text-gray-500">{type.description}</div>
                                             </div>
-                                            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#537547] group-hover:translate-x-1 transition-all" />
+                                            <ArrowRight className="w-5 h-5 text-gray-400 group-hover:text-[#8a8a00] group-hover:translate-x-1 transition-all" />
                                         </button>
                                     );
                                 })}
                                 <div className="text-center pt-4 border-t border-gray-100">
                                     <p className="text-sm text-gray-500">
                                         มีบัญชีอยู่แล้ว?{' '}
-                                        <button type="button" onClick={() => switchMode('login')} className="text-[#537547] hover:text-[#456339] font-medium">
+                                        <button type="button" onClick={() => switchMode('login')} className="text-[#8a8a00] hover:text-[#737300] font-medium">
                                             เข้าสู่ระบบ
                                         </button>
                                     </p>
@@ -481,7 +481,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                         {registerStep === 2 && (
                         <>
                         {/* Selected Type Indicator */}
-                        <div className="mb-6 flex items-center justify-between bg-[#537547]/5 border border-[#537547]/20 rounded-xl p-4">
+                        <div className="mb-6 flex items-center justify-between bg-[#8a8a00]/5 border border-[#8a8a00]/20 rounded-xl p-4">
                             <div className="flex items-center gap-3">
                                 {accountType && (() => {
                                     const selectedType = accountTypes.find(t => t.value === accountType);
@@ -489,19 +489,19 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     const Icon = selectedType.icon;
                                     return (
                                         <>
-                                            <div className="w-10 h-10 rounded-lg bg-[#537547]/10 flex items-center justify-center">
-                                                <Icon className="w-5 h-5 text-[#537547]" />
+                                            <div className="w-10 h-10 rounded-lg bg-[#8a8a00]/10 flex items-center justify-center">
+                                                <Icon className="w-5 h-5 text-[#8a8a00]" />
                                             </div>
                                             <div>
                                                 <div className="text-xs text-gray-500 uppercase tracking-wide">ประเภทบัญชี</div>
-                                                <div className="font-medium text-[#537547]">{selectedType.label}</div>
+                                                <div className="font-medium text-[#8a8a00]">{selectedType.label}</div>
                                             </div>
                                         </>
                                     );
                                 })()}
                             </div>
                             <button type="button" onClick={goBackToRoleSelection}
-                                className="text-sm text-[#537547] hover:text-[#456339] font-medium px-3 py-1.5 rounded-lg hover:bg-[#537547]/10 transition-colors">
+                                className="text-sm text-[#8a8a00] hover:text-[#737300] font-medium px-3 py-1.5 rounded-lg hover:bg-[#8a8a00]/10 transition-colors">
                                 เปลี่ยน
                             </button>
                         </div>
@@ -513,7 +513,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     <div className="relative">
                                         <User className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
                                         <Input id="reg-firstName" placeholder="ชื่อ"
-                                            className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                            className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                             {...registerForm.register('firstName')} />
                                     </div>
                                     {registerForm.formState.errors.firstName && <p className="text-sm text-red-500">{registerForm.formState.errors.firstName.message}</p>}
@@ -523,7 +523,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     <div className="relative">
                                         <User className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
                                         <Input id="reg-lastName" placeholder="นามสกุล"
-                                            className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                            className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                             {...registerForm.register('lastName')} />
                                     </div>
                                     {registerForm.formState.errors.lastName && <p className="text-sm text-red-500">{registerForm.formState.errors.lastName.message}</p>}
@@ -535,7 +535,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
                                     <Input id="reg-email" type="email" placeholder="name@example.com"
-                                        className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                        className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                         {...registerForm.register('email')} />
                                 </div>
                                 {registerForm.formState.errors.email && <p className="text-sm text-red-500">{registerForm.formState.errors.email.message}</p>}
@@ -546,7 +546,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 <div className="relative">
                                     <Phone className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
                                     <Input id="reg-phone" placeholder="08XXXXXXXX"
-                                        className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                        className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                         {...registerForm.register('phone')} />
                                 </div>
                             </div>
@@ -562,7 +562,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     <Building2 className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
                                     <Input id="reg-organization"
                                         placeholder={accountType === 'postgraduateStudent' || accountType === 'undergraduateStudent' ? 'ชื่อมหาวิทยาลัย...' : 'โรงพยาบาล/บริษัท...'}
-                                        className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                        className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                         {...registerForm.register('organization')} />
                                 </div>
                             </div>
@@ -571,7 +571,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                             <div className="space-y-2">
                                 <Label htmlFor="reg-idCard" className="text-gray-700">เลขบัตรประชาชน <span className="text-gray-400">(13 หลัก)</span></Label>
                                 <Input id="reg-idCard" placeholder="X-XXXX-XXXXX-XX-X" maxLength={13}
-                                    className="h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                    className="h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                     {...registerForm.register('idCard')} />
                             </div>
 
@@ -579,7 +579,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 <div className="space-y-2">
                                     <Label htmlFor="reg-pharmacyLicenseId" className="text-gray-700">เลขใบอนุญาต <span className="text-red-500">*</span></Label>
                                     <Input id="reg-pharmacyLicenseId" placeholder="ภ.XXXXX"
-                                        className="h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                        className="h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                         {...registerForm.register('pharmacyLicenseId')} />
                                 </div>
                             )}
@@ -590,7 +590,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     <div className="relative">
                                         <Lock className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
                                         <Input id="reg-password" type={showRegisterPassword ? "text" : "password"} placeholder="••••••"
-                                            className="pl-12 pr-10 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                            className="pl-12 pr-10 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                             {...registerForm.register('password')} />
                                         <button type="button" onClick={() => setShowRegisterPassword(!showRegisterPassword)}
                                             className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 transition-colors">
@@ -604,7 +604,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     <div className="relative">
                                         <Lock className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
                                         <Input id="reg-confirmPassword" type={showRegisterPassword ? "text" : "password"} placeholder="••••••"
-                                            className="pl-12 pr-10 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                            className="pl-12 pr-10 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                             {...registerForm.register('confirmPassword')} />
                                         <button type="button" onClick={() => setShowRegisterPassword(!showRegisterPassword)}
                                             className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 transition-colors">
@@ -616,12 +616,12 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                             </div>
 
                             <div className="flex items-start gap-3 py-2">
-                                <input type="checkbox" id="terms" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 bg-white text-[#537547] focus:ring-[#537547] accent-[#537547]" />
+                                <input type="checkbox" id="terms" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 bg-white text-[#8a8a00] focus:ring-[#8a8a00] accent-[#8a8a00]" />
                                 <label htmlFor="terms" className="text-sm text-gray-500">
                                     I agree to the{' '}
-                                    <Link href="/terms" className="text-[#537547] hover:text-[#456339]">Terms of Service</Link>
+                                    <Link href="/terms" className="text-[#8a8a00] hover:text-[#737300]">Terms of Service</Link>
                                     {' '}and{' '}
-                                    <Link href="/privacy" className="text-[#537547] hover:text-[#456339]">Privacy Policy</Link>
+                                    <Link href="/privacy" className="text-[#8a8a00] hover:text-[#737300]">Privacy Policy</Link>
                                 </label>
                             </div>
 
@@ -637,7 +637,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                             </div>
                             )}
 
-                            <Button type="submit" className="w-full h-12 bg-[#537547] hover:bg-[#456339] text-white rounded-xl font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-md" disabled={registerLoading}>
+                            <Button type="submit" className="w-full h-12 bg-[#8a8a00] hover:bg-[#737300] text-white rounded-xl font-semibold shadow-lg transition-all hover:-translate-y-0.5 hover:shadow-xl active:translate-y-0 active:shadow-md" disabled={registerLoading}>
                                 {registerLoading ? (
                                     <span className="flex items-center gap-2"><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />กำลังสร้างบัญชี...</span>
                                 ) : (
@@ -659,17 +659,17 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                         {/* Mobile Logo */}
                         <div className="flex items-center justify-center gap-2 mb-6">
                             <Image src="/logo.png" alt="Pharmacy Council" width={40} height={40} className="w-10 h-10 rounded-lg" />
-                            <span className="text-2xl font-bold text-[#537547]">สภาเภสัชกรรม</span>
+                            <span className="text-2xl font-bold text-[#8a8a00]">สภาเภสัชกรรม</span>
                         </div>
 
                         {/* Mode Toggle for mobile */}
                         <div className="flex gap-2 p-1 bg-gray-100 rounded-2xl mb-6">
                             <button type="button" onClick={() => switchMode('login')}
-                                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${mode === 'login' ? 'bg-[#537547] text-white shadow-lg' : 'text-gray-500'}`}>
+                                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${mode === 'login' ? 'bg-[#8a8a00] text-white shadow-lg' : 'text-gray-500'}`}>
                                 เข้าสู่ระบบ
                             </button>
                             <button type="button" onClick={() => switchMode('register')}
-                                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${mode === 'register' ? 'bg-[#537547] text-white shadow-lg' : 'text-gray-500'}`}>
+                                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${mode === 'register' ? 'bg-[#8a8a00] text-white shadow-lg' : 'text-gray-500'}`}>
                                 สมัครสมาชิก
                             </button>
                         </div>
@@ -678,7 +678,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                         {mode === 'login' && (
                             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-lg">
                                 <div className="text-center mb-4">
-                                    <h1 className="text-2xl font-bold mb-1 text-[#6f7e0d]">เข้าสู่ระบบ</h1>
+                                    <h1 className="text-2xl font-bold mb-1 text-[#737300]">เข้าสู่ระบบ</h1>
                                     <p className="text-gray-500 text-sm">กรอกอีเมลและรหัสผ่าน</p>
                                 </div>
 
@@ -694,7 +694,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                         <div className="relative">
                                             <Mail className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
                                             <Input id="m-login-email" type="email" placeholder="name@example.com"
-                                                className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-[#6f7e0d] placeholder:text-gray-400"
+                                                className="pl-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-[#737300] placeholder:text-gray-400"
                                                 {...loginForm.register('email')} />
                                         </div>
                                         {loginForm.formState.errors.email && <p className="text-sm text-red-400">{loginForm.formState.errors.email.message}</p>}
@@ -705,7 +705,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                         <div className="relative">
                                             <Lock className="absolute left-4 top-3 h-5 w-5 text-gray-500" />
                                             <Input id="m-login-password" type={showLoginPassword ? "text" : "password"} placeholder="••••••••"
-                                                className="pl-12 pr-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-[#6f7e0d] placeholder:text-gray-400"
+                                                className="pl-12 pr-12 h-11 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-[#737300] placeholder:text-gray-400"
                                                 {...loginForm.register('password')} />
                                             <button type="button" onClick={() => setShowLoginPassword(!showLoginPassword)}
                                                 className="absolute right-4 top-3 text-gray-500 hover:text-gray-300 transition-colors">
@@ -728,7 +728,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     </div>
                                     )}
 
-                                    <Button type="submit" className="w-full h-11 bg-[#537547] hover:bg-[#456339] rounded-xl font-semibold shadow-lg" disabled={loginLoading}>
+                                    <Button type="submit" className="w-full h-11 bg-[#8a8a00] hover:bg-[#737300] rounded-xl font-semibold shadow-lg" disabled={loginLoading}>
                                         {loginLoading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
                                     </Button>
                                 </form>
@@ -739,7 +739,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                         {mode === 'register' && (
                             <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-lg">
                                 <div className="text-center mb-4">
-                                    <h1 className="text-2xl font-bold mb-1 text-[#6f7e0d]">
+                                    <h1 className="text-2xl font-bold mb-1 text-[#737300]">
                                         {registerStep === 1 ? 'เลือกประเภทบัญชี' : 'สร้างบัญชีผู้ใช้'}
                                     </h1>
                                     <p className="text-gray-500 text-xs">
@@ -760,9 +760,9 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                             const Icon = type.icon;
                                             return (
                                                 <button key={type.value} type="button" onClick={() => selectAccountType(type.value)}
-                                                    className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-gray-200 bg-white hover:border-[#537547]/50 text-left transition-all group">
-                                                    <div className="w-10 h-10 rounded-lg bg-[#537547]/10 flex items-center justify-center flex-shrink-0">
-                                                        <Icon className="w-5 h-5 text-[#537547]" />
+                                                    className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-gray-200 bg-white hover:border-[#8a8a00]/50 text-left transition-all group">
+                                                    <div className="w-10 h-10 rounded-lg bg-[#8a8a00]/10 flex items-center justify-center flex-shrink-0">
+                                                        <Icon className="w-5 h-5 text-[#8a8a00]" />
                                                     </div>
                                                     <div className="flex-1">
                                                         <div className="font-medium text-gray-900 text-sm">{type.label}</div>
@@ -779,7 +779,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 {registerStep === 2 && (
                                 <>
                                 {/* Selected Type Indicator */}
-                                <div className="mb-4 flex items-center justify-between bg-[#537547]/5 border border-[#537547]/20 rounded-xl p-3">
+                                <div className="mb-4 flex items-center justify-between bg-[#8a8a00]/5 border border-[#8a8a00]/20 rounded-xl p-3">
                                     <div className="flex items-center gap-2">
                                         {accountType && (() => {
                                             const selectedType = accountTypes.find(t => t.value === accountType);
@@ -787,16 +787,16 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                             const Icon = selectedType.icon;
                                             return (
                                                 <>
-                                                    <div className="w-8 h-8 rounded-lg bg-[#537547]/10 flex items-center justify-center">
-                                                        <Icon className="w-4 h-4 text-[#537547]" />
+                                                    <div className="w-8 h-8 rounded-lg bg-[#8a8a00]/10 flex items-center justify-center">
+                                                        <Icon className="w-4 h-4 text-[#8a8a00]" />
                                                     </div>
-                                                    <span className="font-medium text-[#537547] text-sm">{selectedType.label}</span>
+                                                    <span className="font-medium text-[#8a8a00] text-sm">{selectedType.label}</span>
                                                 </>
                                             );
                                         })()}
                                     </div>
                                     <button type="button" onClick={goBackToRoleSelection}
-                                        className="text-xs text-[#537547] font-medium px-2 py-1 rounded hover:bg-[#537547]/10">
+                                        className="text-xs text-[#8a8a00] font-medium px-2 py-1 rounded hover:bg-[#8a8a00]/10">
                                         เปลี่ยน
                                     </button>
                                 </div>
@@ -805,22 +805,22 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="space-y-1">
                                             <Label htmlFor="m-reg-fn" className="text-gray-700 text-sm">ชื่อ</Label>
-                                            <Input id="m-reg-fn" placeholder="ชื่อ" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400" {...registerForm.register('firstName')} />
+                                            <Input id="m-reg-fn" placeholder="ชื่อ" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400" {...registerForm.register('firstName')} />
                                         </div>
                                         <div className="space-y-1">
                                             <Label htmlFor="m-reg-ln" className="text-gray-700 text-sm">นามสกุล</Label>
-                                            <Input id="m-reg-ln" placeholder="นามสกุล" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400" {...registerForm.register('lastName')} />
+                                            <Input id="m-reg-ln" placeholder="นามสกุล" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400" {...registerForm.register('lastName')} />
                                         </div>
                                     </div>
 
                                     <div className="space-y-1">
                                         <Label htmlFor="m-reg-email" className="text-gray-700 text-sm">อีเมล</Label>
-                                        <Input id="m-reg-email" type="email" placeholder="name@example.com" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400" {...registerForm.register('email')} />
+                                        <Input id="m-reg-email" type="email" placeholder="name@example.com" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400" {...registerForm.register('email')} />
                                     </div>
 
                                     <div className="space-y-1">
                                         <Label htmlFor="m-reg-phone" className="text-gray-700 text-sm">เบอร์โทร <span className="text-gray-400">(ไม่บังคับ)</span></Label>
-                                        <Input id="m-reg-phone" placeholder="08XXXXXXXX" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400" {...registerForm.register('phone')} />
+                                        <Input id="m-reg-phone" placeholder="08XXXXXXXX" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400" {...registerForm.register('phone')} />
                                     </div>
 
                                     {accountType !== 'generalPublic' && (
@@ -832,20 +832,20 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                         </Label>
                                         <Input id="m-reg-org"
                                             placeholder={accountType === 'postgraduateStudent' || accountType === 'undergraduateStudent' ? 'ชื่อมหาวิทยาลัย...' : 'โรงพยาบาล/บริษัท...'}
-                                            className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                            className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                             {...registerForm.register('organization')} />
                                     </div>
                                     )}
 
                                     <div className="space-y-1">
                                         <Label htmlFor="m-reg-idCard" className="text-gray-700 text-sm">เลขบัตรประชาชน</Label>
-                                        <Input id="m-reg-idCard" placeholder="X-XXXX-XXXXX-XX-X" maxLength={13} className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400" {...registerForm.register('idCard')} />
+                                        <Input id="m-reg-idCard" placeholder="X-XXXX-XXXXX-XX-X" maxLength={13} className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400" {...registerForm.register('idCard')} />
                                     </div>
 
                                     {accountType === 'pharmacist' && (
                                         <div className="space-y-1">
                                             <Label htmlFor="m-reg-license" className="text-gray-700 text-sm">เลขใบอนุญาต <span className="text-red-500">*</span></Label>
-                                            <Input id="m-reg-license" placeholder="ภ.XXXXX" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400" {...registerForm.register('pharmacyLicenseId')} />
+                                            <Input id="m-reg-license" placeholder="ภ.XXXXX" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400" {...registerForm.register('pharmacyLicenseId')} />
                                         </div>
                                     )}
 
@@ -854,7 +854,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                             <Label htmlFor="m-reg-pw" className="text-gray-700 text-sm">รหัสผ่าน</Label>
                                             <div className="relative">
                                                 <Input id="m-reg-pw" type={showRegisterPassword ? "text" : "password"} placeholder="••••••"
-                                                    className="pr-10 h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                                    className="pr-10 h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                                     {...registerForm.register('password')} />
                                                 <button type="button" onClick={() => setShowRegisterPassword(!showRegisterPassword)}
                                                     className="absolute right-3 top-2.5 text-gray-500">
@@ -865,7 +865,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                         <div className="space-y-1">
                                             <Label htmlFor="m-reg-cpw" className="text-gray-700 text-sm">ยืนยัน</Label>
                                             <Input id="m-reg-cpw" type={showRegisterPassword ? "text" : "password"} placeholder="••••••"
-                                                className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#537547] text-gray-900 placeholder:text-gray-400"
+                                                className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400"
                                                 {...registerForm.register('confirmPassword')} />
                                         </div>
                                     </div>
@@ -883,7 +883,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     </div>
                                     )}
 
-                                    <Button type="submit" className="w-full h-11 bg-[#537547] hover:bg-[#456339] text-white rounded-xl font-semibold shadow-lg" disabled={registerLoading}>
+                                    <Button type="submit" className="w-full h-11 bg-[#8a8a00] hover:bg-[#737300] text-white rounded-xl font-semibold shadow-lg" disabled={registerLoading}>
                                         {registerLoading ? 'กำลังสร้างบัญชี...' : 'สร้างบัญชี'}
                                     </Button>
                                 </form>

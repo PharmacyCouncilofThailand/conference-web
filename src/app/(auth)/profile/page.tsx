@@ -38,7 +38,7 @@ export default function ProfilePage() {
         <Suspense fallback={
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
-                    <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto mb-4" />
+                    <Loader2 className="w-8 h-8 text-[#8a8a00] animate-spin mx-auto mb-4" />
                     <p className="text-gray-400">กำลังโหลด...</p>
                 </div>
             </div>
@@ -129,7 +129,7 @@ function ProfilePageContent() {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
                 <div className="text-center">
-                    <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto mb-4" />
+                    <Loader2 className="w-8 h-8 text-[#8a8a00] animate-spin mx-auto mb-4" />
                     <p className="text-gray-400">กำลังโหลด...</p>
                 </div>
             </div>
@@ -154,15 +154,15 @@ function ProfilePageContent() {
             {/* Header */}
             <section className="relative pt-32 pb-12 px-6 bg-white border-b border-gray-200 overflow-hidden">
                 <div className="absolute inset-0 -z-10">
-                    <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[#6f7e0d]/5 to-transparent" />
+                    <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[#737300]/5 to-transparent" />
                 </div>
 
                 <div className={`container mx-auto max-w-6xl scroll-animate fade-up stagger-1 ${mounted ? 'is-visible' : ''}`}>
-                    <Link href="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#537547] mb-6 transition-colors group">
+                    <Link href="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#8a8a00] mb-6 transition-colors group">
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         <span>กลับหน้าหลัก</span>
                     </Link>
-                    <h1 className="text-4xl font-bold text-[#6f7e0d]">โปรไฟล์ของฉัน</h1>
+                    <h1 className="text-4xl font-bold text-[#737300]">โปรไฟล์ของฉัน</h1>
                     <p className="text-gray-500 mt-2">จัดการข้อมูลส่วนตัวและดูประวัติการซื้อ</p>
                 </div>
             </section>
@@ -178,7 +178,7 @@ function ProfilePageContent() {
                                 {/* Profile Avatar */}
                                 <div className="text-center mb-6">
                                     <div className="inline-block">
-                                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#6f7e0d] to-[#537547] flex items-center justify-center text-white text-3xl font-bold mx-auto border-4 border-white shadow-md">
+                                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#737300] to-[#8a8a00] flex items-center justify-center text-white text-3xl font-bold mx-auto border-4 border-white shadow-md">
                                             {user.name?.charAt(0).toUpperCase() || 'U'}
                                         </div>
                                     </div>
@@ -197,7 +197,7 @@ function ProfilePageContent() {
                                                 className={cn(
                                                     "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium transition-all",
                                                     isActive
-                                                        ? "bg-[#537547]/10 text-[#537547] border-l-4 border-[#537547]"
+                                                        ? "bg-[#8a8a00]/10 text-[#8a8a00] border-l-4 border-[#8a8a00]"
                                                         : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                                                 )}
                                             >
@@ -214,7 +214,7 @@ function ProfilePageContent() {
                                         <Link href="/dashboard" className="block">
                                             <Button
                                                 variant="outline"
-                                                className="w-full border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-[#537547]"
+                                                className="w-full border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-[#8a8a00]"
                                             >
                                                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -245,7 +245,7 @@ function ProfilePageContent() {
                                 {/* Profile Tab */}
                                 {activeTab === 'profile' && (
                                     <div className="animate-fade-in">
-                                        <h2 className="text-2xl font-bold tracking-tight text-[#6f7e0d] mb-2">
+                                        <h2 className="text-2xl font-bold tracking-tight text-[#737300] mb-2">
                                             Profile Information
                                         </h2>
                                         <p className="text-gray-500 text-sm mb-8">
@@ -255,8 +255,8 @@ function ProfilePageContent() {
                                         <div className="space-y-4">
                                             {/* Name */}
                                             <div className="flex items-center gap-4 py-4 border-b border-gray-100">
-                                                <div className="w-10 h-10 rounded-xl bg-[#537547]/10 flex items-center justify-center">
-                                                    <User className="w-5 h-5 text-[#537547]" />
+                                                <div className="w-10 h-10 rounded-xl bg-[#8a8a00]/10 flex items-center justify-center">
+                                                    <User className="w-5 h-5 text-[#8a8a00]" />
                                                 </div>
                                                 <div>
                                                     <div className="text-sm text-gray-500">ชื่อ-นามสกุล</div>
@@ -266,8 +266,8 @@ function ProfilePageContent() {
 
                                             {/* Email */}
                                             <div className="flex items-center gap-4 py-4 border-b border-gray-100">
-                                                <div className="w-10 h-10 rounded-xl bg-[#6f7e0d]/10 flex items-center justify-center">
-                                                    <Mail className="w-5 h-5 text-[#6f7e0d]" />
+                                                <div className="w-10 h-10 rounded-xl bg-[#737300]/10 flex items-center justify-center">
+                                                    <Mail className="w-5 h-5 text-[#737300]" />
                                                 </div>
                                                 <div>
                                                     <div className="text-sm text-gray-500">อีเมล</div>
@@ -305,7 +305,7 @@ function ProfilePageContent() {
                                 {/* My Ticket Tab */}
                                 {activeTab === 'tickets' && (
                                     <div className="animate-fade-in">
-                                        <h2 className="text-2xl font-bold tracking-tight text-[#6f7e0d] mb-2">
+                                        <h2 className="text-2xl font-bold tracking-tight text-[#737300] mb-2">
                                             My Tickets
                                         </h2>
                                         <p className="text-gray-500 text-sm mb-8">
@@ -314,7 +314,7 @@ function ProfilePageContent() {
 
                                         {isLoadingData ? (
                                             <div className="text-center py-16">
-                                                <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto mb-4" />
+                                                <Loader2 className="w-8 h-8 text-[#8a8a00] animate-spin mx-auto mb-4" />
                                                 <p className="text-gray-400">กำลังโหลดข้อมูล...</p>
                                             </div>
                                         ) : myTickets.length === 0 ? (
@@ -322,7 +322,7 @@ function ProfilePageContent() {
                                                 <Ticket className="w-16 h-16 mx-auto mb-4 opacity-50" />
                                                 <p className="text-lg">ยังไม่มีตั๋ว</p>
                                                 <Link href="/events">
-                                                    <Button className="mt-4 bg-[#537547] hover:bg-[#6f7e0d] text-white">
+                                                    <Button className="mt-4 bg-[#8a8a00] hover:bg-[#737300] text-white">
                                                         ดูงานประชุม
                                                     </Button>
                                                 </Link>
@@ -332,20 +332,20 @@ function ProfilePageContent() {
                                                 {myTickets.map((ticket) => (
                                                     <div
                                                         key={ticket.regCode}
-                                                        className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5 hover:border-[#6f7e0d]/50 hover:shadow-md transition-all"
+                                                        className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5 hover:border-[#737300]/50 hover:shadow-md transition-all"
                                                     >
                                                         <div className="flex justify-between items-start">
                                                             <div>
                                                                 <h4 className="font-bold text-gray-900 text-lg">{ticket.event?.eventName || 'Unknown Event'}</h4>
                                                                 <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
                                                                     <span className="flex items-center gap-2">
-                                                                        <Calendar className="w-4 h-4 text-[#537547]" />
+                                                                        <Calendar className="w-4 h-4 text-[#8a8a00]" />
                                                                         {ticket.event?.startDate
                                                                             ? `${new Date(ticket.event.startDate).toLocaleDateString('th-TH', { year: '2-digit', month: 'short', day: 'numeric' })} ${new Date(ticket.event.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${ticket.event.endDate ? new Date(ticket.event.endDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : ''}`
                                                                             : '-'}
                                                                     </span>
                                                                     <span className="flex items-center gap-2">
-                                                                        <Building2 className="w-4 h-4 text-[#537547]" />
+                                                                        <Building2 className="w-4 h-4 text-[#8a8a00]" />
                                                                         {ticket.event?.location || 'TBA'}
                                                                     </span>
                                                                 </div>
@@ -382,7 +382,7 @@ function ProfilePageContent() {
                                 {/* Payment History Tab */}
                                 {activeTab === 'payment' && (
                                     <div className="animate-fade-in">
-                                        <h2 className="text-2xl font-bold tracking-tight text-[#6f7e0d] mb-2">
+                                        <h2 className="text-2xl font-bold tracking-tight text-[#737300] mb-2">
                                             Payment History
                                         </h2>
                                         <p className="text-gray-500 text-sm mb-6">
@@ -404,7 +404,7 @@ function ProfilePageContent() {
                                                     className={cn(
                                                         "px-4 py-2 rounded-full text-sm font-medium transition-all",
                                                         paymentStatusFilter === filter.key
-                                                            ? "bg-[#537547] text-white"
+                                                            ? "bg-[#8a8a00] text-white"
                                                             : "bg-gray-50 border border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                                                     )}
                                                 >
@@ -415,7 +415,7 @@ function ProfilePageContent() {
 
                                         {isLoadingData ? (
                                             <div className="text-center py-16">
-                                                <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mx-auto mb-4" />
+                                                <Loader2 className="w-8 h-8 text-[#8a8a00] animate-spin mx-auto mb-4" />
                                                 <p className="text-gray-400">กำลังโหลดข้อมูล...</p>
                                             </div>
                                         ) : filteredPayments.length === 0 ? (
@@ -436,7 +436,7 @@ function ProfilePageContent() {
                                                                 "rounded-2xl p-5 transition-all",
                                                                 payment.payment?.status === 'pending'
                                                                     ? "bg-orange-50 border border-orange-200"
-                                                                    : "bg-white border border-gray-200 hover:border-[#6f7e0d]/50 hover:shadow-sm"
+                                                                    : "bg-white border border-gray-200 hover:border-[#737300]/50 hover:shadow-sm"
                                                             )}
                                                         >
                                                             {/* Header with Order Date and Purchase Number */}
@@ -457,7 +457,7 @@ function ProfilePageContent() {
                                                                     </div>
                                                                 </div>
                                                                 <div className="text-right">
-                                                                    <span className="font-bold text-xl text-[#537547]">
+                                                                    <span className="font-bold text-xl text-[#8a8a00]">
                                                                         {parseFloat(payment.payment?.amount || '0').toLocaleString()} THB
                                                                     </span>
                                                                 </div>
@@ -474,7 +474,7 @@ function ProfilePageContent() {
                                                                             </Link>
                                                                         </div>
                                                                         <Link href={`/events/${payment.event?.id}`}>
-                                                                            <Button className="bg-[#537547] hover:bg-[#6f7e0d] text-white font-bold px-6 py-2 rounded-full shadow-sm hover:shadow-md transition-all">
+                                                                            <Button className="bg-[#8a8a00] hover:bg-[#737300] text-white font-bold px-6 py-2 rounded-full shadow-sm hover:shadow-md transition-all">
                                                                                 Purchase again
                                                                             </Button>
                                                                         </Link>
@@ -513,7 +513,7 @@ function ProfilePageContent() {
             <Dialog open={!!viewingQrTicket} onOpenChange={(open) => !open && setViewingQrTicket(null)}>
                 <DialogContent className="bg-white border-gray-200 text-gray-900 sm:max-w-md shadow-xl">
                     <DialogHeader>
-                        <DialogTitle className="text-center text-xl text-[#6f7e0d]">Ticket QR Code</DialogTitle>
+                        <DialogTitle className="text-center text-xl text-[#737300]">Ticket QR Code</DialogTitle>
                         <DialogDescription className="text-center text-gray-500">
                             Show this QR code at the event entrance for check-in
                         </DialogDescription>

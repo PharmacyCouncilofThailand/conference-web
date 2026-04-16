@@ -201,7 +201,7 @@ export default function EventDetailPage() {
     if (isLoading) return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
             <div className="text-center space-y-4">
-                <div className="w-16 h-16 mx-auto border-4 border-[#537547]/20 border-t-[#537547] rounded-full animate-spin" />
+                <div className="w-16 h-16 mx-auto border-4 border-[#8a8a00]/20 border-t-[#8a8a00] rounded-full animate-spin" />
                 <p className="text-gray-500 animate-pulse">กำลังโหลดข้อมูลงาน...</p>
             </div>
         </div>
@@ -213,7 +213,7 @@ export default function EventDetailPage() {
                     <X className="w-10 h-10 text-red-400" />
                 </div>
                 <h2 className="text-xl font-bold text-gray-700">ไม่พบข้อมูลงานประชุม</h2>
-                <Link href="/events"><Button variant="outline" className="border-[#537547]/30 text-[#537547]">กลับหน้ารายการ</Button></Link>
+                <Link href="/events"><Button variant="outline" className="border-[#8a8a00]/30 text-[#8a8a00]">กลับหน้ารายการ</Button></Link>
             </div>
         </div>
     );
@@ -290,7 +290,7 @@ export default function EventDetailPage() {
                                 {event.eventType === 'single_room' ? '✦ Single Session' : '✦ Multi Sessions'}
                             </span>
                             {event.cpeCredits && Number(event.cpeCredits) > 0 && (
-                                <span className="bg-[#537547]/60 text-white border border-[#537547]/70 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-xl shadow-lg drop-shadow-md">
+                                <span className="bg-[#8a8a00]/60 text-white border border-[#8a8a00]/70 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-xl shadow-lg drop-shadow-md">
                                     <Award className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
                                     {event.cpeCredits} CPE Credits
                                 </span>
@@ -335,26 +335,26 @@ export default function EventDetailPage() {
                     {/* Quick Info Cards */}
                     <div className="grid grid-cols-2 gap-3">
                         {/* CPE Credits */}
-                        <div className="bg-[#537547]/10 border border-[#537547]/20 rounded-xl p-4">
+                        <div className="bg-[#8a8a00]/10 border border-[#8a8a00]/20 rounded-xl p-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-[#537547]/10 flex items-center justify-center flex-shrink-0">
-                                    <Award className="w-5 h-5 text-[#537547]" />
+                                <div className="w-10 h-10 rounded-lg bg-[#8a8a00]/10 flex items-center justify-center flex-shrink-0">
+                                    <Award className="w-5 h-5 text-[#8a8a00]" />
                                 </div>
                                 <div>
-                                    <div className="text-xs text-[#537547]">CPE Credits</div>
+                                    <div className="text-xs text-[#8a8a00]">CPE Credits</div>
                                     <div className="text-xl font-bold text-gray-900">{event.cpeCredits}</div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Tickets */}
-                        <div className="bg-[#537547]/10 border border-[#537547]/20 rounded-xl p-4">
+                        <div className="bg-[#8a8a00]/10 border border-[#8a8a00]/20 rounded-xl p-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-[#537547]/10 flex items-center justify-center flex-shrink-0">
-                                    <Ticket className="w-5 h-5 text-[#537547]" />
+                                <div className="w-10 h-10 rounded-lg bg-[#8a8a00]/10 flex items-center justify-center flex-shrink-0">
+                                    <Ticket className="w-5 h-5 text-[#8a8a00]" />
                                 </div>
                                 <div>
-                                    <div className="text-xs text-[#537547]">ที่นั่งเหลือ</div>
+                                    <div className="text-xs text-[#8a8a00]">ที่นั่งเหลือ</div>
                                     <div className="text-xl font-bold text-gray-900">
                                         {currentRound?.capacity
                                             ? currentRound.capacity - (currentRound.registered || 0)
@@ -377,8 +377,8 @@ export default function EventDetailPage() {
 
                         {/* About Section */}
                         <section ref={aboutRef} className={`relative bg-white border border-gray-200 rounded-2xl p-5 sm:p-7 md:p-9 shadow-sm overflow-hidden scroll-animate fade-up ${aboutVisible ? 'is-visible' : ''}`}>
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#537547]/5 to-transparent rounded-bl-full" />
-                            <h2 className="text-xl sm:text-2xl font-bold mb-5 text-[#6f7e0d] flex items-center gap-2">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#8a8a00]/5 to-transparent rounded-bl-full" />
+                            <h2 className="text-xl sm:text-2xl font-bold mb-5 text-[#737300] flex items-center gap-2">
                                 รายละเอียดงาน
                             </h2>
                             <p className="text-sm sm:text-base text-gray-600 leading-[1.85] whitespace-pre-line relative z-10">
@@ -397,9 +397,9 @@ export default function EventDetailPage() {
                                                 href={doc.url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-[#537547]/5 hover:border-[#537547]/30 transition-all group"
+                                                className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 bg-gray-50/50 hover:bg-[#8a8a00]/5 hover:border-[#8a8a00]/30 transition-all group"
                                             >
-                                                <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-[#537547] group-hover:border-[#537547]/30 shadow-sm transition-colors flex-shrink-0">
+                                                <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-[#8a8a00] group-hover:border-[#8a8a00]/30 shadow-sm transition-colors flex-shrink-0">
                                                     <FileText className="w-5 h-5" />
                                                 </div>
                                                 <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 truncate">
@@ -415,9 +415,9 @@ export default function EventDetailPage() {
                         {/* Sessions Section */}
                         {event.sessions && event.sessions.length > 0 && (
                             <section ref={sessionsRef} className={`relative bg-white border border-gray-200 rounded-2xl p-5 sm:p-7 md:p-9 shadow-sm overflow-hidden scroll-animate fade-up ${sessionsVisible ? 'is-visible' : ''}`}>
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#537547] via-[#6f7e0d] to-[#537547]/30" />
-                                <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-[#6f7e0d] mb-5">
-                                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-[#537547]" />
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#8a8a00] via-[#737300] to-[#8a8a00]/30" />
+                                <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-[#737300] mb-5">
+                                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-[#8a8a00]" />
                                     กำหนดการ Sessions
                                 </h2>
                                 <div className="space-y-3">
@@ -432,7 +432,7 @@ export default function EventDetailPage() {
                                             >
                                                 <div className="flex-1 min-w-0 pr-4">
                                                     <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                        <span className="px-2 py-0.5 bg-[#537547]/10 text-[#537547] rounded text-xs font-medium">
+                                                        <span className="px-2 py-0.5 bg-[#8a8a00]/10 text-[#8a8a00] rounded text-xs font-medium">
                                                             {session.sessionCode}
                                                         </span>
                                                         <h3 className="font-semibold text-gray-900">{session.sessionName}</h3>
@@ -442,7 +442,7 @@ export default function EventDetailPage() {
                                                     <span className="px-2 py-1 bg-gray-200/60 rounded text-xs text-gray-600 font-medium whitespace-nowrap hidden sm:inline-block">
                                                         {session.maxCapacity === 0 ? 'ไม่จำกัด' : `${session.maxCapacity} seats`}
                                                     </span>
-                                                    <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-[#537547] hover:border-[#537547] transition-colors">
+                                                    <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-[#8a8a00] hover:border-[#8a8a00] transition-colors">
                                                         {expandedSessions.includes(String(session.id)) ? (
                                                             <ChevronUp className="w-4 h-4" />
                                                         ) : (
@@ -467,7 +467,7 @@ export default function EventDetailPage() {
                                                         )}
                                                         <div className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm text-gray-600 bg-gray-50/50 rounded-lg p-3 border border-gray-100">
                                                             <span className="flex items-center gap-2">
-                                                                <Clock className="w-4 h-4 text-[#537547]" />
+                                                                <Clock className="w-4 h-4 text-[#8a8a00]" />
                                                                 <span className="font-medium">
                                                                     {session.startTime ? new Date(session.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : 'TBA'}
                                                                     {' - '}
@@ -476,13 +476,13 @@ export default function EventDetailPage() {
                                                             </span>
                                                             {session.room && (
                                                                 <span className="flex items-center gap-2">
-                                                                    <MapPin className="w-4 h-4 text-[#537547]" />
+                                                                    <MapPin className="w-4 h-4 text-[#8a8a00]" />
                                                                     <span className="font-medium">{session.room}</span>
                                                                 </span>
                                                             )}
                                                             {session.speakers && (
                                                                 <span className="flex items-center gap-2">
-                                                                    <Users className="w-4 h-4 text-[#537547]" />
+                                                                    <Users className="w-4 h-4 text-[#8a8a00]" />
                                                                     <span className="font-medium">{session.speakers}</span>
                                                                 </span>
                                                             )}
@@ -500,8 +500,8 @@ export default function EventDetailPage() {
                         {event.images && event.images.length > 0 && (
                             <section ref={galleryRef} className={`relative bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden scroll-animate fade-up ${galleryVisible ? 'is-visible' : ''}`}>
                                 <div className="p-5 sm:p-7 md:p-9 pb-0 sm:pb-0 md:pb-0">
-                                    <h2 className="text-xl sm:text-2xl font-bold mb-5 sm:mb-7 flex items-center gap-2 text-[#6f7e0d]">
-                                        <Images className="w-5 h-5 sm:w-6 sm:h-6 text-[#537547]" />
+                                    <h2 className="text-xl sm:text-2xl font-bold mb-5 sm:mb-7 flex items-center gap-2 text-[#737300]">
+                                        <Images className="w-5 h-5 sm:w-6 sm:h-6 text-[#8a8a00]" />
                                         แกลเลอรี่
                                         <span className="text-sm font-normal text-gray-400 ml-1">({event.images.length} รูป)</span>
                                     </h2>
@@ -582,8 +582,8 @@ export default function EventDetailPage() {
                         {/* Venue Section */}
                         <section ref={venueRef} className={`relative bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm scroll-animate fade-up ${venueVisible ? 'is-visible' : ''}`}>
                             <div className="p-5 sm:p-7 md:p-9">
-                                <h2 className="text-xl sm:text-2xl font-bold mb-5 sm:mb-7 flex items-center gap-2 text-[#6f7e0d]">
-                                    <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[#537547]" />
+                                <h2 className="text-xl sm:text-2xl font-bold mb-5 sm:mb-7 flex items-center gap-2 text-[#737300]">
+                                    <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[#8a8a00]" />
                                     สถานที่จัดงาน
                                 </h2>
 
@@ -637,7 +637,7 @@ export default function EventDetailPage() {
                             {event.attachments && event.attachments.length > 0 && (
                                 <div className="mx-5 sm:mx-7 md:mx-9 mb-5 sm:mb-7 md:mb-9 pt-6 border-t border-gray-200">
                                     <h3 className="text-lg font-semibold mb-3 text-gray-700 flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-[#537547]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-5 h-5 text-[#8a8a00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                         </svg>
                                         เอกสารประกอบ
@@ -651,7 +651,7 @@ export default function EventDetailPage() {
                                                 rel="noopener noreferrer"
                                                 className="inline-flex items-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
                                             >
-                                                <svg className="w-4 h-4 text-[#537547]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-4 h-4 text-[#8a8a00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                                 </svg>
                                                 {attachment.fileName}
@@ -665,8 +665,8 @@ export default function EventDetailPage() {
                         {/* Speakers */}
                         {event.speakers && event.speakers.length > 0 && (
                             <section ref={speakersRef} className={`overflow-hidden scroll-animate fade-up ${speakersVisible ? 'is-visible' : ''}`}>
-                                <h2 className="text-xl sm:text-2xl font-bold mb-5 flex items-center gap-2 text-[#6f7e0d]">
-                                    <Users className="w-5 h-5 sm:w-6 sm:h-6 text-[#537547]" />
+                                <h2 className="text-xl sm:text-2xl font-bold mb-5 flex items-center gap-2 text-[#737300]">
+                                    <Users className="w-5 h-5 sm:w-6 sm:h-6 text-[#8a8a00]" />
                                     ผู้บรรยาย ({event.speakers.length} ท่าน)
                                 </h2>
                                 <SpeakerMarquee speakers={event.speakers} />
@@ -683,32 +683,32 @@ export default function EventDetailPage() {
                             )}
 
                             {/* CPE Credits Badge */}
-                            <div className="bg-gradient-to-br from-[#537547]/15 to-[#6f7e0d]/10 border border-[#537547]/20 rounded-2xl p-5 hover:shadow-md transition-shadow">
+                            <div className="bg-gradient-to-br from-[#8a8a00]/15 to-[#737300]/10 border border-[#8a8a00]/20 rounded-2xl p-5 hover:shadow-md transition-shadow">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#537547]/20 to-[#537547]/10 flex items-center justify-center shadow-sm">
-                                        <Award className="w-7 h-7 text-[#537547]" />
+                                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#8a8a00]/20 to-[#8a8a00]/10 flex items-center justify-center shadow-sm">
+                                        <Award className="w-7 h-7 text-[#8a8a00]" />
                                     </div>
                                     <div>
-                                        <div className="text-sm text-[#537547] font-medium">CPE Credits</div>
+                                        <div className="text-sm text-[#8a8a00] font-medium">CPE Credits</div>
                                         <div className="text-3xl font-bold text-gray-900">{event.cpeCredits} <span className="text-lg font-normal text-gray-500">หน่วยกิต</span></div>
                                     </div>
                                 </div>
                                 <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
-                                    <CheckCircle className="w-3 h-3 text-[#537547]" />
+                                    <CheckCircle className="w-3 h-3 text-[#8a8a00]" />
                                     Certified by the Pharmacy Council of Thailand
                                 </p>
                             </div>
 
                             {/* Ticket Availability */}
-                            <div className="bg-gradient-to-br from-[#537547]/15 to-[#6f7e0d]/10 border border-[#537547]/20 rounded-2xl p-5 hover:shadow-md transition-shadow">
+                            <div className="bg-gradient-to-br from-[#8a8a00]/15 to-[#737300]/10 border border-[#8a8a00]/20 rounded-2xl p-5 hover:shadow-md transition-shadow">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#537547]/20 to-[#537547]/10 flex items-center justify-center shadow-sm">
-                                        <Ticket className="w-7 h-7 text-[#537547]" />
+                                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#8a8a00]/20 to-[#8a8a00]/10 flex items-center justify-center shadow-sm">
+                                        <Ticket className="w-7 h-7 text-[#8a8a00]" />
                                     </div>
                                     <div>
                                         {event.maxCapacity === 0 ? (
                                             <>
-                                                <div className="text-sm text-[#537547] font-medium">ผู้ลงทะเบียน</div>
+                                                <div className="text-sm text-[#8a8a00] font-medium">ผู้ลงทะเบียน</div>
                                                 <div className="text-3xl font-bold text-gray-900">
                                                     {event.registeredCount || 0}
                                                     <span className="text-lg font-normal text-gray-500"> / ไม่จำกัด</span>
@@ -716,7 +716,7 @@ export default function EventDetailPage() {
                                             </>
                                         ) : (
                                             <>
-                                                <div className="text-sm text-[#537547] font-medium">ที่นั่งเหลือ</div>
+                                                <div className="text-sm text-[#8a8a00] font-medium">ที่นั่งเหลือ</div>
                                                 <div className="text-3xl font-bold text-gray-900">
                                                     {currentRound?.capacity ? currentRound.capacity - (currentRound.registered || 0) : event.maxCapacity ? event.maxCapacity - (event.registeredCount || 0) : 0}
                                                     <span className="text-lg font-normal text-gray-500"> / {currentRound?.capacity || event.maxCapacity || 0}</span>
@@ -730,7 +730,7 @@ export default function EventDetailPage() {
                                     <div className="mt-4">
                                         <div className="h-2.5 bg-white/50 rounded-full overflow-hidden shadow-inner">
                                             <div
-                                                className="h-full bg-gradient-to-r from-[#537547] to-[#6f7e0d] rounded-full transition-all duration-1000 ease-out"
+                                                className="h-full bg-gradient-to-r from-[#8a8a00] to-[#737300] rounded-full transition-all duration-1000 ease-out"
                                                 style={{
                                                     width: `${currentRound?.capacity
                                                         ? ((currentRound.registered || 0) / currentRound.capacity) * 100
@@ -754,9 +754,9 @@ export default function EventDetailPage() {
 
                             {/* Booking Card */}
                             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#537547] via-[#6f7e0d] to-[#537547]/30" />
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#8a8a00] via-[#737300] to-[#8a8a00]/30" />
                                 <h3 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-2">
-                                    <Ticket className="w-5 h-5 text-[#537547]" />
+                                    <Ticket className="w-5 h-5 text-[#8a8a00]" />
                                     Booking Summary
                                 </h3>
 
@@ -813,8 +813,8 @@ export default function EventDetailPage() {
 
                                     {/* Auto-Detected Ticket (like Eventpass) */}
                                     {autoSelectedTicket && (
-                                        <div className="bg-[#537547]/10 p-4 rounded-xl border border-[#537547]/20">
-                                            <div className="text-xs text-[#537547] mb-1">ประเภทตั๋วสำหรับคุณ:</div>
+                                        <div className="bg-[#8a8a00]/10 p-4 rounded-xl border border-[#8a8a00]/20">
+                                            <div className="text-xs text-[#8a8a00] mb-1">ประเภทตั๋วสำหรับคุณ:</div>
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <div className="font-bold text-gray-900 text-lg">{autoSelectedTicket.name}</div>
@@ -827,7 +827,7 @@ export default function EventDetailPage() {
                                                     ) : null}
                                                 </div>
                                                 <div className="text-right">
-                                                    <span className="text-2xl font-bold text-[#537547]">
+                                                    <span className="text-2xl font-bold text-[#8a8a00]">
                                                         {Number(autoSelectedTicket.price) === 0 ? 'Free' : `฿${Math.round(Number(autoSelectedTicket.price)).toLocaleString()}`}
                                                     </span>
                                                 </div>
@@ -838,7 +838,7 @@ export default function EventDetailPage() {
                                     {/* Add-on Tickets Section */}
                                     {addonTickets.length > 0 && (
                                         <div className="pt-4 border-t border-gray-200">
-                                            <div className="text-sm text-[#537547] mb-3 flex items-center gap-2">
+                                            <div className="text-sm text-[#8a8a00] mb-3 flex items-center gap-2">
                                                 <Ticket className="w-4 h-4" />
                                                 เพิ่มเติม (Add-ons)
                                             </div>
@@ -863,7 +863,7 @@ export default function EventDetailPage() {
                                                                         }
                                                                     </div>
                                                                 </div>
-                                                                <span className="text-[#537547] font-bold text-sm">+฿{Math.round(Number(addon.price)).toLocaleString()}</span>
+                                                                <span className="text-[#8a8a00] font-bold text-sm">+฿{Math.round(Number(addon.price)).toLocaleString()}</span>
                                                             </div>
                                                         </div>
                                                     );
@@ -885,14 +885,14 @@ export default function EventDetailPage() {
                                         </div>
                                         {addonTickets.length > 0 && (
                                             <Link href={`/checkout/${event.id}?mode=addon`} className="block">
-                                                <Button className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]">
+                                                <Button className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#8a8a00] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]">
                                                     <Ticket className="w-5 h-5 mr-2" />
                                                     ซื้อ Add-on เพิ่มเติม
                                                 </Button>
                                             </Link>
                                         )}
                                         <Link href="/my-tickets" className="block">
-                                            <Button variant="outline" className="w-full h-12 text-base font-semibold border-green-600 text-green-700 hover:bg-green-50 rounded-xl transition-all">
+                                            <Button variant="outline" className="w-full h-12 text-base font-semibold border-[#8a8a00] text-[#737300] hover:bg-[#8a8a00]/5 rounded-xl transition-all">
                                                 <Ticket className="w-4 h-4 mr-2" />
                                                 ดูตั๋วของฉัน
                                             </Button>
@@ -915,14 +915,14 @@ export default function EventDetailPage() {
                                         href={actionHref}
                                         className="block"
                                     >
-                                        <Button className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]">
+                                        <Button className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#8a8a00] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]">
                                             {actionLabel}
                                         </Button>
                                     </Link>
                                 )}
 
                                 {!isLoggedIn && userRole === 'public' && (
-                                    <p className="text-xs text-center text-[#537547] mt-3">
+                                    <p className="text-xs text-center text-[#8a8a00] mt-3">
                                         <Link href="/login" className="underline hover:text-[#456339]">เข้าสู่ระบบ</Link> เพื่อดูราคาสมาชิก
                                     </p>
                                 )}
@@ -932,8 +932,8 @@ export default function EventDetailPage() {
                                 </p>
                             </div>
 
-                            <div className="bg-gradient-to-br from-[#537547]/15 to-[#6f7e0d]/10 border border-[#537547]/20 rounded-2xl p-6 hover:shadow-md transition-shadow">
-                                <h4 className="font-bold text-[#537547] mb-2 flex items-center gap-2">
+                            <div className="bg-gradient-to-br from-[#8a8a00]/15 to-[#737300]/10 border border-[#8a8a00]/20 rounded-2xl p-6 hover:shadow-md transition-shadow">
+                                <h4 className="font-bold text-[#8a8a00] mb-2 flex items-center gap-2">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -941,7 +941,7 @@ export default function EventDetailPage() {
                                 </h4>
                                 <p className="text-sm text-gray-500 mb-4">ติดต่อทีมงานสำหรับการจองกลุ่มหรือคำถามเพิ่มเติม</p>
                                 <Link href="/contact">
-                                    <Button variant="link" className="text-[#537547] p-0 h-auto font-semibold hover:text-[#456339]">ติดต่อเรา &rarr;</Button>
+                                    <Button variant="link" className="text-[#8a8a00] p-0 h-auto font-semibold hover:text-[#456339]">ติดต่อเรา &rarr;</Button>
                                 </Link>
                             </div>
                         </div>
@@ -954,14 +954,14 @@ export default function EventDetailPage() {
                         {hasExistingRegistration ? (
                             <>
                                 <div className="flex items-center gap-2">
-                                    <CheckCircle className="w-5 h-5 text-green-600" />
+                                    <CheckCircle className="w-5 h-5 text-[#8a8a00]" />
                                     <div>
-                                        <div className="text-xs text-green-600">{existingTicketLabel}</div>
-                                        <div className="text-sm font-bold text-green-700">{existingTicketSummary}</div>
+                                        <div className="text-xs text-[#8a8a00]">{existingTicketLabel}</div>
+                                        <div className="text-sm font-bold text-[#737300]">{existingTicketSummary}</div>
                                     </div>
                                 </div>
                                 <Link href="/my-tickets" className="flex-1 max-w-[160px]">
-                                    <Button className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95">
+                                    <Button className="w-full bg-gradient-to-r from-[#8a8a00] to-[#737300] hover:from-[#737300] hover:to-[#686805] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95">
                                         <Ticket className="w-4 h-4 mr-1" />
                                         ดูตั๋ว
                                     </Button>
@@ -1012,7 +1012,7 @@ export default function EventDetailPage() {
                             <>
                                 <div>
                                     <div className="text-xs text-gray-500">ราคาเริ่มต้น</div>
-                                    <div className="text-xl font-bold text-[#537547]">
+                                    <div className="text-xl font-bold text-[#8a8a00]">
                                         {autoSelectedTicket
                                             ? (Number(autoSelectedTicket.price) === 0 ? 'Free' : `฿${Math.round(Number(autoSelectedTicket.price)).toLocaleString()}`)
                                             : '-'}
@@ -1020,14 +1020,14 @@ export default function EventDetailPage() {
                                 </div>
                                 {isFreeEvent ? (
                                     <Link href={freeRegisterHref} className="flex-1 max-w-[200px]">
-                                        <Button className="flex-1 bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95">
+                                        <Button className="flex-1 bg-gradient-to-r from-[#8a8a00] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95">
                                             ลงทะเบียนฟรี
                                         </Button>
                                     </Link>
                                 ) : (
                                     <Button
                                         onClick={() => setMobileBookingOpen(true)}
-                                        className="flex-1 max-w-[200px] bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+                                        className="flex-1 max-w-[200px] bg-gradient-to-r from-[#8a8a00] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95"
                                     >
                                         จองตั๋วเลย
                                     </Button>
@@ -1055,7 +1055,7 @@ export default function EventDetailPage() {
 
                             <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100">
                                 <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                    <Ticket className="w-5 h-5 text-[#537547]" />
+                                    <Ticket className="w-5 h-5 text-[#8a8a00]" />
                                     รายละเอียดการจอง
                                 </h3>
                                 <button
@@ -1096,8 +1096,8 @@ export default function EventDetailPage() {
 
                                     {/* Auto-Detected Ticket */}
                                     {autoSelectedTicket && (
-                                        <div className="bg-[#537547]/10 p-4 rounded-xl border border-[#537547]/20">
-                                            <div className="text-xs text-[#537547] mb-1">ประเภทตั๋วสำหรับคุณ:</div>
+                                        <div className="bg-[#8a8a00]/10 p-4 rounded-xl border border-[#8a8a00]/20">
+                                            <div className="text-xs text-[#8a8a00] mb-1">ประเภทตั๋วสำหรับคุณ:</div>
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <div className="font-bold text-gray-900 text-lg">{autoSelectedTicket.name}</div>
@@ -1108,7 +1108,7 @@ export default function EventDetailPage() {
                                                     )}
                                                 </div>
                                                 <div className="text-right">
-                                                    <span className="text-2xl font-bold text-[#537547]">
+                                                    <span className="text-2xl font-bold text-[#8a8a00]">
                                                         {Number(autoSelectedTicket.price) === 0 ? 'Free' : `฿${Math.round(Number(autoSelectedTicket.price)).toLocaleString()}`}
                                                     </span>
                                                 </div>
@@ -1119,7 +1119,7 @@ export default function EventDetailPage() {
                                     {/* Add-on Tickets Section */}
                                     {addonTickets.length > 0 && (
                                         <div className="pt-4 border-t border-gray-200">
-                                            <div className="text-sm text-[#537547] mb-3 flex items-center gap-2">
+                                            <div className="text-sm text-[#8a8a00] mb-3 flex items-center gap-2">
                                                 <Ticket className="w-4 h-4" />
                                                 เพิ่มเติม (Add-ons)
                                             </div>
@@ -1144,7 +1144,7 @@ export default function EventDetailPage() {
                                                                         }
                                                                     </div>
                                                                 </div>
-                                                                <span className="text-[#537547] font-bold text-sm">+฿{Math.round(Number(addon.price)).toLocaleString()}</span>
+                                                                <span className="text-[#8a8a00] font-bold text-sm">+฿{Math.round(Number(addon.price)).toLocaleString()}</span>
                                                             </div>
                                                         </div>
                                                     );
@@ -1175,7 +1175,7 @@ export default function EventDetailPage() {
                                         className="block"
                                         onClick={() => setMobileBookingOpen(false)}
                                     >
-                                        <Button className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all active:scale-[0.98]">
+                                        <Button className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#8a8a00] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all active:scale-[0.98]">
                                             {isFreeEvent ? 'ลงทะเบียนฟรี' : 'จองตั๋วเลย'}
                                         </Button>
                                     </Link>
@@ -1246,7 +1246,7 @@ export default function EventDetailPage() {
                                     onClick={() => setLightboxIndex(idx)}
                                     className={cn(
                                         "w-16 h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all",
-                                        idx === lightboxIndex ? "border-[#537547]" : "border-transparent opacity-60 hover:opacity-100"
+                                        idx === lightboxIndex ? "border-[#8a8a00]" : "border-transparent opacity-60 hover:opacity-100"
                                     )}
                                 >
                                     <img src={img.imageUrl || 'https://placehold.co/1200x800?text=Venue+Photo'} alt="" className="w-full h-full object-cover" />

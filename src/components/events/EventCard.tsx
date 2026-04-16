@@ -55,7 +55,7 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
         : 0;
 
     return (
-        <div className="group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#537547]/50 transition-all duration-300 hover:shadow-lg hover:shadow-[#537547]/10">
+        <div className="group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#8a8a00]/50 transition-all duration-300 hover:shadow-lg hover:shadow-[#8a8a00]/10">
             {/* Image */}
             <div className="relative aspect-[16/10] overflow-hidden bg-gray-100">
                 <img
@@ -73,7 +73,7 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
 
                 {/* CPE Badge */}
                 {event.cpeCredits && Number(event.cpeCredits) > 0 && (
-                    <div className="absolute top-4 right-4 px-2 py-1 bg-[#537547] rounded-lg text-xs font-medium text-white flex items-center gap-1">
+                    <div className="absolute top-4 right-4 px-2 py-1 bg-[#8a8a00] rounded-lg text-xs font-medium text-white flex items-center gap-1">
                         <Award className="w-3 h-3" />
                         {event.cpeCredits} CPE
                     </div>
@@ -82,7 +82,7 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
 
             {/* Content */}
             <div className="p-5">
-                <h3 className="text-lg font-bold mb-2 line-clamp-2 text-[#6f7e0d] group-hover:text-[#537547] transition-colors">
+                <h3 className="text-lg font-bold mb-2 line-clamp-2 text-[#737300] group-hover:text-[#8a8a00] transition-colors">
                     {event.name}
                 </h3>
 
@@ -94,12 +94,12 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
 
                 <div className="space-y-2 text-sm text-gray-500 mb-4">
                     <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-[#537547]" />
+                        <Calendar className="w-4 h-4 text-[#8a8a00]" />
                         <span>{formatDate(event.startDate)}</span>
                     </div>
                     {event.location && (
                         <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 text-[#537547]" />
+                            <MapPin className="w-4 h-4 text-[#8a8a00]" />
                             <span className="truncate">{event.location}</span>
                         </div>
                     )}
@@ -111,16 +111,16 @@ export function EventCard({ event, variant = 'default' }: EventCardProps) {
                         {minPrice > 0 ? (
                             <>
                                 <span className="text-xs text-gray-500">เริ่มต้น</span>
-                                <span className="text-lg font-bold text-[#537547] ml-1">
+                                <span className="text-lg font-bold text-[#8a8a00] ml-1">
                                     ฿{minPrice.toLocaleString()}
                                 </span>
                             </>
                         ) : (
-                            <span className="text-lg font-bold text-[#537547]">ฟรี</span>
+                            <span className="text-lg font-bold text-[#8a8a00]">ฟรี</span>
                         )}
                     </div>
                     <Link href={`/events/${event.id}`}>
-                        <Button size="sm" className="bg-[#537547] hover:bg-[#456339] rounded-lg">
+                        <Button size="sm" className="bg-[#8a8a00] hover:bg-[#456339] rounded-lg">
                             ดูรายละเอียด
                         </Button>
                     </Link>

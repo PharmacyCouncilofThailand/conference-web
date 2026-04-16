@@ -191,7 +191,7 @@ export default function PaymentPage() {
                                     hasSubmitted.current = false;
                                     window.location.reload();
                                 }}
-                                className="px-5 py-2.5 bg-[#537547] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
                             >
                                 ลองใหม่
                             </button>
@@ -208,12 +208,12 @@ export default function PaymentPage() {
             <Navbar />
             <div className="flex-grow flex items-center justify-center px-4">
                 <div className="text-center space-y-4 max-w-md">
-                    <div className="w-20 h-20 mx-auto bg-[#537547]/10 rounded-full flex items-center justify-center">
-                        <ShieldCheck className="w-10 h-10 text-[#537547]" />
+                    <div className="w-20 h-20 mx-auto bg-[#8a8a00]/10 rounded-full flex items-center justify-center">
+                        <ShieldCheck className="w-10 h-10 text-[#8a8a00]" />
                     </div>
                     <h2 className="text-xl font-bold text-gray-800">กำลังนำคุณไปยังหน้าชำระเงิน</h2>
                     <p className="text-gray-500 text-sm">ระบบกำลังเชื่อมต่อกับ payment gateway...</p>
-                    <Loader2 className="w-8 h-8 animate-spin text-[#537547] mx-auto" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[#8a8a00] mx-auto" />
                     <p className="text-xs text-gray-400">กรุณาอย่าปิดหน้านี้</p>
                 </div>
             </div>

@@ -151,7 +151,7 @@ export default function AgendaPage() {
             <Navbar />
 
             {/* Header */}
-            <div className="pt-24 pb-10 bg-gradient-to-br from-[#537547] via-[#456339] to-[#3a5530] relative overflow-hidden">
+            <div className="pt-24 pb-10 bg-gradient-to-br from-[#8a8a00] via-[#456339] to-[#3a5530] relative overflow-hidden">
                 <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
                 <div className="container mx-auto max-w-7xl px-4 sm:px-6 relative z-10">
                     <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-full bg-white/15 border border-white/25 text-white/90 text-sm font-medium mb-4">
@@ -170,7 +170,7 @@ export default function AgendaPage() {
             <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-8">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-24">
-                        <div className="w-10 h-10 border-3 border-[#537547] border-t-transparent rounded-full animate-spin mb-4"></div>
+                        <div className="w-10 h-10 border-3 border-[#8a8a00] border-t-transparent rounded-full animate-spin mb-4"></div>
                         <p className="text-gray-400 text-sm">กำลังโหลดข้อมูล...</p>
                     </div>
                 ) : error ? (
@@ -182,7 +182,7 @@ export default function AgendaPage() {
                         <p className="text-gray-500 mb-5 text-sm">{error}</p>
                         <button
                             onClick={fetchInitialData}
-                            className="px-5 py-2 bg-[#537547] hover:bg-[#456339] text-white rounded-lg transition-colors text-sm"
+                            className="px-5 py-2 bg-[#8a8a00] hover:bg-[#456339] text-white rounded-lg transition-colors text-sm"
                         >
                             ลองใหม่อีกครั้ง
                         </button>
@@ -203,23 +203,23 @@ export default function AgendaPage() {
                                                 key={event.id}
                                                 onClick={() => selectEvent(event.id)}
                                                 className={`w-full text-left rounded-xl p-4 transition-all duration-200 border group ${isSelected
-                                                    ? 'bg-white border-[#537547]/30 shadow-md shadow-[#537547]/10 ring-1 ring-[#537547]/20'
+                                                    ? 'bg-white border-[#8a8a00]/30 shadow-md shadow-[#8a8a00]/10 ring-1 ring-[#8a8a00]/20'
                                                     : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-sm'
                                                     }`}
                                             >
                                                 <div className="flex items-start gap-3">
                                                     {/* Event image thumbnail */}
-                                                    <div className={`w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden border ${isSelected ? 'border-[#537547]/30' : 'border-gray-200'}`}>
+                                                    <div className={`w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden border ${isSelected ? 'border-[#8a8a00]/30' : 'border-gray-200'}`}>
                                                         {event.imageUrl ? (
                                                             <img src={event.imageUrl} alt="" className="w-full h-full object-cover" />
                                                         ) : (
-                                                            <div className={`w-full h-full flex items-center justify-center ${isSelected ? 'bg-[#537547]/10' : 'bg-gray-100'}`}>
-                                                                <Calendar className={`w-5 h-5 ${isSelected ? 'text-[#537547]' : 'text-gray-400'}`} />
+                                                            <div className={`w-full h-full flex items-center justify-center ${isSelected ? 'bg-[#8a8a00]/10' : 'bg-gray-100'}`}>
+                                                                <Calendar className={`w-5 h-5 ${isSelected ? 'text-[#8a8a00]' : 'text-gray-400'}`} />
                                                             </div>
                                                         )}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <h4 className={`text-sm font-semibold truncate mb-1 ${isSelected ? 'text-[#537547]' : 'text-gray-800'}`}>
+                                                        <h4 className={`text-sm font-semibold truncate mb-1 ${isSelected ? 'text-[#8a8a00]' : 'text-gray-800'}`}>
                                                             {event.name || event.title || 'Untitled Event'}
                                                         </h4>
                                                         <div className="flex items-center gap-1.5 text-xs text-gray-400">
@@ -234,7 +234,7 @@ export default function AgendaPage() {
                                                         )}
                                                     </div>
                                                     {isSelected && (
-                                                        <ChevronRight className="w-4 h-4 text-[#537547] flex-shrink-0 mt-1" />
+                                                        <ChevronRight className="w-4 h-4 text-[#8a8a00] flex-shrink-0 mt-1" />
                                                     )}
                                                 </div>
                                             </button>
@@ -248,7 +248,7 @@ export default function AgendaPage() {
                         <div className="flex-1 min-w-0">
                             {loadingDetail ? (
                                 <div className="flex flex-col items-center justify-center py-20">
-                                    <div className="w-8 h-8 border-3 border-[#537547] border-t-transparent rounded-full animate-spin mb-3"></div>
+                                    <div className="w-8 h-8 border-3 border-[#8a8a00] border-t-transparent rounded-full animate-spin mb-3"></div>
                                     <p className="text-gray-400 text-sm">กำลังโหลดกำหนดการ...</p>
                                 </div>
                             ) : !selectedEvent ? (
@@ -268,21 +268,21 @@ export default function AgendaPage() {
                                                 <div className="flex flex-wrap items-center gap-3 mt-2 text-sm text-gray-500">
                                                     {selectedEvent.startDate && (
                                                         <span className="flex items-center gap-1.5">
-                                                            <Calendar className="w-4 h-4 text-[#537547]" />
+                                                            <Calendar className="w-4 h-4 text-[#8a8a00]" />
                                                             {format(new Date(selectedEvent.startDate), 'd MMM yyyy', { locale: th })}
                                                             {selectedEvent.endDate && ` - ${format(new Date(selectedEvent.endDate), 'd MMM yyyy', { locale: th })}`}
                                                         </span>
                                                     )}
                                                     {selectedEvent.venue && (
                                                         <span className="flex items-center gap-1.5">
-                                                            <MapPin className="w-4 h-4 text-[#537547]" />
+                                                            <MapPin className="w-4 h-4 text-[#8a8a00]" />
                                                             {selectedEvent.venue}
                                                         </span>
                                                     )}
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2 text-sm">
-                                                <span className="px-3 py-1 rounded-full bg-[#537547]/10 text-[#537547] font-medium">
+                                                <span className="px-3 py-1 rounded-full bg-[#8a8a00]/10 text-[#8a8a00] font-medium">
                                                     {sessions.length} Sessions
                                                 </span>
                                             </div>
@@ -299,7 +299,7 @@ export default function AgendaPage() {
                                                         key={day.date.toISOString()}
                                                         onClick={() => setActiveDay(day.date)}
                                                         className={`flex-shrink-0 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive
-                                                            ? 'bg-[#537547] text-white shadow-md shadow-[#537547]/20'
+                                                            ? 'bg-[#8a8a00] text-white shadow-md shadow-[#8a8a00]/20'
                                                             : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                                                             }`}
                                                     >
@@ -316,7 +316,7 @@ export default function AgendaPage() {
                                     {/* Active Day Header */}
                                     {activeDay && (
                                         <div className="flex items-center gap-2 mb-5">
-                                            <Clock className="w-5 h-5 text-[#537547]" />
+                                            <Clock className="w-5 h-5 text-[#8a8a00]" />
                                             <h3 className="text-lg font-semibold text-gray-800">
                                                 {format(activeDay, 'EEEE d MMMM yyyy', { locale: th })}
                                             </h3>
@@ -327,7 +327,7 @@ export default function AgendaPage() {
                                     {groupedSessions.length > 0 ? (
                                         <div className="relative">
                                             {/* Timeline line */}
-                                            <div className="absolute left-[39px] top-2 bottom-2 w-px bg-gradient-to-b from-[#537547]/30 via-[#537547]/15 to-transparent hidden sm:block"></div>
+                                            <div className="absolute left-[39px] top-2 bottom-2 w-px bg-gradient-to-b from-[#8a8a00]/30 via-[#8a8a00]/15 to-transparent hidden sm:block"></div>
 
                                             <div className="space-y-4">
                                                 {groupedSessions.map((group, gIdx) => (
@@ -336,9 +336,9 @@ export default function AgendaPage() {
                                                         <div className="flex-shrink-0 w-[80px] pt-5 hidden sm:block">
                                                             <div className="relative">
                                                                 {/* Timeline dot */}
-                                                                <div className="absolute -right-[25px] top-1 w-3 h-3 rounded-full bg-[#537547] border-2 border-white shadow-sm z-10"></div>
+                                                                <div className="absolute -right-[25px] top-1 w-3 h-3 rounded-full bg-[#8a8a00] border-2 border-white shadow-sm z-10"></div>
                                                                 <div className="text-right pr-4">
-                                                                    <div className="text-lg font-bold text-[#537547]">{group.time}</div>
+                                                                    <div className="text-lg font-bold text-[#8a8a00]">{group.time}</div>
                                                                     <div className="text-xs text-gray-400">ถึง {group.endTime}</div>
                                                                 </div>
                                                             </div>
@@ -351,17 +351,17 @@ export default function AgendaPage() {
                                                                 return (
                                                                     <div
                                                                         key={session.id}
-                                                                        className="bg-white border border-gray-200 rounded-xl p-5 hover:border-[#537547]/25 hover:shadow-sm transition-all group"
+                                                                        className="bg-white border border-gray-200 rounded-xl p-5 hover:border-[#8a8a00]/25 hover:shadow-sm transition-all group"
                                                                     >
                                                                         {/* Mobile time */}
-                                                                        <div className="sm:hidden flex items-center gap-2 text-sm text-[#537547] font-semibold mb-3">
+                                                                        <div className="sm:hidden flex items-center gap-2 text-sm text-[#8a8a00] font-semibold mb-3">
                                                                             <Clock className="w-4 h-4" />
                                                                             {group.time} - {group.endTime}
                                                                         </div>
 
                                                                         {/* Code + Room badges */}
                                                                         <div className="flex flex-wrap items-center gap-2 mb-2">
-                                                                            <span className="text-xs font-mono px-2 py-0.5 rounded bg-[#537547]/10 text-[#537547] border border-[#537547]/15">
+                                                                            <span className="text-xs font-mono px-2 py-0.5 rounded bg-[#8a8a00]/10 text-[#8a8a00] border border-[#8a8a00]/15">
                                                                                 {session.sessionCode}
                                                                             </span>
                                                                             {session.room && (
@@ -373,7 +373,7 @@ export default function AgendaPage() {
                                                                         </div>
 
                                                                         {/* Title */}
-                                                                        <h4 className="text-base font-semibold text-gray-900 group-hover:text-[#537547] transition-colors mb-1">
+                                                                        <h4 className="text-base font-semibold text-gray-900 group-hover:text-[#8a8a00] transition-colors mb-1">
                                                                             {session.sessionName}
                                                                         </h4>
 
@@ -430,7 +430,7 @@ export default function AgendaPage() {
                                     {selectedEvent.documents && selectedEvent.documents.length > 0 && (
                                         <div className="mt-8 bg-white border border-gray-200 rounded-xl p-5">
                                             <h3 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                                <FileText className="w-4 h-4 text-[#537547]" />
+                                                <FileText className="w-4 h-4 text-[#8a8a00]" />
                                                 เอกสารประกอบ
                                             </h3>
                                             <div className="grid gap-2 sm:grid-cols-2">
@@ -440,9 +440,9 @@ export default function AgendaPage() {
                                                         href={doc.url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-[#537547]/5 hover:border-[#537547]/20 transition-all group"
+                                                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50/50 hover:bg-[#8a8a00]/5 hover:border-[#8a8a00]/20 transition-all group"
                                                     >
-                                                        <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-[#537547] group-hover:border-[#537547]/30 shadow-sm transition-colors flex-shrink-0">
+                                                        <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:text-[#8a8a00] group-hover:border-[#8a8a00]/30 shadow-sm transition-colors flex-shrink-0">
                                                             <FileText className="w-4 h-4" />
                                                         </div>
                                                         <span className="text-sm font-medium text-gray-600 group-hover:text-gray-800 truncate">

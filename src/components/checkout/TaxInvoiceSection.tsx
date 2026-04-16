@@ -34,10 +34,10 @@ export function TaxInvoiceSection({
                     type="checkbox"
                     checked={needTaxInvoice}
                     onChange={(e) => onNeedTaxInvoiceChange(e.target.checked)}
-                    className="w-5 h-5 rounded border-gray-300 text-[#537547] focus:ring-[#537547]"
+                    className="w-5 h-5 rounded border-gray-300 text-[#8a8a00] focus:ring-[#8a8a00]"
                 />
                 <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-gray-500 group-hover:text-[#537547] transition-colors" />
+                    <FileText className="w-4 h-4 text-gray-500 group-hover:text-[#8a8a00] transition-colors" />
                     <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
                         ต้องการใบกำกับภาษี
                     </span>
@@ -45,7 +45,7 @@ export function TaxInvoiceSection({
             </label>
 
             {needTaxInvoice && (
-                <div className="space-y-4 pl-8 border-l-2 border-[#537547]/20">
+                <div className="space-y-4 pl-8 border-l-2 border-[#8a8a00]/20">
                     <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-gray-700">ชื่อ / บริษัท <span className="text-red-500">*</span></label>
@@ -54,7 +54,7 @@ export function TaxInvoiceSection({
                                 value={taxName}
                                 onChange={(e) => onFieldChange('taxName', e.target.value)}
                                 placeholder="ชื่อบุคคล หรือ ชื่อบริษัท"
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -65,7 +65,7 @@ export function TaxInvoiceSection({
                                 onChange={(e) => onFieldChange('taxId', e.target.value)}
                                 placeholder="เลข 13 หลัก"
                                 maxLength={13}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                             />
                         </div>
                     </div>
@@ -77,7 +77,7 @@ export function TaxInvoiceSection({
                             value={taxAddress}
                             onChange={(e) => onFieldChange('taxAddress', e.target.value)}
                             placeholder="เลขที่ อาคาร ซอย ถนน"
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                         />
                     </div>
 
@@ -89,7 +89,7 @@ export function TaxInvoiceSection({
                                 value={taxSubDistrict}
                                 onChange={(e) => onFieldChange('taxSubDistrict', e.target.value)}
                                 placeholder="แขวง/ตำบล"
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -99,7 +99,7 @@ export function TaxInvoiceSection({
                                 value={taxDistrict}
                                 onChange={(e) => onFieldChange('taxDistrict', e.target.value)}
                                 placeholder="เขต/อำเภอ"
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                             />
                         </div>
                     </div>
@@ -112,7 +112,7 @@ export function TaxInvoiceSection({
                                 value={taxProvince}
                                 onChange={(e) => onFieldChange('taxProvince', e.target.value)}
                                 placeholder="จังหวัด"
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                             />
                         </div>
                         <div className="space-y-1.5">
@@ -123,7 +123,7 @@ export function TaxInvoiceSection({
                                 onChange={(e) => onFieldChange('taxPostalCode', e.target.value)}
                                 placeholder="10xxx"
                                 maxLength={5}
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                             />
                         </div>
                     </div>

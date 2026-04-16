@@ -90,7 +90,7 @@ export default function EventsPage() {
             <Navbar />
 
             {/* Header Section */}
-            <section className="relative pt-40 pb-20 bg-gradient-to-br from-[#537547] via-[#456339] to-[#3d5733] overflow-hidden">
+            <section className="relative pt-40 pb-20 bg-gradient-to-br from-[#8a8a00] via-[#456339] to-[#3d5733] overflow-hidden">
                 {/* Animated background shapes */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
@@ -122,7 +122,7 @@ export default function EventsPage() {
                                 placeholder="ค้นหาชื่อการประชุม, สถานที่..."
                                 value={searchQuery}
                                 onChange={(e) => handleSearch(e.target.value)}
-                                className="w-full h-12 pl-12 pr-10 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#537547]/30 focus:border-[#537547] transition-all"
+                                className="w-full h-12 pl-12 pr-10 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8a8a00]/30 focus:border-[#8a8a00] transition-all"
                             />
                             {searchQuery && (
                                 <button
@@ -141,7 +141,7 @@ export default function EventsPage() {
                                     key={cat}
                                     onClick={() => handleCategoryChange(cat)}
                                     className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${selectedCategory === cat
-                                        ? 'bg-[#537547] text-white scale-105 shadow-md'
+                                        ? 'bg-[#8a8a00] text-white scale-105 shadow-md'
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200 hover:scale-105'
                                         }`}
                                 >
@@ -153,7 +153,7 @@ export default function EventsPage() {
 
                     {/* Results count */}
                     <div className="mt-4 text-sm text-gray-500">
-                        พบ <span className="text-[#537547] font-bold">{filteredEvents.length}</span> รายการ
+                        พบ <span className="text-[#8a8a00] font-bold">{filteredEvents.length}</span> รายการ
                         {searchQuery && <span className="ml-1">สำหรับ "{searchQuery}"</span>}
                     </div>
                 </div>
@@ -163,8 +163,8 @@ export default function EventsPage() {
             <section className="py-12 px-4 md:px-6 flex-grow">
                 <div className="container mx-auto max-w-5xl">
                     <div ref={eventsRef} className={`mb-8 scroll-animate fade-up ${eventsVisible ? 'is-visible' : ''}`}>
-                        <span className="text-[#537547] font-bold text-sm tracking-wider uppercase mb-2 block">Event Schedule</span>
-                        <h2 className="text-3xl font-bold text-[#6f7e0d]">รายการการประชุม</h2>
+                        <span className="text-[#8a8a00] font-bold text-sm tracking-wider uppercase mb-2 block">Event Schedule</span>
+                        <h2 className="text-3xl font-bold text-[#737300]">รายการการประชุม</h2>
                     </div>
 
                     <div className="space-y-6">
@@ -194,7 +194,7 @@ export default function EventsPage() {
                                 <div className="text-gray-500 text-lg mb-2">ไม่พบการประชุมที่ค้นหา</div>
                                 <button
                                     onClick={() => { handleSearch(''); handleCategoryChange('all'); }}
-                                    className="text-[#537547] hover:text-[#456339] transition-colors"
+                                    className="text-[#8a8a00] hover:text-[#456339] transition-colors"
                                 >
                                     ล้างการค้นหา
                                 </button>
@@ -202,7 +202,7 @@ export default function EventsPage() {
                         ) : paginatedEvents.map((event: Event, index: number) => (
                             <div
                                 key={event.id}
-                                className={`group bg-white border border-gray-200 rounded-2xl p-6 md:p-8 hover:border-[#537547]/50 hover:shadow-xl transition-all duration-500 scroll-animate fade-up stagger-${index + 1} ${eventsVisible ? 'is-visible' : ''}`}
+                                className={`group bg-white border border-gray-200 rounded-2xl p-6 md:p-8 hover:border-[#8a8a00]/50 hover:shadow-xl transition-all duration-500 scroll-animate fade-up stagger-${index + 1} ${eventsVisible ? 'is-visible' : ''}`}
                                 style={{ transitionProperty: 'border-color, box-shadow, transform' }}
                             >
                                 <div className="flex flex-col md:flex-row gap-8 items-center">
@@ -211,7 +211,7 @@ export default function EventsPage() {
                                         {getEventImageUrl(event) ? (
                                             <img src={getEventImageUrl(event)!} alt={event.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#537547]/10 to-[#6f7e0d]/10 text-[#537547]">
+                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#8a8a00]/10 to-[#737300]/10 text-[#8a8a00]">
                                                 <Calendar className="w-12 h-12 opacity-60" />
                                             </div>
                                         )}
@@ -220,7 +220,7 @@ export default function EventsPage() {
                                         </div>
                                         {/* CPE Credits badge */}
                                         {event.cpeCredits && Number(event.cpeCredits) > 0 && (
-                                            <div className="absolute top-3 right-3 bg-[#537547]/90 backdrop-blur px-2 py-1 rounded-lg text-xs font-bold text-white flex items-center gap-1 shadow-md">
+                                            <div className="absolute top-3 right-3 bg-[#8a8a00]/90 backdrop-blur px-2 py-1 rounded-lg text-xs font-bold text-white flex items-center gap-1 shadow-md">
                                                 <Award className="w-3 h-3" />
                                                 {event.cpeCredits} CPE
                                             </div>
@@ -232,14 +232,14 @@ export default function EventsPage() {
                                         <div>
 
 
-                                            <h3 className="text-2xl font-bold mb-2 text-gray-900 group-hover:text-[#537547] transition-colors duration-300">{event.name}</h3>
+                                            <h3 className="text-2xl font-bold mb-2 text-gray-900 group-hover:text-[#8a8a00] transition-colors duration-300">{event.name}</h3>
                                             <p className="text-gray-500 text-sm line-clamp-2 md:line-clamp-none">{event.description}</p>
                                         </div>
 
                                         <div className="flex flex-col gap-2 text-sm text-gray-600">
                                             {/* Row 1: Date + Time */}
                                             <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start">
-                                                <span className="inline-flex items-center gap-1.5 bg-[#537547]/8 text-[#537547] px-3 py-1.5 rounded-full font-medium text-xs">
+                                                <span className="inline-flex items-center gap-1.5 bg-[#8a8a00]/8 text-[#8a8a00] px-3 py-1.5 rounded-full font-medium text-xs">
                                                     <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                                                     {event.rounds?.[0]?.date
                                                         ? new Date(event.rounds[0].date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok' })
@@ -255,7 +255,7 @@ export default function EventsPage() {
                                             {/* Row 2: Location */}
                                             {(event.rounds?.[0]?.location || event.location) && (
                                                 <div className="flex items-start gap-1.5 justify-center md:justify-start text-gray-500">
-                                                    <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-[#537547]" />
+                                                    <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-[#8a8a00]" />
                                                     <span className="text-xs leading-relaxed line-clamp-2">{event.rounds?.[0]?.location || event.location}</span>
                                                 </div>
                                             )}
@@ -265,7 +265,7 @@ export default function EventsPage() {
                                     {/* Action */}
                                     <div className="flex-shrink-0">
                                         <Link href={`/events/${event.id}`}>
-                                            <Button className="h-12 px-8 rounded-full bg-[#537547] hover:bg-[#456339] text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-95">
+                                            <Button className="h-12 px-8 rounded-full bg-[#8a8a00] hover:bg-[#456339] text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-95">
                                                 ลงทะเบียน <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
                                             </Button>
                                         </Link>
@@ -301,7 +301,7 @@ export default function EventsPage() {
                                                 key={page}
                                                 onClick={() => handlePageChange(page)}
                                                 className={`w-10 h-10 rounded-lg font-medium transition-all duration-200 ${currentPage === page
-                                                    ? 'bg-[#537547] text-white scale-110 shadow-md'
+                                                    ? 'bg-[#8a8a00] text-white scale-110 shadow-md'
                                                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 hover:scale-105'
                                                     }`}
                                             >

@@ -92,10 +92,10 @@ export function AddonSelector({
                                 isPurchased
                                     ? 'border-green-200 bg-green-50/50 opacity-70 cursor-not-allowed'
                                     : isSelected
-                                        ? 'border-[#537547] bg-[#537547]/5'
+                                        ? 'border-[#8a8a00] bg-[#8a8a00]/5'
                                         : isSoldOut
                                             ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                                            : 'border-gray-200 bg-white hover:border-[#537547]/40'
+                                            : 'border-gray-200 bg-white hover:border-[#8a8a00]/40'
                             }`}
                         >
                             <div className="flex items-center justify-between gap-3">
@@ -105,7 +105,7 @@ export function AddonSelector({
                                             isPurchased
                                                 ? 'border-green-500 bg-green-500'
                                                 : isSelected
-                                                    ? 'border-[#537547] bg-[#537547]'
+                                                    ? 'border-[#8a8a00] bg-[#8a8a00]'
                                                     : 'border-gray-300'
                                         }`}
                                     >
@@ -130,7 +130,7 @@ export function AddonSelector({
                                         )}
                                     </div>
                                 </div>
-                                <span className={`font-semibold flex-shrink-0 ${isSelected ? 'text-[#537547]' : 'text-gray-700'}`}>
+                                <span className={`font-semibold flex-shrink-0 ${isSelected ? 'text-[#8a8a00]' : 'text-gray-700'}`}>
                                     {formatPrice(addon.price)}
                                 </span>
                             </div>
@@ -143,7 +143,7 @@ export function AddonSelector({
                                 <select
                                     value={dietaryRequirement || ''}
                                     onChange={(e) => onDietaryChange(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                                 >
                                     {DIETARY_OPTIONS.map((opt) => (
                                         <option key={opt.value} value={opt.value}>
@@ -157,7 +157,7 @@ export function AddonSelector({
                                         value={dietaryOtherText || ''}
                                         onChange={(e) => onDietaryOtherChange(e.target.value)}
                                         placeholder="ระบุอาหารที่ต้องการ"
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#537547] focus:ring-1 focus:ring-[#537547] outline-none"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
                                     />
                                 )}
                             </div>
@@ -175,8 +175,8 @@ export function AddonSelector({
                                             onClick={() => onWorkshopTopicChange(String(session.id))}
                                             className={`w-full text-left p-3 border rounded-lg text-sm transition-all ${
                                                 selectedWorkshopTopic === String(session.id)
-                                                    ? 'border-[#537547] bg-[#537547]/5'
-                                                    : 'border-gray-200 bg-white hover:border-[#537547]/40'
+                                                    ? 'border-[#8a8a00] bg-[#8a8a00]/5'
+                                                    : 'border-gray-200 bg-white hover:border-[#8a8a00]/40'
                                             }`}
                                         >
                                             <div className="font-medium text-gray-900">{session.sessionName}</div>

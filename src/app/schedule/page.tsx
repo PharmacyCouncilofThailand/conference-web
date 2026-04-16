@@ -24,10 +24,10 @@ export default function SchedulePage() {
                             { time: "04:00 PM", title: "Panel Discussion", type: "Main Stage" },
                         ].map((item, i) => (
                             <div key={i} className="flex gap-6 group">
-                                <div className="w-24 text-right pt-2 font-mono text-emerald-400">{item.time}</div>
+                                <div className="w-24 text-right pt-2 font-mono text-[#8a8a00]">{item.time}</div>
                                 <div className="relative border-l border-white/10 pl-8 pb-8 flex-1">
-                                    <div className="absolute -left-[5px] top-3 w-2.5 h-2.5 rounded-full bg-emerald-600 ring-4 ring-background group-hover:ring-emerald-900 transition-all" />
-                                    <div className="bg-white/5 border border-white/10 p-6 rounded-2xl hover:border-emerald-500/50 transition-all">
+                                    <div className="absolute -left-[5px] top-3 w-2.5 h-2.5 rounded-full bg-[#8a8a00] ring-4 ring-background group-hover:ring-[#737300] transition-all" />
+                                    <div className="bg-white/5 border border-white/10 p-6 rounded-2xl hover:border-[#8a8a00]/50 transition-all">
                                         <h3 className="text-xl font-bold mb-2">{item.title}</h3>
                                         <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-xs font-medium">
                                             {item.type}

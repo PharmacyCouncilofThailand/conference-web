@@ -37,7 +37,7 @@ export function StatsSection({
     return (
         <section ref={ref} className="py-20 px-6">
             <div className="container mx-auto">
-                <div className={`bg-[#537547] rounded-3xl p-12 text-white scroll-animate scale-in ${isVisible ? 'is-visible' : ''}`}>
+                <div className={`bg-[#8a8a00] rounded-3xl p-12 text-white scroll-animate scale-in ${isVisible ? 'is-visible' : ''}`}>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 text-center">
                         <div className={`scroll-animate fade-up stagger-1 ${isVisible ? 'is-visible' : ''}`}>
                             <div className="text-5xl font-bold text-white mb-2">

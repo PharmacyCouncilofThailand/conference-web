@@ -19,10 +19,10 @@ export default function MyTicketsPage() {
 
             <div className="flex-grow flex items-center justify-center px-4">
                 <div className="text-center space-y-4 max-w-md">
-                    <div className="w-20 h-20 mx-auto bg-[#537547]/10 rounded-full flex items-center justify-center">
-                        <Ticket className="w-10 h-10 text-[#537547]" />
+                    <div className="w-20 h-20 mx-auto bg-[#8a8a00]/10 rounded-full flex items-center justify-center">
+                        <Ticket className="w-10 h-10 text-[#8a8a00]" />
                     </div>
-                    <Loader2 className="w-8 h-8 animate-spin text-[#537547] mx-auto" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[#8a8a00] mx-auto" />
                     <h1 className="text-xl font-bold text-gray-900">กำลังพาไปยังตั๋วของคุณ</h1>
                     <p className="text-sm text-gray-500">กรุณารอสักครู่ ระบบกำลังเปิดแท็บ My Ticket ในหน้าโปรไฟล์</p>
                 </div>

@@ -24,7 +24,7 @@ export default async function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#6f7e0d] overflow-x-hidden">
+    <div className="min-h-screen bg-white text-[#737300] overflow-x-hidden">
       <Navbar />
 
       <HeroSection

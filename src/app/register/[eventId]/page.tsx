@@ -158,7 +158,7 @@ export default function FreeRegisterPage() {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
                 <div className="text-center space-y-4">
-                    <div className="w-16 h-16 mx-auto border-4 border-[#537547]/20 border-t-[#537547] rounded-full animate-spin" />
+                    <div className="w-16 h-16 mx-auto border-4 border-[#8a8a00]/20 border-t-[#8a8a00] rounded-full animate-spin" />
                     <p className="text-gray-500 animate-pulse">กำลังโหลดข้อมูลงาน...</p>
                 </div>
             </div>
@@ -187,18 +187,18 @@ export default function FreeRegisterPage() {
                 <Navbar />
                 <main className="pt-24 pb-16 px-4 sm:px-6">
                     <div className="container mx-auto max-w-lg">
-                        <Link href={`/events/${eventId}`} className="inline-flex items-center text-[#537547] hover:text-[#456339] mb-6 text-sm">
+                        <Link href={`/events/${eventId}`} className="inline-flex items-center text-[#8a8a00] hover:text-[#456339] mb-6 text-sm">
                             <ArrowLeft className="w-4 h-4 mr-1" /> กลับหน้างาน
                         </Link>
 
                         <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 text-center">
-                            <div className="w-16 h-16 mx-auto bg-[#537547]/10 rounded-full flex items-center justify-center mb-4">
-                                <User className="w-8 h-8 text-[#537547]" />
+                            <div className="w-16 h-16 mx-auto bg-[#8a8a00]/10 rounded-full flex items-center justify-center mb-4">
+                                <User className="w-8 h-8 text-[#8a8a00]" />
                             </div>
                             <h1 className="text-2xl font-bold text-gray-900 mb-2">กรุณาเข้าสู่ระบบ</h1>
                             <p className="text-gray-500 mb-6">คุณต้องเข้าสู่ระบบก่อนลงทะเบียนเข้าร่วมงาน</p>
                             <Link href={`/login?redirect=${encodeURIComponent(`/register/${eventId}`)}`}>
-                                <Button className="bg-[#537547] hover:bg-[#456339] text-white px-8 h-12 text-lg font-semibold rounded-xl">
+                                <Button className="bg-[#8a8a00] hover:bg-[#456339] text-white px-8 h-12 text-lg font-semibold rounded-xl">
                                     เข้าสู่ระบบ
                                 </Button>
                             </Link>
@@ -217,7 +217,7 @@ export default function FreeRegisterPage() {
                 <Navbar />
                 <main className="pt-24 pb-16 px-4 sm:px-6">
                     <div className="container mx-auto max-w-lg">
-                        <Link href={`/events/${eventId}`} className="inline-flex items-center text-[#537547] hover:text-[#456339] mb-6 text-sm">
+                        <Link href={`/events/${eventId}`} className="inline-flex items-center text-[#8a8a00] hover:text-[#456339] mb-6 text-sm">
                             <ArrowLeft className="w-4 h-4 mr-1" /> กลับหน้างาน
                         </Link>
 
@@ -226,7 +226,7 @@ export default function FreeRegisterPage() {
                             <h1 className="text-xl font-bold text-gray-900 mb-2">ไม่พบตั๋วฟรีสำหรับคุณ</h1>
                             <p className="text-gray-500 mb-6">งานนี้อาจไม่มีตั๋วฟรีสำหรับสถานะของคุณ หรือตั๋วอาจหมดแล้ว</p>
                             <Link href={`/events/${eventId}`}>
-                                <Button variant="outline" className="border-[#537547]/30 text-[#537547]">กลับหน้างาน</Button>
+                                <Button variant="outline" className="border-[#8a8a00]/30 text-[#8a8a00]">กลับหน้างาน</Button>
                             </Link>
                         </div>
                     </div>
@@ -245,7 +245,7 @@ export default function FreeRegisterPage() {
                     <div className="container mx-auto max-w-lg">
                         <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
                             {/* Success header */}
-                            <div className="bg-gradient-to-r from-[#537547] to-[#6f7e0d] p-8 text-center text-white">
+                            <div className="bg-gradient-to-r from-[#8a8a00] to-[#737300] p-8 text-center text-white">
                                 <div className="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">
                                     <CheckCircle className="w-10 h-10" />
                                 </div>
@@ -256,8 +256,8 @@ export default function FreeRegisterPage() {
                             {/* Details */}
                             <div className="p-6 space-y-5">
                                 {/* Reg Code */}
-                                <div className="bg-[#537547]/5 border border-[#537547]/20 rounded-xl p-4">
-                                    <div className="text-xs text-[#537547] font-medium mb-1">รหัสลงทะเบียน</div>
+                                <div className="bg-[#8a8a00]/5 border border-[#8a8a00]/20 rounded-xl p-4">
+                                    <div className="text-xs text-[#8a8a00] font-medium mb-1">รหัสลงทะเบียน</div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-xl font-bold text-gray-900 font-mono tracking-wider">
                                             {result.regCode}
@@ -267,7 +267,7 @@ export default function FreeRegisterPage() {
                                             className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
                                             title="คัดลอก"
                                         >
-                                            {copied ? <CheckCircle className="w-5 h-5 text-[#537547]" /> : <Copy className="w-5 h-5" />}
+                                            {copied ? <CheckCircle className="w-5 h-5 text-[#8a8a00]" /> : <Copy className="w-5 h-5" />}
                                         </button>
                                     </div>
                                 </div>
@@ -287,20 +287,20 @@ export default function FreeRegisterPage() {
                                 {/* Event & Ticket info */}
                                 <div className="space-y-3 text-sm">
                                     <div className="flex items-start gap-3">
-                                        <Calendar className="w-4 h-4 text-[#537547] mt-0.5 flex-shrink-0" />
+                                        <Calendar className="w-4 h-4 text-[#8a8a00] mt-0.5 flex-shrink-0" />
                                         <div>
                                             <div className="font-medium text-gray-900">{result.eventName}</div>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-3">
-                                        <Ticket className="w-4 h-4 text-[#537547] mt-0.5 flex-shrink-0" />
+                                        <Ticket className="w-4 h-4 text-[#8a8a00] mt-0.5 flex-shrink-0" />
                                         <div>
                                             <div className="text-gray-600">{result.ticketName}</div>
-                                            <div className="text-[#537547] font-semibold">ฟรี</div>
+                                            <div className="text-[#8a8a00] font-semibold">ฟรี</div>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-3">
-                                        <Mail className="w-4 h-4 text-[#537547] mt-0.5 flex-shrink-0" />
+                                        <Mail className="w-4 h-4 text-[#8a8a00] mt-0.5 flex-shrink-0" />
                                         <div className="text-gray-600">
                                             อีเมลยืนยันถูกส่งไปที่ {authUser?.email}
                                         </div>
@@ -310,7 +310,7 @@ export default function FreeRegisterPage() {
                                 {/* SSO countdown auto-redirect */}
                                 {isSsoUser && backToWebsiteUrl && countdown > 0 && (
                                     <div className="text-center text-sm text-gray-500">
-                                        กลับไปหน้าเว็บไซต์อัตโนมัติใน <span className="font-bold text-[#537547]">{countdown}</span> วินาที
+                                        กลับไปหน้าเว็บไซต์อัตโนมัติใน <span className="font-bold text-[#8a8a00]">{countdown}</span> วินาที
                                     </div>
                                 )}
 
@@ -318,13 +318,13 @@ export default function FreeRegisterPage() {
                                 <div className="flex flex-col gap-3 pt-2">
                                     {backToWebsiteUrl ? (
                                         <a href={backToWebsiteUrl}>
-                                            <Button className="w-full h-12 bg-[#537547] hover:bg-[#456339] text-white font-semibold rounded-xl">
+                                            <Button className="w-full h-12 bg-[#8a8a00] hover:bg-[#456339] text-white font-semibold rounded-xl">
                                                 <ExternalLink className="w-4 h-4 mr-2" /> กลับไปหน้าเว็บไซต์
                                             </Button>
                                         </a>
                                     ) : (
                                         <Link href="/my-tickets">
-                                            <Button className="w-full h-12 bg-[#537547] hover:bg-[#456339] text-white font-semibold rounded-xl">
+                                            <Button className="w-full h-12 bg-[#8a8a00] hover:bg-[#456339] text-white font-semibold rounded-xl">
                                                 <Ticket className="w-4 h-4 mr-2" /> ดูตั๋วของฉัน
                                             </Button>
                                         </Link>
@@ -350,13 +350,13 @@ export default function FreeRegisterPage() {
             <Navbar />
             <main className="pt-24 pb-16 px-4 sm:px-6">
                 <div className="container mx-auto max-w-lg">
-                    <Link href={`/events/${eventId}`} className="inline-flex items-center text-[#537547] hover:text-[#456339] mb-6 text-sm">
+                    <Link href={`/events/${eventId}`} className="inline-flex items-center text-[#8a8a00] hover:text-[#456339] mb-6 text-sm">
                         <ArrowLeft className="w-4 h-4 mr-1" /> กลับหน้างาน
                     </Link>
 
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-[#537547] to-[#6f7e0d] p-6 text-white">
+                        <div className="bg-gradient-to-r from-[#8a8a00] to-[#737300] p-6 text-white">
                             <h1 className="text-xl font-bold mb-1">ลงทะเบียนเข้าร่วมงาน</h1>
                             <p className="text-white/80 text-sm">{event.name}</p>
                         </div>
@@ -366,7 +366,7 @@ export default function FreeRegisterPage() {
                             <div className="bg-gray-50 rounded-xl p-4 space-y-2">
                                 {event.startDate && (
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <Calendar className="w-4 h-4 text-[#537547]" />
+                                        <Calendar className="w-4 h-4 text-[#8a8a00]" />
                                         {new Date(event.startDate).toLocaleDateString('th-TH', {
                                             weekday: 'long',
                                             day: 'numeric',
@@ -377,21 +377,21 @@ export default function FreeRegisterPage() {
                                 )}
                                 {event.venue && (
                                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                                        <MapPin className="w-4 h-4 text-[#537547]" />
+                                        <MapPin className="w-4 h-4 text-[#8a8a00]" />
                                         {event.venue}
                                     </div>
                                 )}
                                 <div className="flex items-center gap-2 text-sm">
-                                    <Ticket className="w-4 h-4 text-[#537547]" />
+                                    <Ticket className="w-4 h-4 text-[#8a8a00]" />
                                     <span className="text-gray-600">{freeTicket!.name}</span>
-                                    <span className="ml-auto text-[#537547] font-bold">ฟรี</span>
+                                    <span className="ml-auto text-[#8a8a00] font-bold">ฟรี</span>
                                 </div>
                             </div>
 
                             {/* User info (pre-filled, read-only) */}
                             <div>
                                 <div className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                                    <User className="w-4 h-4 text-[#537547]" />
+                                    <User className="w-4 h-4 text-[#8a8a00]" />
                                     ข้อมูลผู้ลงทะเบียน
                                 </div>
                                 <div className="bg-gray-50 rounded-xl p-4 space-y-2">
@@ -420,7 +420,7 @@ export default function FreeRegisterPage() {
                             <Button
                                 onClick={handleRegister}
                                 disabled={isSubmitting}
-                                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#537547] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
+                                className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#8a8a00] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]"
                             >
                                 {isSubmitting ? (
                                     <><Loader2 className="w-5 h-5 mr-2 animate-spin" />กำลังลงทะเบียน...</>

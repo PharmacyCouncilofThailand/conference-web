@@ -55,7 +55,7 @@ export function CountdownTimer({ targetDate, endDate, className = '' }: Countdow
         return (
             <div className={`text-center ${className}`}>
                 <div className="text-sm text-gray-400 mb-2">Event Status</div>
-                <div className="text-lg font-bold text-[#537547]">Event is ongoing</div>
+                <div className="text-lg font-bold text-[#8a8a00]">Event is ongoing</div>
             </div>
         );
     }
@@ -73,20 +73,20 @@ export function CountdownTimer({ targetDate, endDate, className = '' }: Countdow
         <div className={`${className}`}>
             <div className="text-sm text-gray-400 mb-3 text-center">Event starts in</div>
             <div className="grid grid-cols-4 gap-2">
-                <div className="bg-[#537547]/10 border border-[#537547]/20 rounded-xl p-3 text-center">
-                    <div className="text-2xl md:text-3xl font-bold text-[#537547]">{timeLeft.days}</div>
+                <div className="bg-[#8a8a00]/10 border border-[#8a8a00]/20 rounded-xl p-3 text-center">
+                    <div className="text-2xl md:text-3xl font-bold text-[#8a8a00]">{timeLeft.days}</div>
                     <div className="text-xs text-gray-400">Days</div>
                 </div>
-                <div className="bg-[#537547]/10 border border-[#537547]/20 rounded-xl p-3 text-center">
-                    <div className="text-2xl md:text-3xl font-bold text-[#537547]">{timeLeft.hours.toString().padStart(2, '0')}</div>
+                <div className="bg-[#8a8a00]/10 border border-[#8a8a00]/20 rounded-xl p-3 text-center">
+                    <div className="text-2xl md:text-3xl font-bold text-[#8a8a00]">{timeLeft.hours.toString().padStart(2, '0')}</div>
                     <div className="text-xs text-gray-400">Hours</div>
                 </div>
-                <div className="bg-[#537547]/10 border border-[#537547]/20 rounded-xl p-3 text-center">
-                    <div className="text-2xl md:text-3xl font-bold text-[#537547]">{timeLeft.minutes.toString().padStart(2, '0')}</div>
+                <div className="bg-[#8a8a00]/10 border border-[#8a8a00]/20 rounded-xl p-3 text-center">
+                    <div className="text-2xl md:text-3xl font-bold text-[#8a8a00]">{timeLeft.minutes.toString().padStart(2, '0')}</div>
                     <div className="text-xs text-gray-400">Mins</div>
                 </div>
-                <div className="bg-[#537547]/10 border border-[#537547]/20 rounded-xl p-3 text-center">
-                    <div className="text-2xl md:text-3xl font-bold text-[#537547] animate-pulse">{timeLeft.seconds.toString().padStart(2, '0')}</div>
+                <div className="bg-[#8a8a00]/10 border border-[#8a8a00]/20 rounded-xl p-3 text-center">
+                    <div className="text-2xl md:text-3xl font-bold text-[#8a8a00] animate-pulse">{timeLeft.seconds.toString().padStart(2, '0')}</div>
                     <div className="text-xs text-gray-400">Secs</div>
                 </div>
             </div>

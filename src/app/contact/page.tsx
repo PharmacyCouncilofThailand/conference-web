@@ -128,7 +128,7 @@ export default function ContactPage() {
             <Navbar />
 
             {/* Header */}
-            <section className="relative pt-32 pb-16 px-6 bg-gradient-to-br from-[#537547] via-[#456339] to-[#3d5733] overflow-hidden">
+            <section className="relative pt-32 pb-16 px-6 bg-gradient-to-br from-[#8a8a00] via-[#456339] to-[#3d5733] overflow-hidden">
                 {/* Animated background shapes */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-0 left-10 w-64 h-64 bg-white/5 blur-[100px] rounded-full animate-pulse" style={{ animationDuration: '4s' }} />
@@ -158,23 +158,23 @@ export default function ContactPage() {
 
                             {/* Contact Cards */}
                             <div className="grid md:grid-cols-3 gap-4">
-                                <div className={`bg-white border border-gray-200 rounded-2xl p-5 text-center hover:border-[#537547]/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 scroll-animate fade-up stagger-1 ${contentVisible ? 'is-visible' : ''}`}>
-                                    <div className="w-12 h-12 rounded-xl bg-[#537547]/10 flex items-center justify-center mx-auto mb-3 transition-transform hover:scale-110 hover:rotate-3">
-                                        <Phone className="w-6 h-6 text-[#537547]" />
+                                <div className={`bg-white border border-gray-200 rounded-2xl p-5 text-center hover:border-[#8a8a00]/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 scroll-animate fade-up stagger-1 ${contentVisible ? 'is-visible' : ''}`}>
+                                    <div className="w-12 h-12 rounded-xl bg-[#8a8a00]/10 flex items-center justify-center mx-auto mb-3 transition-transform hover:scale-110 hover:rotate-3">
+                                        <Phone className="w-6 h-6 text-[#8a8a00]" />
                                     </div>
                                     <h3 className="font-bold mb-1 text-gray-900">โทรศัพท์</h3>
                                     <p className="text-sm text-gray-500">02-123-4567</p>
                                 </div>
 
-                                <div className={`bg-white border border-gray-200 rounded-2xl p-5 text-center hover:border-[#537547]/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 scroll-animate fade-up stagger-2 ${contentVisible ? 'is-visible' : ''}`}>
-                                    <div className="w-12 h-12 rounded-xl bg-[#537547]/10 flex items-center justify-center mx-auto mb-3 transition-transform hover:scale-110 hover:rotate-3">
-                                        <Mail className="w-6 h-6 text-[#537547]" />
+                                <div className={`bg-white border border-gray-200 rounded-2xl p-5 text-center hover:border-[#8a8a00]/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 scroll-animate fade-up stagger-2 ${contentVisible ? 'is-visible' : ''}`}>
+                                    <div className="w-12 h-12 rounded-xl bg-[#8a8a00]/10 flex items-center justify-center mx-auto mb-3 transition-transform hover:scale-110 hover:rotate-3">
+                                        <Mail className="w-6 h-6 text-[#8a8a00]" />
                                     </div>
                                     <h3 className="font-bold mb-1 text-gray-900">อีเมล</h3>
                                     <p className="text-sm text-gray-500">support@eventflow.th</p>
                                 </div>
 
-                                <div className={`bg-white border border-gray-200 rounded-2xl p-5 text-center hover:border-[#537547]/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 scroll-animate fade-up stagger-3 ${contentVisible ? 'is-visible' : ''}`}>
+                                <div className={`bg-white border border-gray-200 rounded-2xl p-5 text-center hover:border-[#8a8a00]/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 scroll-animate fade-up stagger-3 ${contentVisible ? 'is-visible' : ''}`}>
                                     <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mx-auto mb-3 transition-transform hover:scale-110 hover:rotate-3">
                                         <Clock className="w-6 h-6 text-blue-500" />
                                     </div>
@@ -185,21 +185,21 @@ export default function ContactPage() {
 
                             {/* Contact Form */}
                             <div className={`bg-white border border-gray-200 rounded-3xl p-6 md:p-8 shadow-sm scroll-animate fade-up stagger-4 ${contentVisible ? 'is-visible' : ''}`}>
-                                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-[#6f7e0d]">
-                                    <MessageCircle className="w-5 h-5 text-[#537547]" />
+                                <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-[#737300]">
+                                    <MessageCircle className="w-5 h-5 text-[#8a8a00]" />
                                     ส่งข้อความถึงเรา
                                 </h2>
 
                                 {submitted ? (
                                     <div className="text-center py-12 scroll-animate scale-in is-visible">
-                                        <div className="w-16 h-16 bg-[#537547]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <CheckCircle className="w-8 h-8 text-[#537547]" />
+                                        <div className="w-16 h-16 bg-[#8a8a00]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <CheckCircle className="w-8 h-8 text-[#8a8a00]" />
                                         </div>
-                                        <h3 className="text-xl font-bold text-[#537547] mb-2">ส่งข้อความสำเร็จ!</h3>
+                                        <h3 className="text-xl font-bold text-[#8a8a00] mb-2">ส่งข้อความสำเร็จ!</h3>
                                         <p className="text-gray-500 mb-4">เราจะติดต่อกลับภายใน 24 ชั่วโมง</p>
                                         <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4 inline-block">
                                             <p className="text-sm text-gray-500 mb-1">หมายเลข Ticket</p>
-                                            <p className="text-xl font-mono font-bold text-[#537547]">{ticketId}</p>
+                                            <p className="text-xl font-mono font-bold text-[#8a8a00]">{ticketId}</p>
                                         </div>
                                         <p className="text-sm text-gray-500 mb-4">กรุณาเก็บหมายเลขนี้ไว้อ้างอิง</p>
                                         <Button
@@ -221,7 +221,7 @@ export default function ContactPage() {
                                                     value={formData.name}
                                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                                                     placeholder="กรอกชื่อของคุณ"
-                                                    className="bg-gray-50 border-gray-200 focus:border-[#537547] text-gray-900 transition-all"
+                                                    className="bg-gray-50 border-gray-200 focus:border-[#8a8a00] text-gray-900 transition-all"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -233,7 +233,7 @@ export default function ContactPage() {
                                                     value={formData.email}
                                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                                     placeholder="your@email.com"
-                                                    className="bg-gray-50 border-gray-200 focus:border-[#537547] text-gray-900 transition-all"
+                                                    className="bg-gray-50 border-gray-200 focus:border-[#8a8a00] text-gray-900 transition-all"
                                                 />
                                             </div>
                                         </div>
@@ -246,7 +246,7 @@ export default function ContactPage() {
                                                     value={formData.phone}
                                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                                     placeholder="08X-XXX-XXXX"
-                                                    className="bg-gray-50 border-gray-200 focus:border-[#537547] text-gray-900 transition-all"
+                                                    className="bg-gray-50 border-gray-200 focus:border-[#8a8a00] text-gray-900 transition-all"
                                                 />
                                             </div>
                                             <div className="space-y-2">
@@ -256,7 +256,7 @@ export default function ContactPage() {
                                                     value={formData.regCode}
                                                     onChange={(e) => setFormData({ ...formData, regCode: e.target.value })}
                                                     placeholder="REG-XXXXXX"
-                                                    className="bg-gray-50 border-gray-200 focus:border-[#537547] text-gray-900 transition-all"
+                                                    className="bg-gray-50 border-gray-200 focus:border-[#8a8a00] text-gray-900 transition-all"
                                                 />
                                             </div>
                                         </div>
@@ -268,7 +268,7 @@ export default function ContactPage() {
                                                 required
                                                 value={formData.category}
                                                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                                className="w-full h-11 px-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 focus:border-[#537547] focus:outline-none transition-all"
+                                                className="w-full h-11 px-4 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 focus:border-[#8a8a00] focus:outline-none transition-all"
                                             >
                                                 <option value="">-- เลือกหมวดหมู่ --</option>
                                                 <option value="registration">การลงทะเบียน</option>
@@ -287,7 +287,7 @@ export default function ContactPage() {
                                                 value={formData.subject}
                                                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                                                 placeholder="เรื่องที่ต้องการติดต่อ"
-                                                className="bg-gray-50 border-gray-200 focus:border-[#537547] text-gray-900 transition-all"
+                                                className="bg-gray-50 border-gray-200 focus:border-[#8a8a00] text-gray-900 transition-all"
                                             />
                                         </div>
 
@@ -300,14 +300,14 @@ export default function ContactPage() {
                                                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                                                 placeholder="รายละเอียดที่ต้องการสอบถาม..."
                                                 rows={5}
-                                                className="w-full rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-[#537547] focus:outline-none resize-none transition-all"
+                                                className="w-full rounded-lg bg-gray-50 border border-gray-200 px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:border-[#8a8a00] focus:outline-none resize-none transition-all"
                                             />
                                         </div>
 
                                         <Button
                                             type="submit"
                                             disabled={isSubmitting}
-                                            className="w-full bg-[#537547] hover:bg-[#456339] text-white h-12 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:hover:scale-100"
+                                            className="w-full bg-[#8a8a00] hover:bg-[#456339] text-white h-12 transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] disabled:hover:scale-100"
                                         >
                                             {isSubmitting ? (
                                                 <>กำลังส่ง...</>
@@ -326,8 +326,8 @@ export default function ContactPage() {
                         {/* Right: FAQ */}
                         <div ref={faqRef} className="lg:col-span-1">
                             <div>
-                                <h2 className={`text-xl font-bold mb-6 flex items-center gap-2 text-[#6f7e0d] scroll-animate fade-up ${faqVisible ? 'is-visible' : ''}`}>
-                                    <HelpCircle className="w-5 h-5 text-[#537547]" />
+                                <h2 className={`text-xl font-bold mb-6 flex items-center gap-2 text-[#737300] scroll-animate fade-up ${faqVisible ? 'is-visible' : ''}`}>
+                                    <HelpCircle className="w-5 h-5 text-[#8a8a00]" />
                                     คำถามที่พบบ่อย
                                 </h2>
 
@@ -349,7 +349,7 @@ export default function ContactPage() {
                                                 return (
                                                     <div
                                                         key={idx}
-                                                        className={`bg-white border rounded-xl overflow-hidden transition-all duration-300 ${isOpen ? 'border-[#537547]/50 shadow-md' : 'border-gray-200 hover:border-[#537547]/30'}`}
+                                                        className={`bg-white border rounded-xl overflow-hidden transition-all duration-300 ${isOpen ? 'border-[#8a8a00]/50 shadow-md' : 'border-gray-200 hover:border-[#8a8a00]/30'}`}
                                                     >
                                                         <button
                                                             onClick={() => toggleFaq(faqId)}
@@ -357,7 +357,7 @@ export default function ContactPage() {
                                                         >
                                                             <span className="text-sm font-medium pr-4 text-gray-900">{item.q}</span>
                                                             <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
-                                                                <ChevronDown className={`w-4 h-4 flex-shrink-0 ${isOpen ? 'text-[#537547]' : 'text-gray-400'}`} />
+                                                                <ChevronDown className={`w-4 h-4 flex-shrink-0 ${isOpen ? 'text-[#8a8a00]' : 'text-gray-400'}`} />
                                                             </div>
                                                         </button>
 
