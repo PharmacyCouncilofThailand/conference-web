@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, Lock } from 'lucide-react';
+import { formatStudentLevelList } from '@/lib/utils';
 
 export interface PackageOption {
     id: string;
@@ -14,6 +15,8 @@ export interface PackageOption {
     originalPrice?: number | null;
     available: number;
     isActive: boolean;
+    allowedRoles?: string[];
+    allowedStudentLevels?: string[];
 }
 
 interface PackageSelectorProps {
@@ -37,6 +40,14 @@ export function PackageSelector({
 
     const formatPrice = (price: number) =>
         `${currencySymbol}${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+    if (packages.length === 0 && !isAddonOnly) {
+        return (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
+                ไม่มีแพ็กเกจที่ตรงกับสถานะของคุณในขณะนี้
+            </div>
+        );
+    }
 
     if (isAddonOnly) {
         return (
@@ -102,6 +113,11 @@ export function PackageSelector({
                                     </div>
                                     {pkg.description && (
                                         <p className="text-sm text-gray-500 mt-1">{pkg.description}</p>
+                                    )}
+                                    {pkg.allowedRoles?.includes('student') && (
+                                        <div className="mt-2 inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                            ระดับนักศึกษา: {formatStudentLevelList(pkg.allowedStudentLevels)}
+                                        </div>
                                     )}
                                     {pkg.features && pkg.features.length > 0 && (
                                         <ul className="mt-2 space-y-1">

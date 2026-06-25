@@ -5,11 +5,22 @@ import Image from 'next/image';
 import { Calendar, ArrowRight, MapPin, Award, ChevronRight, ChevronLeft, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { useCounter } from '@/hooks/use-counter';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Event } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 
 const CAROUSEL_INTERVAL = 5000;
+const EMPTY_EVENTS: Event[] = [];
+
+function formatEventDate(dateString?: string) {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('th-TH', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'Asia/Bangkok'
+    });
+}
 
 interface HeroSectionProps {
     yearsCount: number;
@@ -19,15 +30,18 @@ interface HeroSectionProps {
     events?: Event[];
 }
 
-export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEvent, events = [] }: HeroSectionProps) {
-    const yearsCounter = useCounter(yearsCount, 2000);
-    const membersCounter = useCounter(membersCount, 2500);
-    const eventsCounter = useCounter(eventsCount, 2000);
+export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEvent, events = EMPTY_EVENTS }: HeroSectionProps) {
+    const { count: yearsDisplayCount, setIsVisible: setYearsCounterVisible } = useCounter(yearsCount, 2000);
+    const { count: membersDisplayCount, setIsVisible: setMembersCounterVisible } = useCounter(membersCount, 2500);
+    const { count: eventsDisplayCount, setIsVisible: setEventsCounterVisible } = useCounter(eventsCount, 2000);
     const [mounted, setMounted] = useState(false);
     const { isLoggedIn } = useAuth();
 
     // Carousel state
-    const carouselEvents = events.length > 0 ? events : featuredEvent ? [featuredEvent] : [];
+    const carouselEvents = useMemo(() => {
+        if (events.length > 0) return events;
+        return featuredEvent ? [featuredEvent] : EMPTY_EVENTS;
+    }, [events, featuredEvent]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
 
@@ -57,31 +71,25 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            yearsCounter.setIsVisible(true);
-            membersCounter.setIsVisible(true);
-            eventsCounter.setIsVisible(true);
+            setYearsCounterVisible(true);
+            setMembersCounterVisible(true);
+            setEventsCounterVisible(true);
         }, 500);
 
         // Trigger entrance animation
         requestAnimationFrame(() => setMounted(true));
 
         return () => clearTimeout(timer);
-    }, []);
-
-    // Helper for formatting date
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return '';
-        return new Date(dateString).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Bangkok' });
-    };
+    }, [setEventsCounterVisible, setMembersCounterVisible, setYearsCounterVisible]);
 
     const currentEvent = carouselEvents[currentIndex];
 
     return (
-        <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 bg-white overflow-hidden">
-            <div className="container mx-auto px-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <section className="ui-hero-section bg-white overflow-hidden">
+            <div className="ui-shell">
+                <div className="ui-home-hero-grid">
                     {/* Left Content */}
-                    <div className="space-y-8">
+                    <div className="ui-hero-copy space-y-8">
                         {/* Official Badge */}
                         <div
                             className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#8a8a00]/10 border border-[#8a8a00]/20 scroll-animate fade-up ${mounted ? 'is-visible' : ''}`}
@@ -91,7 +99,7 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                         </div>
 
                         <h1
-                            className={`text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-[#737300] scroll-animate fade-up stagger-1 ${mounted ? 'is-visible' : ''}`}
+                            className={`ui-hero-title font-bold text-[#737300] scroll-animate fade-up stagger-1 ${mounted ? 'is-visible' : ''}`}
                         >
                             สภาเภสัชกรรม
                             <br />
@@ -101,14 +109,14 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                         </h1>
 
                         <p
-                            className={`text-lg text-gray-500 max-w-lg leading-relaxed scroll-animate fade-up stagger-2 ${mounted ? 'is-visible' : ''}`}
+                            className={`ui-hero-description text-gray-500 scroll-animate fade-up stagger-2 ${mounted ? 'is-visible' : ''}`}
                         >
                             ศูนย์กลางการจัดงานประชุมวิชาการและอบรมเพื่อพัฒนาศักยภาพเภสัชกร
                             พร้อมสะสมหน่วยกิตการศึกษาต่อเนื่อง (CPE) ที่ได้รับการรับรอง
                         </p>
 
                         {/* CTA Buttons */}
-                        <div className={`flex flex-wrap gap-4 scroll-animate fade-up stagger-3 ${mounted ? 'is-visible' : ''}`}>
+                        <div className={`ui-action-row scroll-animate fade-up stagger-3 ${mounted ? 'is-visible' : ''}`}>
                             <Link href="/events">
                                 <Button size="lg" className="h-14 px-8 bg-[#8a8a00] text-white hover:bg-[#456339] rounded-xl shadow-lg font-semibold transition-transform hover:scale-105 active:scale-95">
                                     <Calendar className="w-5 h-5 mr-2" />
@@ -126,17 +134,17 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                         </div>
 
                         {/* Quick Stats */}
-                        <div className={`grid grid-cols-3 gap-6 pt-4 scroll-animate fade-up stagger-4 ${mounted ? 'is-visible' : ''}`}>
+                        <div className={`ui-quick-stats pt-4 scroll-animate fade-up stagger-4 ${mounted ? 'is-visible' : ''}`}>
                             <div className="text-center">
-                                <div className="text-3xl font-bold text-[#8a8a00]">{yearsCounter.count}+</div>
+                                <div className="text-3xl font-bold text-[#8a8a00]">{yearsDisplayCount}+</div>
                                 <div className="text-sm text-gray-500">ปีแห่งความไว้วางใจ</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-3xl font-bold text-[#8a8a00]">{(membersCounter.count / 1000).toFixed(0)}K+</div>
+                                <div className="text-3xl font-bold text-[#8a8a00]">{(membersDisplayCount / 1000).toFixed(0)}K+</div>
                                 <div className="text-sm text-gray-500">เภสัชกรทั่วประเทศ</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-3xl font-bold text-[#8a8a00]">{eventsCounter.count}+</div>
+                                <div className="text-3xl font-bold text-[#8a8a00]">{eventsDisplayCount}+</div>
                                 <div className="text-sm text-gray-500">งานประชุมที่จัด</div>
                             </div>
                         </div>
@@ -197,7 +205,7 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                                     </div>
                                     <h3 className="text-2xl font-bold mb-2 text-white">{currentEvent.name}</h3>
                                     <div className="flex flex-wrap gap-4 text-sm text-gray-300 mb-4">
-                                        <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {formatDate(currentEvent.startDate)}</span>
+                                        <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {formatEventDate(currentEvent.startDate)}</span>
                                         <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {currentEvent.location || 'สถานที่จัดงาน'}</span>
                                         {currentEvent.cpeCredits && Number(currentEvent.cpeCredits) > 0 && (
                                             <span className="flex items-center gap-1"><Award className="w-4 h-4 text-white/80" /> {currentEvent.cpeCredits} หน่วยกิต CPE</span>
@@ -231,9 +239,7 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                                         <div
                                             key={currentIndex}
                                             className="h-full bg-[#8a8a00] rounded-r-full"
-                                            style={{
-                                                animation: `carousel-progress ${CAROUSEL_INTERVAL}ms linear`,
-                                            }}
+                                            style={{ animation: `carousel-progress ${CAROUSEL_INTERVAL}ms linear` }}
                                         />
                                     </div>
                                 )}
@@ -253,13 +259,6 @@ export function HeroSection({ yearsCount, membersCount, eventsCount, featuredEve
                 </div>
             </div>
 
-            {/* Carousel progress bar animation */}
-            <style dangerouslySetInnerHTML={{ __html: `
-                @keyframes carousel-progress {
-                    from { width: 0%; }
-                    to { width: 100%; }
-                }
-            ` }} />
         </section>
     );
 }

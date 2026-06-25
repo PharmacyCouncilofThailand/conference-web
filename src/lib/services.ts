@@ -9,6 +9,7 @@ import {
 } from '@/types';
 import { apiClient } from './api/client';
 import { API_URL } from '@/config';
+import { parseAllowedList } from '@/lib/utils';
 
 // ===========================================
 // Service Layer — Real API calls
@@ -67,34 +68,8 @@ function mapApiEventToEvent(apiEvent: any): Event {
         firstSessionStart: apiEvent.firstSessionStart || undefined,
         // Pass through nested data if present
         ticketTypes: (apiEvent.ticketTypes || []).map((t: any) => {
-            // Parse allowedRoles - could be JSON string, array, or CSV
-            let allowedRoles: string[] = [];
-            if (t.allowedRoles) {
-                if (Array.isArray(t.allowedRoles)) {
-                    allowedRoles = t.allowedRoles;
-                } else if (typeof t.allowedRoles === 'string') {
-                    try {
-                        const parsed = JSON.parse(t.allowedRoles);
-                        allowedRoles = Array.isArray(parsed) ? parsed : [];
-                    } catch {
-                        allowedRoles = t.allowedRoles.split(',').map((r: string) => r.trim()).filter(Boolean);
-                    }
-                }
-            }
-            // Parse allowedStudentLevels - same logic as allowedRoles
-            let allowedStudentLevels: string[] = [];
-            if (t.allowedStudentLevels) {
-                if (Array.isArray(t.allowedStudentLevels)) {
-                    allowedStudentLevels = t.allowedStudentLevels;
-                } else if (typeof t.allowedStudentLevels === 'string') {
-                    try {
-                        const parsed = JSON.parse(t.allowedStudentLevels);
-                        allowedStudentLevels = Array.isArray(parsed) ? parsed : [];
-                    } catch {
-                        allowedStudentLevels = t.allowedStudentLevels.split(',').map((l: string) => l.trim()).filter(Boolean);
-                    }
-                }
-            }
+            const allowedRoles = parseAllowedList(t.allowedRoles);
+            const allowedStudentLevels = parseAllowedList(t.allowedStudentLevels);
             return {
                 ...t,
                 ticketCategory: t.ticketCategory || t.category,

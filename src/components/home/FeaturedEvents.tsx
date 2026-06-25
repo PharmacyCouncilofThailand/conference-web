@@ -11,6 +11,9 @@ interface FeaturedEventsProps {
     events: Event[];
 }
 
+const PLACEHOLDER_CARDS = [1, 2, 3];
+const FALLBACK_EVENT_IMAGE = 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?q=80&w=800&auto=format&fit=crop';
+
 export function FeaturedEvents({ events }: FeaturedEventsProps) {
     const { ref: headerRef, isVisible: headerVisible } = useScrollAnimation();
     const { ref: cardsRef, isVisible: cardsVisible } = useScrollAnimation({ rootMargin: '0px 0px -30px 0px' });
@@ -35,26 +38,27 @@ export function FeaturedEvents({ events }: FeaturedEventsProps) {
             el.removeEventListener('scroll', checkScroll);
             window.removeEventListener('resize', checkScroll);
         };
-    }, [checkScroll, events]);
+    }, [checkScroll, events.length]);
 
-    const scroll = (direction: 'left' | 'right') => {
+    const scroll = useCallback((direction: 'left' | 'right') => {
         const el = scrollRef.current;
         if (!el) return;
         const cardWidth = el.querySelector<HTMLElement>(':scope > a, :scope > div')?.offsetWidth || 360;
-        const gap = 24;
+        const styles = window.getComputedStyle(el);
+        const gap = Number.parseFloat(styles.columnGap || styles.gap || '0') || 0;
         el.scrollBy({ left: direction === 'left' ? -(cardWidth + gap) : (cardWidth + gap), behavior: 'smooth' });
-    };
+    }, []);
 
     return (
-        <section className="py-20 px-6">
-            <div className="container mx-auto">
+        <section className="ui-section">
+            <div className="ui-shell">
                 <div
                     ref={headerRef}
-                    className={`flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4 scroll-animate fade-up ${headerVisible ? 'is-visible' : ''}`}
+                    className={`ui-featured-header scroll-animate fade-up ${headerVisible ? 'is-visible' : ''}`}
                 >
                     <div>
                         <span className="text-[#8a8a00] text-sm font-bold uppercase tracking-wider">งานที่กำลังจะมาถึง</span>
-                        <h2 className="text-3xl md:text-4xl font-bold mt-2 text-[#737300]">งานประชุมวิชาการ</h2>
+                        <h2 className="ui-section-title font-bold mt-2 text-[#737300]">งานประชุมวิชาการ</h2>
                     </div>
                     <div className="flex items-center gap-3">
                         {events.length > 0 && (
@@ -88,15 +92,14 @@ export function FeaturedEvents({ events }: FeaturedEventsProps) {
                 <div className="relative" ref={cardsRef}>
                     <div
                         ref={scrollRef}
-                        className="flex gap-6 overflow-x-auto scroll-smooth pb-4 -mb-4 snap-x snap-mandatory scrollbar-hide"
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        className="ui-featured-track"
                     >
                         {events.length > 0 ? (
                             events.map((event, index) => (
                                 <Link
                                     href={`/events/${event.id}`}
                                     key={event.id}
-                                    className="flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[calc(33.333%-16px)] snap-start"
+                                    className="ui-featured-card-link"
                                 >
                                     <div
                                         className={`group bg-white border border-gray-200 rounded-2xl overflow-hidden hover:border-[#8a8a00]/50 transition-all hover:-translate-y-2 shadow-sm hover:shadow-xl h-full scroll-animate fade-up stagger-${index + 1} ${cardsVisible ? 'is-visible' : ''}`}
@@ -107,7 +110,7 @@ export function FeaturedEvents({ events }: FeaturedEventsProps) {
                                                     event.imageUrl ||
                                                     event.coverImage ||
                                                     event.image ||
-                                                    `https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?q=80&w=800&auto=format&fit=crop`
+                                                    FALLBACK_EVENT_IMAGE
                                                 }
                                                 alt={event.name || event.title}
                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
@@ -143,8 +146,8 @@ export function FeaturedEvents({ events }: FeaturedEventsProps) {
                             ))
                         ) : (
                             // Placeholder cards
-                            [1, 2, 3].map((i) => (
-                                <div key={i} className="flex-shrink-0 w-[85vw] sm:w-[70vw] md:w-[calc(33.333%-16px)] bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                            PLACEHOLDER_CARDS.map((i) => (
+                                <div key={i} className="ui-featured-card-link bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
                                     <div className="aspect-video bg-gray-100 animate-pulse" />
                                     <div className="p-5 space-y-3">
                                         <div className="h-6 bg-gray-100 rounded animate-pulse" />
@@ -156,8 +159,6 @@ export function FeaturedEvents({ events }: FeaturedEventsProps) {
                     </div>
                 </div>
             </div>
-
-            <style dangerouslySetInnerHTML={{ __html: `.scrollbar-hide::-webkit-scrollbar { display: none; }` }} />
         </section>
     );
 }

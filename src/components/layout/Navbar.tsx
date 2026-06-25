@@ -21,8 +21,12 @@ export function Navbar() {
 
     // Close mobile menu when route changes
     useEffect(() => {
-        setIsMobileMenuOpen(false);
-        setShowDropdown(false);
+        const frame = requestAnimationFrame(() => {
+            setIsMobileMenuOpen(false);
+            setShowDropdown(false);
+        });
+
+        return () => cancelAnimationFrame(frame);
     }, [pathname]);
 
     // Prevent scrolling when mobile menu is open
@@ -51,19 +55,19 @@ export function Navbar() {
             {/* Navbar Background — #686805 */}
             <div className="absolute inset-0 bg-[#686805] backdrop-blur-md border-b border-[#686805]/80 -z-10" />
 
-            <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+            <div className="ui-nav-shell flex items-center justify-between">
                 {isSSOMode ? (
                     <div className="flex items-center gap-3">
-                        <Image src="/logo-pharmacy.png" alt="สภาเภสัชกรรม" width={160} height={40} className="h-14 w-auto object-contain" />
+                        <Image src="/logo-pharmacy.png" alt="สภาเภสัชกรรม" width={160} height={40} className="ui-nav-logo w-auto object-contain" />
                     </div>
                 ) : (
                     <Link href="/" className="flex items-center gap-3">
-                        <Image src="/logo-pharmacy.png" alt="สภาเภสัชกรรม" width={160} height={40} className="h-14 w-auto object-contain" />
+                        <Image src="/logo-pharmacy.png" alt="สภาเภสัชกรรม" width={160} height={40} className="ui-nav-logo w-auto object-contain" />
                     </Link>
                 )}
 
                 {!isSSOMode && (
-                    <div className="hidden md:flex items-center gap-8">
+                    <div className="hidden lg:flex items-center gap-8">
                         <Link href="/" className="text-sm text-white/90 hover:text-white transition-colors">หน้าหลัก</Link>
                         <Link href="/events" className="text-sm text-white/90 hover:text-white transition-colors">งานประชุม</Link>
                         <Link href="/agenda" className="text-sm text-white/90 hover:text-white transition-colors">กำหนดการ</Link>
@@ -151,7 +155,7 @@ export function Navbar() {
                     ) : (
                         // Not logged in - Show login/register buttons (hide in SSO mode)
                         !isSSOMode && (
-                            <div className="hidden md:flex items-center gap-4">
+                            <div className="hidden lg:flex items-center gap-4">
                                 <Link href="/login">
                                     <Button variant="ghost" className="text-white hover:text-white hover:bg-white/15">เข้าสู่ระบบ</Button>
                                 </Link>
@@ -164,7 +168,7 @@ export function Navbar() {
                     {/* Mobile Menu Toggle (hide in SSO mode) */}
                     {!isSSOMode && (
                         <button
-                            className="md:hidden p-2 text-white hover:bg-white/15 rounded-full transition-colors"
+                            className="lg:hidden p-2 text-white hover:bg-white/15 rounded-full transition-colors"
                             onClick={() => setIsMobileMenuOpen(true)}
                             aria-label="Open mobile menu"
                             aria-expanded={isMobileMenuOpen}
@@ -177,7 +181,7 @@ export function Navbar() {
 
             {/* Mobile Navigation Drawer */}
             <div
-                className={`fixed inset-0 z-[60] md:hidden bg-[#686805] backdrop-blur-xl transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+                className={`fixed inset-0 z-[60] lg:hidden bg-[#686805] backdrop-blur-xl transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
                     }`}
             >
                 <div className="flex flex-col h-full">
@@ -209,7 +213,7 @@ export function Navbar() {
                         {!isLoggedIn && (
                             <div className="mt-4 flex flex-col gap-3">
                                 <Link href="/login">
-                                    <Button variant="outline" className="w-full justify-center border-white/30 hover:bg-white/15 text-white">
+                                    <Button variant="ghost" className="w-full justify-center border border-white/30 bg-transparent text-white hover:bg-white/15 hover:text-white">
                                         เข้าสู่ระบบ
                                     </Button>
                                 </Link>

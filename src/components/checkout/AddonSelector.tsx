@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, X } from 'lucide-react';
+import { formatStudentLevelList } from '@/lib/utils';
 
 export interface AddonOption {
     id: string;
@@ -11,6 +12,8 @@ export interface AddonOption {
     description?: string | null;
     available: number;
     isActive: boolean;
+    allowedRoles?: string[];
+    allowedStudentLevels?: string[];
     // Workshop-specific
     sessions?: Array<{
         id: number;
@@ -127,6 +130,11 @@ export function AddonSelector({
                                         </div>
                                         {addon.description && (
                                             <p className="text-xs text-gray-500 mt-0.5">{addon.description}</p>
+                                        )}
+                                        {addon.allowedRoles?.includes('student') && (
+                                            <div className="mt-1 inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                                                ระดับนักศึกษา: {formatStudentLevelList(addon.allowedStudentLevels)}
+                                            </div>
                                         )}
                                     </div>
                                 </div>

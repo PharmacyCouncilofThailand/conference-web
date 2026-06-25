@@ -293,7 +293,7 @@ function PaymentResultInner() {
                             </div>
                         )}
 
-                        <div className="flex gap-3 justify-center pt-2">
+                        <div className="ui-responsive-actions pt-2">
                             {backToWebsiteUrl ? (
                                 <a
                                     href={backToWebsiteUrl}
@@ -330,7 +330,7 @@ function PaymentResultInner() {
                             ระบบยังไม่ได้รับการยืนยันจากธนาคาร<br />
                             กรุณาตรวจสอบสถานะอีกครั้งในภายหลัง
                         </p>
-                        <div className="flex gap-3 justify-center pt-2">
+                        <div className="ui-responsive-actions pt-2">
                             <button
                                 onClick={() => {
                                     pollCount.current = 0;
@@ -359,7 +359,7 @@ function PaymentResultInner() {
                         </div>
                         <h2 className="text-xl font-bold text-gray-800">การชำระเงินไม่สำเร็จ</h2>
                         <p className="text-gray-500 text-sm">กรุณาลองใหม่อีกครั้ง หรือเลือกวิธีชำระเงินอื่น</p>
-                        <div className="flex gap-3 justify-center pt-2">
+                        <div className="ui-responsive-actions pt-2">
                             {eventId && (
                                 <Link
                                     href={`/checkout/${eventId}`}
@@ -386,7 +386,7 @@ function PaymentResultInner() {
                         </div>
                         <h2 className="text-xl font-bold text-gray-800">ยกเลิกการชำระเงิน</h2>
                         <p className="text-gray-500 text-sm">คุณได้ยกเลิกการชำระเงิน</p>
-                        <div className="flex gap-3 justify-center pt-2">
+                        <div className="ui-responsive-actions pt-2">
                             {eventId && (
                                 <Link
                                     href={`/checkout/${eventId}`}
@@ -413,7 +413,7 @@ function PaymentResultInner() {
                         </div>
                         <h2 className="text-xl font-bold text-gray-700">เกิดข้อผิดพลาด</h2>
                         <p className="text-gray-500 text-sm">{errorMessage}</p>
-                        <div className="flex gap-3 justify-center pt-2">
+                        <div className="ui-responsive-actions pt-2">
                             <button
                                 onClick={() => router.back()}
                                 className="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors text-sm"
@@ -435,7 +435,7 @@ function PaymentResultInner() {
     return (
         <div className="min-h-screen bg-white flex flex-col">
             <Navbar />
-            <div className="flex-grow flex items-center justify-center px-4 py-20">
+            <div className="ui-centered-page">
                 <div className="max-w-lg w-full">
                     {renderContent()}
                 </div>
@@ -451,7 +451,7 @@ export default function PaymentResultPage() {
             fallback={
                 <div className="min-h-screen bg-white flex flex-col">
                     <Navbar />
-                    <div className="flex-grow flex items-center justify-center px-4 py-20">
+                    <div className="ui-centered-page">
                         <div className="text-center space-y-4">
                             <div className="w-20 h-20 mx-auto bg-[#8a8a00]/10 rounded-full flex items-center justify-center">
                                 <Loader2 className="w-10 h-10 animate-spin text-[#8a8a00]" />

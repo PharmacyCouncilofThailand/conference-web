@@ -128,7 +128,7 @@ export default function ContactPage() {
             <Navbar />
 
             {/* Header */}
-            <section className="relative pt-32 pb-16 px-6 bg-gradient-to-br from-[#8a8a00] via-[#456339] to-[#3d5733] overflow-hidden">
+            <section className="ui-page-hero bg-gradient-to-br from-[#8a8a00] via-[#456339] to-[#3d5733] overflow-hidden">
                 {/* Animated background shapes */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-0 left-10 w-64 h-64 bg-white/5 blur-[100px] rounded-full animate-pulse" style={{ animationDuration: '4s' }} />
@@ -136,28 +136,28 @@ export default function ContactPage() {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-white/3 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }} />
                 </div>
 
-                <div className="container mx-auto max-w-4xl text-center relative z-10">
+                <div className="ui-shell max-w-4xl text-center relative z-10">
                     <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 border border-white/25 text-white/90 text-sm mb-4 scroll-animate fade-up ${mounted ? 'is-visible' : ''}`}>
                         <HelpCircle className="w-4 h-4" />
                         ช่วยเหลือ
                     </div>
-                    <h1 className={`text-4xl md:text-5xl font-bold text-white scroll-animate fade-up stagger-1 ${mounted ? 'is-visible' : ''}`}>ติดต่อเรา</h1>
-                    <p className={`text-white/80 mt-4 max-w-xl mx-auto scroll-animate fade-up stagger-2 ${mounted ? 'is-visible' : ''}`}>
+                    <h1 className={`ui-page-title font-bold text-white scroll-animate fade-up stagger-1 ${mounted ? 'is-visible' : ''}`}>ติดต่อเรา</h1>
+                    <p className={`ui-subtitle text-white/80 mt-4 max-w-xl mx-auto scroll-animate fade-up stagger-2 ${mounted ? 'is-visible' : ''}`}>
                         มีคำถามหรือต้องการความช่วยเหลือ? เราพร้อมให้บริการคุณ
                     </p>
                 </div>
             </section>
 
             {/* Main Content */}
-            <section className="py-16 px-6 flex-grow">
-                <div className="container mx-auto max-w-6xl">
-                    <div className="grid lg:grid-cols-3 gap-12">
+            <section className="ui-section flex-grow">
+                <div className="ui-shell max-w-6xl">
+                    <div className="ui-contact-layout">
 
                         {/* Left: Contact Info + Form */}
-                        <div ref={contentRef} className="lg:col-span-2 space-y-8">
+                        <div ref={contentRef} className="space-y-8">
 
                             {/* Contact Cards */}
-                            <div className="grid md:grid-cols-3 gap-4">
+                            <div className="ui-contact-card-grid">
                                 <div className={`bg-white border border-gray-200 rounded-2xl p-5 text-center hover:border-[#8a8a00]/50 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 scroll-animate fade-up stagger-1 ${contentVisible ? 'is-visible' : ''}`}>
                                     <div className="w-12 h-12 rounded-xl bg-[#8a8a00]/10 flex items-center justify-center mx-auto mb-3 transition-transform hover:scale-110 hover:rotate-3">
                                         <Phone className="w-6 h-6 text-[#8a8a00]" />
@@ -184,7 +184,7 @@ export default function ContactPage() {
                             </div>
 
                             {/* Contact Form */}
-                            <div className={`bg-white border border-gray-200 rounded-3xl p-6 md:p-8 shadow-sm scroll-animate fade-up stagger-4 ${contentVisible ? 'is-visible' : ''}`}>
+                            <div className={`ui-page-card bg-white border border-gray-200 rounded-3xl shadow-sm scroll-animate fade-up stagger-4 ${contentVisible ? 'is-visible' : ''}`}>
                                 <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-[#737300]">
                                     <MessageCircle className="w-5 h-5 text-[#8a8a00]" />
                                     ส่งข้อความถึงเรา
@@ -212,7 +212,7 @@ export default function ContactPage() {
                                     </div>
                                 ) : (
                                     <form onSubmit={handleSubmit} className="space-y-4">
-                                        <div className="grid md:grid-cols-2 gap-4">
+                                        <div className="ui-form-grid">
                                             <div className="space-y-2">
                                                 <Label htmlFor="name" className="text-gray-700">ชื่อ-นามสกุล *</Label>
                                                 <Input
@@ -238,7 +238,7 @@ export default function ContactPage() {
                                             </div>
                                         </div>
 
-                                        <div className="grid md:grid-cols-2 gap-4">
+                                        <div className="ui-form-grid">
                                             <div className="space-y-2">
                                                 <Label htmlFor="phone" className="text-gray-700">เบอร์โทร (ถ้ามี)</Label>
                                                 <Input
@@ -324,7 +324,7 @@ export default function ContactPage() {
                         </div>
 
                         {/* Right: FAQ */}
-                        <div ref={faqRef} className="lg:col-span-1">
+                        <div ref={faqRef}>
                             <div>
                                 <h2 className={`text-xl font-bold mb-6 flex items-center gap-2 text-[#737300] scroll-animate fade-up ${faqVisible ? 'is-visible' : ''}`}>
                                     <HelpCircle className="w-5 h-5 text-[#8a8a00]" />

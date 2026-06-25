@@ -7,7 +7,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { CheckCircle, QrCode, Copy, Download, ArrowRight, ArrowLeft, Clock, CreditCard, ShieldCheck, Loader2 } from 'lucide-react';
+import { CheckCircle, QrCode, Copy, Download, ArrowRight, ArrowLeft, Clock, CreditCard, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
@@ -17,10 +17,9 @@ export default function PaymentPage() {
     const eventId = params.id as string;
     const amount = searchParams.get('amount') || '0';
     const method = searchParams.get('method') || 'qr'; // 'qr' or 'credit_card'
-    const refNo = `REF-${Math.floor(Math.random() * 1000000)}`;
+    const [refNo] = useState(() => `REF-${Math.floor(Math.random() * 1000000)}`);
     const roundId = searchParams.get('round') || 'round-1';
 
-    const [isProcessingCard, setIsProcessingCard] = useState(false);
     const [cardSuccess, setCardSuccess] = useState(false);
 
     const { data: event } = useQuery({
@@ -37,9 +36,7 @@ export default function PaymentPage() {
     useEffect(() => {
         // Auto-simulate card processing if method is credit_card
         if (method === 'credit_card' && !cardSuccess) {
-            setIsProcessingCard(true);
             const timer = setTimeout(() => {
-                setIsProcessingCard(false);
                 setCardSuccess(true);
             }, 3000); // 3 seconds simulation
             return () => clearTimeout(timer);
@@ -59,7 +56,7 @@ export default function PaymentPage() {
         return (
             <div className="min-h-screen bg-background text-foreground flex flex-col">
                 <Navbar />
-                <div className="flex-grow pt-32 pb-20 px-4 md:px-6 relative flex items-center justify-center">
+                <div className="ui-centered-page relative">
                     <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#737300]/20 to-transparent -z-10" />
                     <Card className="max-w-md w-full bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl text-center p-6">
                         <div className="w-20 h-20 bg-[#8a8a00] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[#8a8a00]/50 animate-in zoom-in duration-500">
@@ -96,7 +93,7 @@ export default function PaymentPage() {
         return (
             <div className="min-h-screen bg-background text-foreground flex flex-col">
                 <Navbar />
-                <div className="flex-grow pt-32 pb-20 px-4 md:px-6 relative flex items-center justify-center">
+                <div className="ui-centered-page relative">
                     <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-blue-900/20 to-transparent -z-10" />
                     <Card className="max-w-md w-full bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl p-8 text-center">
                         <div className="relative w-24 h-24 mx-auto mb-6">
@@ -122,7 +119,7 @@ export default function PaymentPage() {
         <div className="min-h-screen bg-background text-foreground flex flex-col">
             <Navbar />
 
-            <div className="flex-grow pt-32 pb-20 px-4 md:px-6 relative flex items-center justify-center">
+            <div className="ui-centered-page relative">
                 <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-[#737300]/20 to-transparent -z-10" />
 
                 <Card className="max-w-md w-full bg-white/5 border-white/10 backdrop-blur-xl shadow-2xl">

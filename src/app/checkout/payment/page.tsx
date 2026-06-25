@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { paymentsApi } from '@/lib/api/payments';
+import type { ApiError } from '@/lib/api/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -44,6 +45,7 @@ export default function PaymentPage() {
     const [status, setStatus] = useState<'loading' | 'submitting' | 'error'>('loading');
     const [, setGateway] = useState<'paysolutions' | 'ktb' | null>(null);
     const [errorMessage, setErrorMessage] = useState('');
+    const [errorCode, setErrorCode] = useState<string | null>(null);
     const [formData, setFormData] = useState<{ actionUrl: string; fields: Record<string, string> } | null>(null);
     const hasSubmitted = useRef(false);
 
@@ -56,6 +58,7 @@ export default function PaymentPage() {
 
         const createPaymentIntent = async () => {
             try {
+                setErrorCode(null);
                 const saved = sessionStorage.getItem('checkout-payment-data');
                 if (!saved) {
                     setErrorMessage('ไม่พบข้อมูล checkout กรุณาเริ่มต้นใหม่');
@@ -148,8 +151,15 @@ export default function PaymentPage() {
                     throw new Error('Invalid response from create-intent');
                 }
             } catch (error) {
-                const msg = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสร้างรายการชำระเงิน';
-                setErrorMessage(msg);
+                const apiError = error as ApiError;
+                if (apiError.code === 'STUDENT_ELIGIBILITY_REQUIRED') {
+                    setErrorCode(apiError.code);
+                    setErrorMessage('Postgraduate student-rate payment requires approved eligibility for this event. Please submit or review your document from Profile before trying again.');
+                } else {
+                    const msg = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสร้างรายการชำระเงิน';
+                    setErrorCode(apiError.code || null);
+                    setErrorMessage(msg);
+                }
                 setStatus('error');
             }
         };
@@ -172,12 +182,20 @@ export default function PaymentPage() {
         return (
             <div className="min-h-screen bg-white flex flex-col">
                 <Navbar />
-                <div className="flex-grow flex items-center justify-center px-4">
+                <div className="ui-centered-page">
                     <div className="text-center space-y-4 max-w-md">
                         <AlertCircle className="w-16 h-16 text-red-400 mx-auto" />
                         <h2 className="text-xl font-bold text-gray-700">เกิดข้อผิดพลาด</h2>
                         <p className="text-gray-500 text-sm">{errorMessage}</p>
-                        <div className="flex gap-3 justify-center pt-2">
+                        <div className="ui-responsive-actions pt-2">
+                            {errorCode === 'STUDENT_ELIGIBILITY_REQUIRED' && (
+                                <button
+                                    onClick={() => router.push('/profile')}
+                                    className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                >
+                                    Profile
+                                </button>
+                            )}
                             <button
                                 onClick={() => router.back()}
                                 className="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors text-sm"
@@ -188,6 +206,7 @@ export default function PaymentPage() {
                                 onClick={() => {
                                     setStatus('loading');
                                     setErrorMessage('');
+                                    setErrorCode(null);
                                     hasSubmitted.current = false;
                                     window.location.reload();
                                 }}
@@ -206,7 +225,7 @@ export default function PaymentPage() {
     return (
         <div className="min-h-screen bg-white flex flex-col">
             <Navbar />
-            <div className="flex-grow flex items-center justify-center px-4">
+            <div className="ui-centered-page">
                 <div className="text-center space-y-4 max-w-md">
                     <div className="w-20 h-20 mx-auto bg-[#8a8a00]/10 rounded-full flex items-center justify-center">
                         <ShieldCheck className="w-10 h-10 text-[#8a8a00]" />

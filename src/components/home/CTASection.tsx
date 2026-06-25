@@ -9,15 +9,15 @@ export function CTASection() {
     const { ref, isVisible } = useScrollAnimation();
 
     return (
-        <section ref={ref} className="py-20 px-6">
-            <div className="container mx-auto text-center">
-                <h2 className={`text-3xl md:text-4xl font-bold mb-4 text-[#737300] scroll-animate fade-up ${isVisible ? 'is-visible' : ''}`}>
+        <section ref={ref} className="ui-section">
+            <div className="ui-shell text-center">
+                <h2 className={`ui-section-title font-bold mb-4 text-[#737300] scroll-animate fade-up ${isVisible ? 'is-visible' : ''}`}>
                     พร้อมเข้าร่วมงานประชุมหรือยัง?
                 </h2>
                 <p className={`text-gray-500 mb-8 max-w-xl mx-auto scroll-animate fade-up stagger-1 ${isVisible ? 'is-visible' : ''}`}>
                     ลงทะเบียนเข้าร่วมงานประชุมวิชาการเพื่อพัฒนาความรู้และสะสมหน่วยกิต CPE
                 </p>
-                <div className={`flex flex-wrap justify-center gap-4 scroll-animate fade-up stagger-2 ${isVisible ? 'is-visible' : ''}`}>
+                <div className={`ui-cta-actions justify-center scroll-animate fade-up stagger-2 ${isVisible ? 'is-visible' : ''}`}>
                     <Link href="/events">
                         <Button
                             size="lg"

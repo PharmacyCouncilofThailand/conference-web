@@ -48,8 +48,8 @@ function PaymentSuccessContent() {
             <Navbar />
 
             {/* Main Content */}
-            <div className="flex-grow pt-32 pb-20 px-6">
-                <div className="container mx-auto max-w-2xl">
+            <div className="ui-page-main flex-grow">
+                <div className="ui-shell max-w-2xl">
 
                     {/* Success Animation */}
                     <div className="text-center mb-8">
@@ -65,7 +65,7 @@ function PaymentSuccessContent() {
                                 <Sparkles className="w-4 h-4" />
                                 ลงทะเบียนสำเร็จ
                             </div>
-                            <h1 className="text-3xl md:text-4xl font-bold">
+                            <h1 className="ui-section-title font-bold">
                                 ชำระเงินเรียบร้อยแล้ว!
                             </h1>
                             <p className="text-gray-400">
@@ -82,7 +82,7 @@ function PaymentSuccessContent() {
                                 รายละเอียดการลงทะเบียน
                             </h2>
 
-                            <div className="flex gap-4 mb-4">
+                            <div className="flex flex-col sm:flex-row gap-4 mb-4">
                                 <img
                                     src={event.coverImage}
                                     alt={event.name}
@@ -154,7 +154,7 @@ function PaymentSuccessContent() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="ui-responsive-actions">
                         <Link href="/" className="flex-1">
                             <Button variant="outline" className="w-full border-white/20 hover:bg-white/10 h-12">
                                 <Home className="w-4 h-4 mr-2" />

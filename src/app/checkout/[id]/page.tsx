@@ -5,6 +5,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { eventsApi } from '@/lib/api/events';
 import { paymentsApi } from '@/lib/api/payments';
+import { hasApprovedPostgraduateEligibility, studentEligibilityApi } from '@/lib/api/studentEligibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCheckoutWizard } from '@/hooks/checkout/useCheckoutWizard';
 import { Navbar } from '@/components/layout/Navbar';
@@ -20,6 +21,15 @@ import { PaymentMethodCard } from '@/components/checkout/PaymentMethodCard';
 import { OrderSummary } from '@/components/checkout/OrderSummary';
 import { User, Mail, Phone, Globe, Lock, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { getEffectiveTicketIdentity, ticketAllowsUser } from '@/lib/utils';
+
+type TicketWithPriority = {
+    priority?: string;
+};
+
+type PrioritizedPackageOption = PackageOption & {
+    priority?: string;
+};
 
 export default function CheckoutPage() {
     const params = useParams();
@@ -30,11 +40,11 @@ export default function CheckoutPage() {
     const originApp = searchParams.get('originApp');
     const returnTo = searchParams.get('returnTo');
 
-    const { user, token, isLoggedIn, isLoading: authLoading } = useAuth();
+    const { user, isLoggedIn, isLoading: authLoading } = useAuth();
 
     const {
         currentStep, checkoutData, steps, updateCheckoutData,
-        nextStep, prevStep, goToStep, resetWizard,
+        nextStep, prevStep, goToStep,
         isCurrentStepValid, canProceedToPayment,
     } = useCheckoutWizard(eventId);
 
@@ -52,6 +62,19 @@ export default function CheckoutPage() {
     });
 
     const event = eventData?.data;
+
+    const { data: studentEligibilityData } = useQuery({
+        queryKey: ['student-eligibility', event?.eventCode, user?.id],
+        queryFn: () => studentEligibilityApi.getMe(event!.eventCode),
+        enabled: isLoggedIn && user?.role === 'pharmacist' && !!event?.eventCode,
+        retry: 1,
+    });
+
+    const effectiveTicketIdentity = useMemo(() => getEffectiveTicketIdentity(
+        user?.role || 'public',
+        user?.studentLevel || null,
+        hasApprovedPostgraduateEligibility(studentEligibilityData?.eligibility),
+    ), [studentEligibilityData?.eligibility, user?.role, user?.studentLevel]);
 
     // Fetch purchase status (for addon-only detection)
     const { data: purchasesData } = useQuery({
@@ -121,19 +144,6 @@ export default function CheckoutPage() {
     const { packageOptions, addonOptions } = useMemo(() => {
         if (!event?.ticketTypes) return { packageOptions: [], addonOptions: [] };
 
-        const userRole = user?.role || 'public';
-        const userStudentLevel = user?.studentLevel || null;
-        const isTicketAllowedForUser = (tt: { allowedRoles?: string[]; allowedStudentLevels?: string[] }) => {
-            if (!tt.allowedRoles || tt.allowedRoles.length === 0) return true;
-            const role = userRole === 'public' ? 'general' : userRole;
-            if (!tt.allowedRoles.includes(role)) return false;
-            // For student tickets, also check studentLevel if specified
-            if (role === 'student' && tt.allowedStudentLevels && tt.allowedStudentLevels.length > 0 && userStudentLevel) {
-                return tt.allowedStudentLevels.includes(userStudentLevel);
-            }
-            return true;
-        };
-
         const isTicketOnSale = (tt: { salesStart?: string; saleStartDate?: string; salesEnd?: string; saleEndDate?: string }) => {
             const now = new Date();
             const start = tt.salesStart || tt.saleStartDate;
@@ -143,15 +153,15 @@ export default function CheckoutPage() {
             return true;
         };
 
-        const pkgs: PackageOption[] = [];
+        const pkgs: PrioritizedPackageOption[] = [];
         const addons: AddonOption[] = [];
 
         for (const tt of event.ticketTypes) {
-            if (!isTicketAllowedForUser(tt)) continue;
+            if (!ticketAllowsUser(tt, effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel)) continue;
             if (!isTicketOnSale(tt)) continue;
 
-            const priority: string = (tt as any).priority ?? 'regular';
-            const baseOption = {
+            const priority = (tt as TicketWithPriority).priority ?? 'regular';
+            const baseOption: PrioritizedPackageOption = {
                 id: String(tt.id),
                 groupName: tt.groupName || tt.name,
                 name: tt.name,
@@ -164,6 +174,8 @@ export default function CheckoutPage() {
                 available: (tt.quota || 0) - (tt.soldCount || 0),
                 isActive: tt.isActive !== false,
                 priority,
+                allowedRoles: tt.allowedRoles || [],
+                allowedStudentLevels: tt.allowedStudentLevels || [],
             };
 
             if (tt.category === 'primary') {
@@ -190,10 +202,10 @@ export default function CheckoutPage() {
         }
 
         const priorityOrder: Record<string, number> = { early_bird: 0, regular: 1 };
-        pkgs.sort((a, b) => (priorityOrder[(a as any).priority] ?? 1) - (priorityOrder[(b as any).priority] ?? 1));
+        pkgs.sort((a, b) => (priorityOrder[a.priority ?? 'regular'] ?? 1) - (priorityOrder[b.priority ?? 'regular'] ?? 1));
 
         return { packageOptions: pkgs, addonOptions: addons };
-    }, [event?.ticketTypes, currency, user?.role]);
+    }, [event?.ticketTypes, currency, effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel]);
 
     // Smart back link
     const backUrl = useMemo(() => {
@@ -233,7 +245,7 @@ export default function CheckoutPage() {
         } catch (err) {
             setPromoError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด');
         }
-    }, [checkoutData, currency, updateCheckoutData]);
+    }, [checkoutData, currency, eventId, updateCheckoutData]);
 
     const handleRemovePromo = useCallback(() => {
         updateCheckoutData({ promoCode: '', promoApplied: false });
@@ -283,7 +295,7 @@ export default function CheckoutPage() {
         return (
             <div className="min-h-screen bg-white flex flex-col">
                 <Navbar />
-                <div className="flex-grow flex items-center justify-center">
+                <div className="ui-centered-page">
                     <div className="text-center space-y-4">
                         <AlertCircle className="w-16 h-16 text-red-400 mx-auto" />
                         <h2 className="text-xl font-bold text-gray-700">ไม่พบ Event</h2>
@@ -301,8 +313,8 @@ export default function CheckoutPage() {
         <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
             <Navbar />
 
-            <div className="flex-grow pt-28 pb-20 px-4 md:px-6">
-                <div className="container mx-auto max-w-6xl">
+            <div className="ui-page-main flex-grow">
+                <div className="ui-shell max-w-6xl">
                     {/* Event Banner */}
                     <div className="mb-6">
                         <EventBanner
@@ -327,9 +339,9 @@ export default function CheckoutPage() {
                         />
                     </div>
 
-                    <div className="grid lg:grid-cols-3 gap-8">
+                    <div className="ui-checkout-grid">
                         {/* Left: Wizard Steps */}
-                        <div className="lg:col-span-2 space-y-6">
+                        <div className="space-y-6">
 
                             {/* Step 1: Personal Info */}
                             {currentStep === 1 && (
@@ -339,7 +351,7 @@ export default function CheckoutPage() {
                                         ข้อมูลส่วนตัว
                                     </h3>
 
-                                    <div className="grid sm:grid-cols-2 gap-4">
+                                    <div className="ui-form-grid">
                                         <div className="space-y-1.5">
                                             <label className="text-sm font-medium text-gray-700">ชื่อ <span className="text-red-500">*</span></label>
                                             <input
@@ -362,7 +374,7 @@ export default function CheckoutPage() {
                                         </div>
                                     </div>
 
-                                    <div className="grid sm:grid-cols-2 gap-4">
+                                    <div className="ui-form-grid">
                                         <div className="space-y-1.5">
                                             <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
                                                 <Mail className="w-3.5 h-3.5" /> อีเมล <span className="text-red-500">*</span>
@@ -404,7 +416,7 @@ export default function CheckoutPage() {
                                         />
                                     </div>
 
-                                    <div className="flex justify-end pt-2">
+                                    <div className="ui-responsive-actions justify-end pt-2">
                                         <button
                                             type="button"
                                             onClick={nextStep}
@@ -460,7 +472,7 @@ export default function CheckoutPage() {
                                         </div>
                                     )}
 
-                                    <div className="flex justify-between pt-2">
+                                    <div className="ui-responsive-actions justify-between pt-2">
                                         <button
                                             type="button"
                                             onClick={prevStep}
@@ -498,7 +510,7 @@ export default function CheckoutPage() {
                                         onFieldChange={(field, value) => updateCheckoutData({ [field]: value })}
                                     />
 
-                                    <div className="flex justify-between pt-2">
+                                    <div className="ui-responsive-actions justify-between pt-2">
                                         <button
                                             type="button"
                                             onClick={prevStep}
@@ -529,7 +541,7 @@ export default function CheckoutPage() {
                                         isThai={isThai}
                                     />
 
-                                    <div className="flex justify-between pt-2">
+                                    <div className="ui-responsive-actions justify-between pt-2">
                                         <button
                                             type="button"
                                             onClick={prevStep}
@@ -543,7 +555,7 @@ export default function CheckoutPage() {
                         </div>
 
                         {/* Right: Order Summary */}
-                        <div className="lg:col-span-1">
+                        <div>
                             <OrderSummary
                                 eventName={event.eventName}
                                 selectedPackage={checkoutData.selectedPackage}

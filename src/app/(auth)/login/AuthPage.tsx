@@ -43,6 +43,8 @@ const registerSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 type RegisterForm = z.infer<typeof registerSchema>;
 
+const TURNSTILE_OPTIONS = { size: 'normal' as const };
+
 const accountTypes = [
     { value: 'pharmacist' as const, label: 'เภสัชกร', icon: Stethoscope, description: 'สำหรับเภสัชกรที่ต้องการสะสมหน่วยกิต CPE' },
     { value: 'medicalProfessional' as const, label: 'บุคลากรทางการแพทย์', icon: Briefcase, description: 'แพทย์ พยาบาล และบุคลากรทางการแพทย์อื่นๆ' },
@@ -95,6 +97,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                 firstName: response.user.firstName,
                 lastName: response.user.lastName,
                 role: response.user.role,
+                studentLevel: response.user.studentLevel,
                 country: response.user.country,
                 delegateType: response.user.delegateType,
                 isThai: response.user.isThai,
@@ -182,6 +185,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                     firstName: response.user.firstName,
                     lastName: response.user.lastName,
                     role: response.user.role,
+                    studentLevel: response.user.studentLevel,
                     name: `${response.user.firstName} ${response.user.lastName}`,
                 };
                 authLogin(response.token, authUser);
@@ -224,11 +228,11 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
     const isRegister = mode === 'register';
 
     return (
-        <div className="min-h-screen bg-white text-[#737300] flex overflow-hidden relative">
+        <div className="ui-auth-split bg-white text-[#737300] flex overflow-hidden relative">
 
             {/* ══════════════ DECORATIVE PANEL ══════════════ */}
             {!isMobile && <div
-                className={`flex absolute top-0 bottom-0 w-1/2 z-20 transition-transform duration-700 ease-in-out ${isRegister ? 'translate-x-full' : 'translate-x-0'
+                className={`ui-auth-side absolute top-0 bottom-0 z-20 transition-transform duration-700 ease-in-out ${isRegister ? 'translate-x-full' : 'translate-x-0'
                     }`}
             >
                 <div className="relative w-full h-full overflow-hidden">
@@ -330,7 +334,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
             {/* ══════════════ FORM PANELS CONTAINER ══════════════ */}
             {/* Login Form - sits on the RIGHT half */}
             {!isMobile && <div
-                className={`flex absolute top-0 bottom-0 right-0 w-1/2 items-center justify-center p-8 transition-all duration-700 ease-in-out ${isRegister ? 'opacity-0 pointer-events-none translate-x-[-20%]' : 'opacity-100 translate-x-0'
+                className={`ui-auth-pane flex absolute top-0 bottom-0 right-0 items-center justify-center transition-all duration-700 ease-in-out ${isRegister ? 'opacity-0 pointer-events-none translate-x-[-20%]' : 'opacity-100 translate-x-0'
                     }`}
             >
                 <div className="w-full max-w-md relative z-10">
@@ -339,7 +343,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                         <span>กลับหน้าหลัก</span>
                     </Link>
 
-                    <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-lg">
+                    <div className="ui-auth-card bg-white border border-gray-200 rounded-3xl shadow-lg">
                         <div className="text-center mb-6">
                             <h1 className="text-3xl font-bold mb-2 text-[#737300]">เข้าสู่ระบบ</h1>
                             <p className="text-gray-500 text-sm">กรอกอีเมลและรหัสผ่านเพื่อเข้าสู่ระบบ</p>
@@ -382,13 +386,15 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                             </div>
 
                             {turnstileSiteKey && (
-                            <div className="flex justify-center">
+                            <div className="ui-turnstile-wrap">
                                 <Turnstile
                                     ref={loginTurnstileRef}
                                     siteKey={turnstileSiteKey}
                                     onSuccess={(token) => { setLoginRecaptchaToken(token); setLoginError(null); }}
                                     onExpire={() => setLoginRecaptchaToken(null)}
                                     onError={() => setLoginRecaptchaToken(null)}
+                                    options={TURNSTILE_OPTIONS}
+                                    className="ui-turnstile-widget"
                                 />
                             </div>
                             )}
@@ -422,7 +428,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
 
             {/* Register Form - sits on the LEFT half */}
             {!isMobile && <div
-                className={`flex absolute top-0 bottom-0 left-0 w-1/2 items-center justify-center p-8 overflow-y-auto transition-all duration-700 ease-in-out ${isRegister ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none translate-x-[20%]'
+                className={`ui-auth-pane flex absolute top-0 bottom-0 left-0 items-center justify-center overflow-y-auto transition-all duration-700 ease-in-out ${isRegister ? 'opacity-100 translate-x-0' : 'opacity-0 pointer-events-none translate-x-[20%]'
                     }`}
             >
                 <div className="w-full max-w-lg relative z-10 py-8">
@@ -431,7 +437,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                         <span>กลับหน้าหลัก</span>
                     </Link>
 
-                    <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-lg">
+                    <div className="ui-auth-card bg-white border border-gray-200 rounded-3xl shadow-lg">
                         <div className="text-center mb-6">
                             <h1 className="text-3xl font-bold mb-2 text-[#737300]">
                                 {registerStep === 1 ? 'เลือกประเภทบัญชี' : 'สร้างบัญชีผู้ใช้'}
@@ -507,7 +513,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                         </div>
 
                         <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="ui-form-grid">
                                 <div className="space-y-2">
                                     <Label htmlFor="reg-firstName" className="text-gray-700">ชื่อ</Label>
                                     <div className="relative">
@@ -584,7 +590,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="ui-form-grid">
                                 <div className="space-y-2">
                                     <Label htmlFor="reg-password" className="text-gray-700">รหัสผ่าน</Label>
                                     <div className="relative">
@@ -626,13 +632,15 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                             </div>
 
                             {turnstileSiteKey && (
-                            <div className="flex justify-center">
+                            <div className="ui-turnstile-wrap">
                                 <Turnstile
                                     ref={registerTurnstileRef}
                                     siteKey={turnstileSiteKey}
                                     onSuccess={(token) => { setRecaptchaToken(token); setRegisterError(null); }}
                                     onExpire={() => setRecaptchaToken(null)}
                                     onError={() => setRecaptchaToken(null)}
+                                    options={TURNSTILE_OPTIONS}
+                                    className="ui-turnstile-widget"
                                 />
                             </div>
                             )}
@@ -654,7 +662,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
             {/* ══════════════ MOBILE LAYOUT (stacked, no slide) ══════════════ */}
             {isMobile && <div className="w-full flex flex-col">
                 <div className="absolute inset-0 bg-gray-50" />
-                <div className="relative z-10 flex-1 flex items-center justify-center p-6">
+                <div className="relative z-10 flex-1 flex items-center justify-center ui-auth-pane">
                     <div className="w-full max-w-md">
                         {/* Mobile Logo */}
                         <div className="flex items-center justify-center gap-2 mb-6">
@@ -676,7 +684,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
 
                         {/* Mobile Login Form */}
                         {mode === 'login' && (
-                            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-lg">
+                            <div className="ui-auth-card bg-white border border-gray-200 rounded-3xl shadow-lg">
                                 <div className="text-center mb-4">
                                     <h1 className="text-2xl font-bold mb-1 text-[#737300]">เข้าสู่ระบบ</h1>
                                     <p className="text-gray-500 text-sm">กรอกอีเมลและรหัสผ่าน</p>
@@ -716,14 +724,15 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     </div>
 
                                     {turnstileSiteKey && (
-                                    <div className="flex justify-center">
+                                    <div className="ui-turnstile-wrap">
                                         <Turnstile
                                             ref={loginTurnstileRef}
                                             siteKey={turnstileSiteKey}
                                             onSuccess={(token) => { setLoginRecaptchaToken(token); setLoginError(null); }}
                                             onExpire={() => setLoginRecaptchaToken(null)}
                                             onError={() => setLoginRecaptchaToken(null)}
-                                            options={{ size: 'compact' }}
+                                            options={TURNSTILE_OPTIONS}
+                                            className="ui-turnstile-widget"
                                         />
                                     </div>
                                     )}
@@ -737,7 +746,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
 
                         {/* Mobile Register Form */}
                         {mode === 'register' && (
-                            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-lg">
+                            <div className="ui-auth-card bg-white border border-gray-200 rounded-3xl shadow-lg">
                                 <div className="text-center mb-4">
                                     <h1 className="text-2xl font-bold mb-1 text-[#737300]">
                                         {registerStep === 1 ? 'เลือกประเภทบัญชี' : 'สร้างบัญชีผู้ใช้'}
@@ -802,7 +811,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                 </div>
 
                                 <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-3">
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="ui-form-grid">
                                         <div className="space-y-1">
                                             <Label htmlFor="m-reg-fn" className="text-gray-700 text-sm">ชื่อ</Label>
                                             <Input id="m-reg-fn" placeholder="ชื่อ" className="h-10 bg-gray-50 border-gray-200 rounded-xl focus:border-[#8a8a00] text-gray-900 placeholder:text-gray-400" {...registerForm.register('firstName')} />
@@ -849,7 +858,7 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                         </div>
                                     )}
 
-                                    <div className="grid grid-cols-2 gap-3">
+                                    <div className="ui-form-grid">
                                         <div className="space-y-1">
                                             <Label htmlFor="m-reg-pw" className="text-gray-700 text-sm">รหัสผ่าน</Label>
                                             <div className="relative">
@@ -871,14 +880,15 @@ export default function AuthPage({ initialMode = 'login' }: { initialMode?: 'log
                                     </div>
 
                                     {turnstileSiteKey && (
-                                    <div className="flex justify-center">
+                                    <div className="ui-turnstile-wrap">
                                         <Turnstile
                                             ref={registerTurnstileRef}
                                             siteKey={turnstileSiteKey}
                                             onSuccess={(token) => { setRecaptchaToken(token); setRegisterError(null); }}
                                             onExpire={() => setRecaptchaToken(null)}
                                             onError={() => setRecaptchaToken(null)}
-                                            options={{ size: 'compact' }}
+                                            options={TURNSTILE_OPTIONS}
+                                            className="ui-turnstile-widget"
                                         />
                                     </div>
                                     )}

@@ -42,9 +42,9 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white text-[#737300] flex">
+        <div className="ui-auth-split bg-white text-[#737300] flex">
             {/* Left Side - Decorative */}
-            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+            <div className="ui-auth-side relative overflow-hidden">
                 {/* Background Effects */}
                 <div className="absolute inset-0">
                     <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#8a8a00]/30 rounded-full blur-[120px]" />
@@ -83,7 +83,7 @@ export default function ForgotPasswordPage() {
             </div>
 
             {/* Right Side - Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 relative">
+            <div className="ui-auth-pane flex items-center justify-center relative">
                 {/* Background gradient for mobile */}
                 <div className="absolute inset-0 lg:hidden">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-[#8a8a00]/20 rounded-full blur-[100px]" />
@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
                     </div>
 
                     {/* Form Card */}
-                    <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+                    <div className="ui-auth-card bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl">
                         {!isSubmitted ? (
                             <>
                                 <div className="text-center mb-6">

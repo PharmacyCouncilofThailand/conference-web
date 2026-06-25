@@ -15,3 +15,9 @@ export {
     type PreviewRequest,
     type PreviewResponse,
 } from './payments';
+export {
+    studentEligibilityApi,
+    hasApprovedPostgraduateEligibility,
+    type StudentEligibility,
+    type StudentEligibilityStatus,
+} from './studentEligibility';

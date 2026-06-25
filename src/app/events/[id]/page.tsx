@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getEventById } from '@/lib/services';
 import { paymentsApi } from '@/lib/api/payments';
+import { hasApprovedPostgraduateEligibility, studentEligibilityApi } from '@/lib/api/studentEligibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -13,7 +14,7 @@ import { SpeakerMarquee } from '@/components/ui/speaker-marquee';
 import { Calendar, MapPin, Clock, Share2, ArrowLeft, Users, CheckCircle, Award, Ticket, X, ChevronLeft, ChevronRight, Images, Check, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { cn, getUserRoleLabel, getUserRoleBadgeColor } from '@/lib/utils';
+import { cn, formatStudentLevelList, getEffectiveTicketIdentity, getStudentLevelLabel, getUserRoleLabel, getUserRoleBadgeColor, ticketAllowsUser } from '@/lib/utils';
 import { Event, Round } from '@/types';
 import { useScrollAnimation } from '@/hooks/use-scroll-animation';
 
@@ -70,22 +71,6 @@ export default function EventDetailPage() {
     const originApp = searchParams.get('originApp');
     const returnTo = searchParams.get('returnTo');
 
-    // Helper: check if a ticket is visible to the current user based on allowedRoles and studentLevel
-    const userStudentLevel = authUser?.studentLevel || null;
-    const isTicketAllowedForUser = (ticket: { allowedRoles?: string[]; allowedStudentLevels?: string[] }) => {
-        // If no allowedRoles defined, ticket is visible to everyone
-        if (!ticket.allowedRoles || ticket.allowedRoles.length === 0) return true;
-        // Map userRole to the backend role format
-        // 'public' (not logged in) or 'general' => matches 'general' ticket roles
-        const role = userRole === 'public' ? 'general' : userRole;
-        if (!ticket.allowedRoles.includes(role)) return false;
-        // For student tickets, also check studentLevel if specified
-        if (role === 'student' && ticket.allowedStudentLevels && ticket.allowedStudentLevels.length > 0 && userStudentLevel) {
-            return ticket.allowedStudentLevels.includes(userStudentLevel);
-        }
-        return true;
-    };
-
     const { data: event, isLoading, isError } = useQuery({
         queryKey: ['event', id],
         queryFn: async () => {
@@ -98,6 +83,24 @@ export default function EventDetailPage() {
         enabled: !!id,
         retry: 1,
     });
+
+    const { data: studentEligibilityData } = useQuery({
+        queryKey: ['student-eligibility', event?.code, authUser?.id],
+        queryFn: () => studentEligibilityApi.getMe(event!.code),
+        enabled: isLoggedIn && userRole === 'pharmacist' && !!event?.code,
+        retry: 1,
+    });
+
+    // Helper: check if a ticket is visible to the current user based on allowedRoles and studentLevel.
+    // Pharmacists with event-approved postgraduate eligibility can access student postgraduate tickets for this event only.
+    const userStudentLevel = authUser?.studentLevel || null;
+    const effectiveTicketIdentity = getEffectiveTicketIdentity(
+        userRole,
+        userStudentLevel,
+        hasApprovedPostgraduateEligibility(studentEligibilityData?.eligibility),
+    );
+    const isTicketAllowedForUser = (ticket: { allowedRoles?: string[]; allowedStudentLevels?: string[] }) =>
+        ticketAllowsUser(ticket, effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel);
 
     // Check if user already registered for this event
     const { data: myTicketsData } = useQuery({
@@ -227,6 +230,20 @@ export default function EventDetailPage() {
     const allPrimaryTickets = event.ticketTypes?.filter(t => t.ticketCategory !== 'addon') || [];
     const roleFilteredTickets = allPrimaryTickets.filter(t => isTicketAllowedForUser(t));
     const hasTicketsButNotForRole = !autoSelectedTicket && !isSaleNotStarted && allPrimaryTickets.length > 0 && roleFilteredTickets.length === 0;
+    const studentRestrictedPrimaryTickets = allPrimaryTickets.filter(t =>
+        t.allowedRoles?.includes('student') && (t.allowedStudentLevels?.length || 0) > 0
+    );
+    const hasStudentLevelMismatch = hasTicketsButNotForRole && userRole === 'student' && studentRestrictedPrimaryTickets.length > 0;
+    const hasPharmacistPostgraduateEligibilityMismatch = hasTicketsButNotForRole
+        && userRole === 'pharmacist'
+        && studentRestrictedPrimaryTickets.some(t => t.allowedStudentLevels?.includes('postgraduate'));
+    const noTicketForRoleMessage = hasPharmacistPostgraduateEligibilityMismatch
+        ? 'Postgraduate student-rate tickets require approved eligibility for this event. Please submit or review your document from Profile before registering.'
+        : hasStudentLevelMismatch
+        ? userStudentLevel
+            ? `ตั๋วนักศึกษาของงานนี้เปิดสำหรับ ${formatStudentLevelList(studentRestrictedPrimaryTickets[0]?.allowedStudentLevels)} แต่บัญชีของคุณเป็น ${getStudentLevelLabel(userStudentLevel)}`
+            : 'บัญชี Student ของคุณยังไม่ได้ระบุระดับนักศึกษา กรุณาอัปเดตโปรไฟล์หรือติดต่อผู้จัดงาน'
+        : 'ระบบยังไม่เปิดจำหน่ายตั๋วสำหรับคุณ กรุณาติดต่อผู้จัดงานเพื่อสอบถามรายละเอียด';
 
     // Detect "all sold out" scenario
     const onSaleForRole = roleFilteredTickets.filter(t => isTicketOnSale(t));
@@ -266,7 +283,7 @@ export default function EventDetailPage() {
             <Navbar />
 
             {/* Hero Section - Responsive */}
-            <section className="relative h-[50vh] sm:h-[55vh] md:h-[65vh] min-h-[400px] md:min-h-[520px] w-full bg-black">
+            <section className="ui-event-detail-hero relative w-full bg-black">
                 <div className="absolute inset-0 overflow-hidden">
                     {event.videoUrl ? (
                         <div className="absolute inset-0 w-full h-full pointer-events-none z-0">
@@ -278,8 +295,8 @@ export default function EventDetailPage() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 pointer-events-none" />
                 </div>
 
-                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 lg:p-12 z-20">
-                    <div className="container mx-auto max-w-7xl">
+                <div className="ui-event-detail-hero-content absolute bottom-0 left-0 right-0 z-20">
+                    <div className="ui-shell">
                         <Link href="/events" className={`inline-flex items-center text-white/90 hover:text-white mb-3 sm:mb-4 md:mb-6 transition-colors text-sm sm:text-base scroll-animate fade-up drop-shadow-md ${mounted ? 'is-visible' : ''}`}>
                             <ArrowLeft className="w-4 h-4 mr-2" /> กลับไปหน้ารายการ
                         </Link>
@@ -298,7 +315,7 @@ export default function EventDetailPage() {
                         </div>
 
                         {/* Title */}
-                        <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 leading-tight max-w-4xl text-white drop-shadow-lg [text-shadow:_0_2px_10px_rgba(0,0,0,0.5)] scroll-animate fade-up stagger-2 ${mounted ? 'is-visible' : ''}`}>
+                        <h1 className={`ui-event-detail-title font-bold mb-3 sm:mb-4 max-w-4xl text-white drop-shadow-lg [text-shadow:_0_2px_10px_rgba(0,0,0,0.5)] scroll-animate fade-up stagger-2 ${mounted ? 'is-visible' : ''}`}>
                             {event.name}
                         </h1>
 
@@ -324,7 +341,7 @@ export default function EventDetailPage() {
             </section>
 
             {/* Main Content */}
-            <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8 md:py-12">
+            <div className="ui-shell ui-section-tight">
                 {/* Mobile: Sidebar First (for important info) */}
                 <div className="lg:hidden space-y-4 mb-6">
                     {/* Countdown Timer */}
@@ -333,7 +350,7 @@ export default function EventDetailPage() {
                     )}
 
                     {/* Quick Info Cards */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="ui-event-quick-grid">
                         {/* CPE Credits */}
                         <div className="bg-[#8a8a00]/10 border border-[#8a8a00]/20 rounded-xl p-4">
                             <div className="flex items-center gap-3">
@@ -371,12 +388,12 @@ export default function EventDetailPage() {
                 </div>
 
                 {/* Desktop Grid Layout */}
-                <div className="grid lg:grid-cols-3 gap-6 lg:gap-10">
+                <div className="ui-event-detail-grid">
                     {/* Left Column: Content */}
-                    <div className="lg:col-span-2 space-y-6 sm:space-y-8 md:space-y-10">
+                    <div className="space-y-6 sm:space-y-8 md:space-y-10">
 
                         {/* About Section */}
-                        <section ref={aboutRef} className={`relative bg-white border border-gray-200 rounded-2xl p-5 sm:p-7 md:p-9 shadow-sm overflow-hidden scroll-animate fade-up ${aboutVisible ? 'is-visible' : ''}`}>
+                        <section ref={aboutRef} className={`ui-event-detail-card relative bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden scroll-animate fade-up ${aboutVisible ? 'is-visible' : ''}`}>
                             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[#8a8a00]/5 to-transparent rounded-bl-full" />
                             <h2 className="text-xl sm:text-2xl font-bold mb-5 text-[#737300] flex items-center gap-2">
                                 รายละเอียดงาน
@@ -390,7 +407,7 @@ export default function EventDetailPage() {
                                     <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
                                         เอกสารประกอบ
                                     </h3>
-                                    <div className="grid gap-3 sm:grid-cols-2">
+                                    <div className="ui-form-grid">
                                         {event.documents.map((doc, idx) => (
                                             <a
                                                 key={idx}
@@ -414,7 +431,7 @@ export default function EventDetailPage() {
 
                         {/* Sessions Section */}
                         {event.sessions && event.sessions.length > 0 && (
-                            <section ref={sessionsRef} className={`relative bg-white border border-gray-200 rounded-2xl p-5 sm:p-7 md:p-9 shadow-sm overflow-hidden scroll-animate fade-up ${sessionsVisible ? 'is-visible' : ''}`}>
+                            <section ref={sessionsRef} className={`ui-event-detail-card relative bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden scroll-animate fade-up ${sessionsVisible ? 'is-visible' : ''}`}>
                                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#8a8a00] via-[#737300] to-[#8a8a00]/30" />
                                 <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-[#737300] mb-5">
                                     <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-[#8a8a00]" />
@@ -499,7 +516,7 @@ export default function EventDetailPage() {
                         {/* Gallery Section */}
                         {event.images && event.images.length > 0 && (
                             <section ref={galleryRef} className={`relative bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden scroll-animate fade-up ${galleryVisible ? 'is-visible' : ''}`}>
-                                <div className="p-5 sm:p-7 md:p-9 pb-0 sm:pb-0 md:pb-0">
+                                <div className="ui-event-detail-card pb-0 sm:pb-0 md:pb-0">
                                     <h2 className="text-xl sm:text-2xl font-bold mb-5 sm:mb-7 flex items-center gap-2 text-[#737300]">
                                         <Images className="w-5 h-5 sm:w-6 sm:h-6 text-[#8a8a00]" />
                                         แกลเลอรี่
@@ -508,7 +525,7 @@ export default function EventDetailPage() {
                                 </div>
 
                                 {/* Airbnb-style Gallery Grid */}
-                                <div className="px-5 sm:px-7 md:px-9 pb-5 sm:pb-7 md:pb-9">
+                                <div className="ui-event-detail-card pt-0">
                                     <div className="grid grid-cols-1 sm:grid-cols-4 sm:grid-rows-2 gap-2 sm:gap-3 h-56 sm:h-[340px] md:h-[400px] rounded-xl overflow-hidden">
                                         {/* Hero Image - Full width on mobile, Left half on Desktop */}
                                         <button
@@ -581,7 +598,7 @@ export default function EventDetailPage() {
 
                         {/* Venue Section */}
                         <section ref={venueRef} className={`relative bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm scroll-animate fade-up ${venueVisible ? 'is-visible' : ''}`}>
-                            <div className="p-5 sm:p-7 md:p-9">
+                            <div className="ui-event-detail-card">
                                 <h2 className="text-xl sm:text-2xl font-bold mb-5 sm:mb-7 flex items-center gap-2 text-[#737300]">
                                     <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-[#8a8a00]" />
                                     สถานที่จัดงาน
@@ -676,7 +693,7 @@ export default function EventDetailPage() {
 
                     {/* Right Column: Desktop Sidebar */}
                     <div ref={sidebarRef} className="hidden lg:block relative">
-                        <div className={`sticky top-24 space-y-6 scroll-animate slide-right ${sidebarVisible ? 'is-visible' : ''}`}>
+                        <div className={`ui-sticky-panel space-y-6 scroll-animate slide-right ${sidebarVisible ? 'is-visible' : ''}`}>
                             {/* Countdown Timer */}
                             {event.startDate && (
                                 <CountdownTimer targetDate={event.startDate} endDate={event.endDate} />
@@ -770,6 +787,11 @@ export default function EventDetailPage() {
                                         )}>
                                             {getUserRoleLabel(userRole)}
                                         </span>
+                                        {userRole === 'student' && (
+                                            <span className="text-[11px] text-blue-600">
+                                                {getStudentLevelLabel(userStudentLevel)}
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* Sale Not Started Notice */}
@@ -793,7 +815,7 @@ export default function EventDetailPage() {
                                                 <span className="text-sm font-semibold text-blue-700">ยังไม่มีตั๋วสำหรับคุณ</span>
                                             </div>
                                             <p className="text-xs text-blue-600">
-                                                ระบบยังไม่เปิดจำหน่ายตั๋วสำหรับคุณ กรุณาติดต่อผู้จัดงานเพื่อสอบถามรายละเอียด
+                                                {noTicketForRoleMessage}
                                             </p>
                                         </div>
                                     )}
@@ -818,6 +840,11 @@ export default function EventDetailPage() {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <div className="font-bold text-gray-900 text-lg">{autoSelectedTicket.name}</div>
+                                                    {autoSelectedTicket.allowedRoles?.includes('student') && (
+                                                        <div className="mt-1 inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                                            ระดับนักศึกษา: {formatStudentLevelList(autoSelectedTicket.allowedStudentLevels)}
+                                                        </div>
+                                                    )}
                                                     {autoSelectedTicket.quota === 0 ? (
                                                         <div className="text-xs text-gray-500 mt-1">ไม่จำกัด</div>
                                                     ) : autoSelectedTicket.available !== undefined ? (
@@ -856,6 +883,11 @@ export default function EventDetailPage() {
                                                             <div className="flex items-center justify-between">
                                                                 <div>
                                                                     <div className="font-medium text-gray-900 text-sm">{addon.name}</div>
+                                                                    {addon.allowedRoles?.includes('student') && (
+                                                                        <div className="mt-1 inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                                                                            ระดับนักศึกษา: {formatStudentLevelList(addon.allowedStudentLevels)}
+                                                                        </div>
+                                                                    )}
                                                                     <div className="text-xs text-gray-500">
                                                                         {isSoldOut
                                                                             ? <span className="text-red-400">เต็มแล้ว</span>
@@ -1076,7 +1108,7 @@ export default function EventDetailPage() {
                                                 <span className="text-sm font-semibold text-blue-700">ยังไม่มีตั๋วสำหรับคุณ</span>
                                             </div>
                                             <p className="text-xs text-blue-600">
-                                                ระบบยังไม่เปิดจำหน่ายตั๋วสำหรับคุณ กรุณาติดต่อผู้จัดงานเพื่อสอบถามรายละเอียด
+                                                {noTicketForRoleMessage}
                                             </p>
                                         </div>
                                     )}

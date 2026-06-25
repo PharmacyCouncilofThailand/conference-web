@@ -17,7 +17,7 @@ export default function MyTicketsPage() {
         <div className="min-h-screen bg-white flex flex-col">
             <Navbar />
 
-            <div className="flex-grow flex items-center justify-center px-4">
+            <div className="ui-centered-page">
                 <div className="text-center space-y-4 max-w-md">
                     <div className="w-20 h-20 mx-auto bg-[#8a8a00]/10 rounded-full flex items-center justify-center">
                         <Ticket className="w-10 h-10 text-[#8a8a00]" />

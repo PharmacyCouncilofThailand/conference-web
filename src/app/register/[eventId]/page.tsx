@@ -5,16 +5,18 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getEventById } from '@/lib/services';
 import { registrationsApi } from '@/lib/api/registrations';
+import { hasApprovedPostgraduateEligibility, studentEligibilityApi } from '@/lib/api/studentEligibility';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import {
     Calendar, MapPin, User, Mail, CheckCircle,
-    Loader2, AlertCircle, Ticket, ArrowLeft, Copy, ExternalLink
+    Loader2, AlertCircle, Ticket, ArrowLeft, Copy, ExternalLink, GraduationCap
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ApiError } from '@/lib/api/client';
+import { formatStudentLevelList, getEffectiveTicketIdentity, getStudentLevelLabel, ticketAllowsUser } from '@/lib/utils';
 
 type RegistrationResult = {
     regCode: string;
@@ -47,6 +49,14 @@ export default function FreeRegisterPage() {
         enabled: !!eventId,
     });
 
+    const shouldCheckStudentEligibility = isLoggedIn && userRole === 'pharmacist' && !!event?.code;
+    const { data: studentEligibilityData, isLoading: eligibilityLoading } = useQuery({
+        queryKey: ['student-eligibility', event?.code, authUser?.id],
+        queryFn: () => studentEligibilityApi.getMe(event!.code),
+        enabled: shouldCheckStudentEligibility,
+        retry: 1,
+    });
+
     // Determine the "back to website" URL: prefer event.websiteUrl, fallback to returnTo
     const backToWebsiteUrl = event?.websiteUrl || returnTo || null;
     const isSsoUser = !!originApp;
@@ -71,6 +81,16 @@ export default function FreeRegisterPage() {
         };
     }, [result, isSsoUser, backToWebsiteUrl]);
 
+    const userStudentLevel = authUser?.studentLevel || null;
+    const effectiveTicketIdentity = useMemo(() => getEffectiveTicketIdentity(
+        userRole,
+        userStudentLevel,
+        hasApprovedPostgraduateEligibility(studentEligibilityData?.eligibility),
+    ), [studentEligibilityData?.eligibility, userRole, userStudentLevel]);
+    const displayStudentLevel = effectiveTicketIdentity.role === 'student'
+        ? effectiveTicketIdentity.studentLevel
+        : userStudentLevel;
+
     // Determine the packageId based on user role (same logic as event detail page)
     // packageId maps directly to role for ticket matching
     const packageId = useMemo(() => {
@@ -80,24 +100,15 @@ export default function FreeRegisterPage() {
             student: 'student',
             general: 'general',
         };
-        return roleToPackage[userRole] || 'pharmacist';
-    }, [userRole]);
+        return roleToPackage[effectiveTicketIdentity.role] || 'pharmacist';
+    }, [effectiveTicketIdentity.role]);
 
     // Find the auto-selected free ticket for this user
-    const userStudentLevel = authUser?.studentLevel || null;
     const freeTicket = useMemo(() => {
         if (!event?.ticketTypes) return null;
 
-        const isTicketAllowedForUser = (ticket: { allowedRoles?: string[]; allowedStudentLevels?: string[] }) => {
-            if (!ticket.allowedRoles || ticket.allowedRoles.length === 0) return true;
-            const role = userRole === 'public' ? 'general' : userRole;
-            if (!ticket.allowedRoles.includes(role)) return false;
-            // For student tickets, also check studentLevel if specified
-            if (role === 'student' && ticket.allowedStudentLevels && ticket.allowedStudentLevels.length > 0 && userStudentLevel) {
-                return ticket.allowedStudentLevels.includes(userStudentLevel);
-            }
-            return true;
-        };
+        const isTicketAllowedForUser = (ticket: { allowedRoles?: string[]; allowedStudentLevels?: string[] }) =>
+            ticketAllowsUser(ticket, effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel);
 
         const isTicketOnSale = (ticket: { salesStart?: string; salesEnd?: string }) => {
             const now = new Date();
@@ -114,7 +125,7 @@ export default function FreeRegisterPage() {
 
         // Find first free ticket (price = 0)
         return primaryTickets.find(t => Number(t.price) === 0) || null;
-    }, [event, userRole]);
+    }, [effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel, event]);
 
     const handleRegister = async () => {
         if (!isLoggedIn || !authUser) {
@@ -137,6 +148,8 @@ export default function FreeRegisterPage() {
             const apiErr = err as ApiError;
             if (apiErr.code === 'ALREADY_REGISTERED') {
                 setError('คุณได้ลงทะเบียนงานนี้แล้ว');
+            } else if (apiErr.code === 'STUDENT_ELIGIBILITY_REQUIRED') {
+                setError('Postgraduate student-rate registration requires approved eligibility for this event. Please submit or review your document from Profile before registering.');
             } else {
                 setError(apiErr.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่');
             }
@@ -153,8 +166,23 @@ export default function FreeRegisterPage() {
         }
     };
 
+    const pharmacistEligibilityStatus = studentEligibilityData?.eligibility?.status;
+    const hasPostgraduateStudentFreeTicket = event?.ticketTypes?.some(ticket =>
+        ticket.ticketCategory !== 'addon'
+        && Number(ticket.price) === 0
+        && ticket.allowedRoles?.includes('student')
+        && (!ticket.allowedStudentLevels?.length || ticket.allowedStudentLevels.includes('postgraduate'))
+    );
+    const noFreeTicketMessage = userRole === 'pharmacist' && hasPostgraduateStudentFreeTicket
+        ? pharmacistEligibilityStatus === 'pending'
+            ? 'Your postgraduate student-rate request for this event is still pending approval.'
+            : 'Postgraduate student-rate tickets require approved eligibility for this event. Please submit or review your document from Profile before registering.'
+        : userRole === 'student' && !userStudentLevel
+        ? 'บัญชี Student ของคุณยังไม่ได้ระบุระดับนักศึกษา จึงยังไม่สามารถจับคู่กับตั๋วนักศึกษาที่จำกัดระดับได้'
+        : 'งานนี้อาจไม่มีตั๋วฟรีสำหรับสถานะของคุณ หรือตั๋วอาจหมดแล้ว';
+
     // Loading state
-    if (isLoading) {
+    if (isLoading || (shouldCheckStudentEligibility && eligibilityLoading)) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
                 <div className="text-center space-y-4">
@@ -170,7 +198,7 @@ export default function FreeRegisterPage() {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
                 <Navbar />
-                <div className="flex flex-col items-center justify-center pt-32 pb-16">
+                <div className="ui-centered-page flex-col">
                     <AlertCircle className="w-16 h-16 text-red-400 mb-4" />
                     <h2 className="text-xl font-bold text-gray-700 mb-4">ไม่พบข้อมูลงานประชุม</h2>
                     <Link href="/events"><Button variant="outline">กลับหน้ารายการ</Button></Link>
@@ -185,13 +213,13 @@ export default function FreeRegisterPage() {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
                 <Navbar />
-                <main className="pt-24 pb-16 px-4 sm:px-6">
-                    <div className="container mx-auto max-w-lg">
+                <main className="ui-page-main-tight">
+                    <div className="ui-shell max-w-lg">
                         <Link href={`/events/${eventId}`} className="inline-flex items-center text-[#8a8a00] hover:text-[#456339] mb-6 text-sm">
                             <ArrowLeft className="w-4 h-4 mr-1" /> กลับหน้างาน
                         </Link>
 
-                        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 text-center">
+                        <div className="ui-page-card bg-white rounded-2xl border border-gray-200 shadow-lg text-center">
                             <div className="w-16 h-16 mx-auto bg-[#8a8a00]/10 rounded-full flex items-center justify-center mb-4">
                                 <User className="w-8 h-8 text-[#8a8a00]" />
                             </div>
@@ -215,16 +243,16 @@ export default function FreeRegisterPage() {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
                 <Navbar />
-                <main className="pt-24 pb-16 px-4 sm:px-6">
-                    <div className="container mx-auto max-w-lg">
+                <main className="ui-page-main-tight">
+                    <div className="ui-shell max-w-lg">
                         <Link href={`/events/${eventId}`} className="inline-flex items-center text-[#8a8a00] hover:text-[#456339] mb-6 text-sm">
                             <ArrowLeft className="w-4 h-4 mr-1" /> กลับหน้างาน
                         </Link>
 
-                        <div className="bg-white rounded-2xl border border-gray-200 shadow-lg p-8 text-center">
+                        <div className="ui-page-card bg-white rounded-2xl border border-gray-200 shadow-lg text-center">
                             <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
                             <h1 className="text-xl font-bold text-gray-900 mb-2">ไม่พบตั๋วฟรีสำหรับคุณ</h1>
-                            <p className="text-gray-500 mb-6">งานนี้อาจไม่มีตั๋วฟรีสำหรับสถานะของคุณ หรือตั๋วอาจหมดแล้ว</p>
+                            <p className="text-gray-500 mb-6">{noFreeTicketMessage}</p>
                             <Link href={`/events/${eventId}`}>
                                 <Button variant="outline" className="border-[#8a8a00]/30 text-[#8a8a00]">กลับหน้างาน</Button>
                             </Link>
@@ -241,8 +269,8 @@ export default function FreeRegisterPage() {
         return (
             <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
                 <Navbar />
-                <main className="pt-24 pb-16 px-4 sm:px-6">
-                    <div className="container mx-auto max-w-lg">
+                <main className="ui-page-main-tight">
+                    <div className="ui-shell max-w-lg">
                         <div className="bg-white rounded-2xl border border-gray-200 shadow-lg overflow-hidden">
                             {/* Success header */}
                             <div className="bg-gradient-to-r from-[#8a8a00] to-[#737300] p-8 text-center text-white">
@@ -254,7 +282,7 @@ export default function FreeRegisterPage() {
                             </div>
 
                             {/* Details */}
-                            <div className="p-6 space-y-5">
+                            <div className="ui-page-card space-y-5">
                                 {/* Reg Code */}
                                 <div className="bg-[#8a8a00]/5 border border-[#8a8a00]/20 rounded-xl p-4">
                                     <div className="text-xs text-[#8a8a00] font-medium mb-1">รหัสลงทะเบียน</div>
@@ -348,8 +376,8 @@ export default function FreeRegisterPage() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
             <Navbar />
-            <main className="pt-24 pb-16 px-4 sm:px-6">
-                <div className="container mx-auto max-w-lg">
+                <main className="ui-page-main-tight">
+                    <div className="ui-shell max-w-lg">
                     <Link href={`/events/${eventId}`} className="inline-flex items-center text-[#8a8a00] hover:text-[#456339] mb-6 text-sm">
                         <ArrowLeft className="w-4 h-4 mr-1" /> กลับหน้างาน
                     </Link>
@@ -361,7 +389,7 @@ export default function FreeRegisterPage() {
                             <p className="text-white/80 text-sm">{event.name}</p>
                         </div>
 
-                        <div className="p-6 space-y-5">
+                        <div className="ui-page-card space-y-5">
                             {/* Event info */}
                             <div className="bg-gray-50 rounded-xl p-4 space-y-2">
                                 {event.startDate && (
@@ -386,6 +414,13 @@ export default function FreeRegisterPage() {
                                     <span className="text-gray-600">{freeTicket!.name}</span>
                                     <span className="ml-auto text-[#8a8a00] font-bold">ฟรี</span>
                                 </div>
+                                {freeTicket?.allowedRoles?.includes('student') && (
+                                    <div className="flex items-center gap-2 text-xs text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
+                                        <GraduationCap className="w-4 h-4" />
+                                        ระดับนักศึกษา: {formatStudentLevelList(freeTicket.allowedStudentLevels)}
+                                        {displayStudentLevel && <span className="text-blue-500">({getStudentLevelLabel(displayStudentLevel)})</span>}
+                                    </div>
+                                )}
                             </div>
 
                             {/* User info (pre-filled, read-only) */}

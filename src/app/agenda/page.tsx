@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { ApiSession, ApiSpeaker } from '@/lib/api';
@@ -28,51 +28,24 @@ export default function AgendaPage() {
     const [speakers, setSpeakers] = useState<ApiSpeaker[]>([]);
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        fetchInitialData();
-    }, []);
-
-    const fetchInitialData = async () => {
-        try {
-            setLoading(true);
-            const allEvents = await getEvents();
-            const publishedEvents = allEvents
-                .filter((e: any) => e.status === 'published' || !e.status)
-                .sort((a: any, b: any) => new Date(b.startDate || '').getTime() - new Date(a.startDate || '').getTime());
-
-            if (publishedEvents.length === 0) {
-                setError('ไม่พบงานประชุมในขณะนี้');
-                setLoading(false);
-                return;
-            }
-
-            setEvents(publishedEvents);
-            // Auto-select the first event
-            await selectEvent(publishedEvents[0].id, publishedEvents);
-        } catch (err) {
-            console.error('Failed to fetch agenda data:', err);
-            setError('ไม่สามารถโหลดข้อมมูลได้ กรุณาลองใหม่อีกครั้ง');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const selectEvent = async (eventId: string, eventList?: Event[]) => {
+    const selectEvent = useCallback(async (eventId: string) => {
         try {
             setLoadingDetail(true);
             setSelectedEventId(eventId);
-            const eventData = await getEventById(eventId) as any;
+            const eventData = await getEventById(eventId);
+            const eventSessions = (eventData.sessions || []) as unknown as ApiSession[];
+            const eventSpeakers = (eventData.speakers || []) as unknown as ApiSpeaker[];
             if (eventData) {
                 setSelectedEvent(eventData);
-                setSessions(eventData.sessions || []);
-                setSpeakers(eventData.speakers || []);
+                setSessions(eventSessions);
+                setSpeakers(eventSpeakers);
 
                 // Generate day tabs from session dates
-                const sessionDates = (eventData.sessions || [])
-                    .map((s: any) => {
-                        try { return parseISO(s.startTime); } catch { return null; }
+                const sessionDates = eventSessions
+                    .map((session) => {
+                        try { return parseISO(session.startTime); } catch { return null; }
                     })
-                    .filter((d: any): d is Date => d !== null);
+                    .filter((date): date is Date => date !== null);
 
                 const uniqueDates = (sessionDates as Date[]).reduce<Date[]>((acc, date) => {
                     if (!acc.some(d => isSameDay(d, date))) acc.push(date);
@@ -83,8 +56,8 @@ export default function AgendaPage() {
                 const dayTabs: DayTab[] = uniqueDates.map(date => ({
                     date,
                     label: format(date, 'd MMM yyyy', { locale: th }),
-                    sessionCount: (eventData.sessions || []).filter((s: any) => {
-                        try { return isSameDay(parseISO(s.startTime), date); } catch { return false; }
+                    sessionCount: eventSessions.filter((session) => {
+                        try { return isSameDay(parseISO(session.startTime), date); } catch { return false; }
                     }).length
                 }));
 
@@ -101,7 +74,36 @@ export default function AgendaPage() {
         } finally {
             setLoadingDetail(false);
         }
-    };
+    }, []);
+
+    const fetchInitialData = useCallback(async () => {
+        try {
+            setLoading(true);
+            const allEvents = await getEvents();
+            const publishedEvents = allEvents
+                .filter((event) => event.status === 'published' || !event.status)
+                .sort((a, b) => new Date(b.startDate || '').getTime() - new Date(a.startDate || '').getTime());
+
+            if (publishedEvents.length === 0) {
+                setError('ไม่พบงานประชุมในขณะนี้');
+                setLoading(false);
+                return;
+            }
+
+            setEvents(publishedEvents);
+            // Auto-select the first event
+            await selectEvent(publishedEvents[0].id);
+        } catch (err) {
+            console.error('Failed to fetch agenda data:', err);
+            setError('ไม่สามารถโหลดข้อมมูลได้ กรุณาลองใหม่อีกครั้ง');
+        } finally {
+            setLoading(false);
+        }
+    }, [selectEvent]);
+
+    useEffect(() => {
+        void fetchInitialData();
+    }, [fetchInitialData]);
 
     const getFilteredSessions = () => {
         if (!activeDay || !sessions) return [];
@@ -151,23 +153,23 @@ export default function AgendaPage() {
             <Navbar />
 
             {/* Header */}
-            <div className="pt-24 pb-10 bg-gradient-to-br from-[#8a8a00] via-[#456339] to-[#3a5530] relative overflow-hidden">
+            <div className="ui-page-hero bg-gradient-to-br from-[#8a8a00] via-[#456339] to-[#3a5530] relative overflow-hidden">
                 <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
-                <div className="container mx-auto max-w-7xl px-4 sm:px-6 relative z-10">
+                <div className="ui-shell relative z-10">
                     <span className="inline-flex items-center gap-1.5 py-1 px-3 rounded-full bg-white/15 border border-white/25 text-white/90 text-sm font-medium mb-4">
                         <Layers className="w-4 h-4" />
                         Conference Agenda
                     </span>
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 text-white">
+                    <h1 className="ui-page-title font-bold mb-3 text-white">
                         กำหนดการประชุม
                     </h1>
-                    <p className="text-white/70 max-w-xl text-base sm:text-lg">
+                    <p className="ui-subtitle text-white/70 max-w-xl">
                         เลือกงานประชุมเพื่อดูตารางกิจกรรมและหัวข้อการบรรยาย
                     </p>
                 </div>
             </div>
 
-            <div className="container mx-auto max-w-7xl px-4 sm:px-6 py-8">
+            <div className="ui-shell ui-section-tight">
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-24">
                         <div className="w-10 h-10 border-3 border-[#8a8a00] border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -188,10 +190,10 @@ export default function AgendaPage() {
                         </button>
                     </div>
                 ) : (
-                    <div className="flex flex-col lg:flex-row gap-6">
+                    <div className="ui-agenda-layout">
                         {/* ========== LEFT SIDEBAR: Event Tabs ========== */}
-                        <div className="lg:w-80 flex-shrink-0">
-                            <div className="sticky top-24 space-y-3">
+                        <div className="flex-shrink-0">
+                            <div className="ui-sticky-panel space-y-3">
                                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-1 mb-2">
                                     งานประชุมทั้งหมด ({events.length})
                                 </h3>
@@ -433,8 +435,8 @@ export default function AgendaPage() {
                                                 <FileText className="w-4 h-4 text-[#8a8a00]" />
                                                 เอกสารประกอบ
                                             </h3>
-                                            <div className="grid gap-2 sm:grid-cols-2">
-                                                {selectedEvent.documents.map((doc: any, idx: number) => (
+                                            <div className="ui-form-grid">
+                                                {selectedEvent.documents.map((doc, idx) => (
                                                     <a
                                                         key={idx}
                                                         href={doc.url}

@@ -73,7 +73,7 @@ function SSOCallbackInner() {
 
   if (isVerifying) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="ui-centered-page">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600">กำลังเข้าสู่ระบบ...</p>
@@ -84,8 +84,8 @@ function SSOCallbackInner() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md">
+      <div className="ui-centered-page">
+        <div className="text-center max-w-md w-full">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
             <p className="text-red-600">{error}</p>
           </div>
@@ -107,7 +107,7 @@ export default function SSOCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="ui-centered-page">
           <div className="text-center">
             <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
             <p className="text-gray-600">กำลังเข้าสู่ระบบ...</p>

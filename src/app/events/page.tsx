@@ -6,17 +6,18 @@ import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { getEvents } from '@/lib/services';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, MapPin, Clock, ArrowRight, Search, Filter, X, Award } from 'lucide-react';
+import { Calendar, MapPin, Clock, ArrowRight, Search, X, Award } from 'lucide-react';
 import Link from 'next/link';
 import { Event } from '@/types';
 import { useScrollAnimation } from '@/hooks/use-scroll-animation';
+
+const ITEMS_PER_PAGE = 4;
 
 export default function EventsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [mounted, setMounted] = useState(false);
-    const ITEMS_PER_PAGE = 4; // จำนวน Event ต่อหน้า
 
     const { ref: eventsRef, isVisible: eventsVisible } = useScrollAnimation({ rootMargin: '0px 0px -20px 0px' });
 
@@ -90,7 +91,7 @@ export default function EventsPage() {
             <Navbar />
 
             {/* Header Section */}
-            <section className="relative pt-40 pb-20 bg-gradient-to-br from-[#8a8a00] via-[#456339] to-[#3d5733] overflow-hidden">
+            <section className="ui-page-hero bg-gradient-to-br from-[#8a8a00] via-[#456339] to-[#3d5733] overflow-hidden">
                 {/* Animated background shapes */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
@@ -98,8 +99,8 @@ export default function EventsPage() {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/3 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }} />
                 </div>
 
-                <div className="container mx-auto text-center px-4 relative z-10">
-                    <h1 className={`text-5xl font-bold mb-4 text-white scroll-animate fade-up ${mounted ? 'is-visible' : ''}`}>
+                <div className="ui-shell text-center relative z-10">
+                    <h1 className={`ui-page-title font-bold mb-4 text-white scroll-animate fade-up ${mounted ? 'is-visible' : ''}`}>
                         ค้นหาการประชุม
                     </h1>
                     <div className={`flex justify-center items-center gap-2 text-white/60 text-sm font-medium uppercase tracking-wider scroll-animate fade-up stagger-1 ${mounted ? 'is-visible' : ''}`}>
@@ -111,9 +112,9 @@ export default function EventsPage() {
             </section>
 
             {/* Search & Filter Section */}
-            <section className={`py-8 px-4 md:px-6 border-b border-gray-200 scroll-animate fade-up stagger-2 ${mounted ? 'is-visible' : ''}`}>
-                <div className="container mx-auto max-w-5xl">
-                    <div className="flex flex-col md:flex-row gap-4">
+            <section className={`ui-section-tight border-b border-gray-200 scroll-animate fade-up stagger-2 ${mounted ? 'is-visible' : ''}`}>
+                <div className="ui-shell max-w-5xl">
+                    <div className="ui-filter-layout">
                         {/* Search Input */}
                         <div className="relative flex-1">
                             <Search className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
@@ -154,17 +155,17 @@ export default function EventsPage() {
                     {/* Results count */}
                     <div className="mt-4 text-sm text-gray-500">
                         พบ <span className="text-[#8a8a00] font-bold">{filteredEvents.length}</span> รายการ
-                        {searchQuery && <span className="ml-1">สำหรับ "{searchQuery}"</span>}
+                        {searchQuery && <span className="ml-1">สำหรับ &quot;{searchQuery}&quot;</span>}
                     </div>
                 </div>
             </section>
 
             {/* Event List Section */}
-            <section className="py-12 px-4 md:px-6 flex-grow">
-                <div className="container mx-auto max-w-5xl">
+            <section className="ui-section flex-grow">
+                <div className="ui-shell max-w-5xl">
                     <div ref={eventsRef} className={`mb-8 scroll-animate fade-up ${eventsVisible ? 'is-visible' : ''}`}>
                         <span className="text-[#8a8a00] font-bold text-sm tracking-wider uppercase mb-2 block">Event Schedule</span>
-                        <h2 className="text-3xl font-bold text-[#737300]">รายการการประชุม</h2>
+                        <h2 className="ui-section-title font-bold text-[#737300]">รายการการประชุม</h2>
                     </div>
 
                     <div className="space-y-6">
@@ -172,9 +173,9 @@ export default function EventsPage() {
                             // Skeleton loading with pulse animation
                             <div className="space-y-6">
                                 {[1, 2, 3].map((i) => (
-                                    <div key={i} className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8">
-                                        <div className="flex flex-col md:flex-row gap-8 items-center">
-                                            <div className="w-full md:w-64 h-48 bg-gray-100 rounded-xl animate-pulse" />
+                                    <div key={i} className="ui-event-list-card bg-white border border-gray-200 rounded-2xl">
+                                        <div className="ui-event-list-layout">
+                                            <div className="ui-event-list-media bg-gray-100 rounded-xl animate-pulse" />
                                             <div className="flex-1 space-y-4 w-full">
                                                 <div className="h-4 bg-gray-100 rounded w-24 animate-pulse" />
                                                 <div className="h-7 bg-gray-100 rounded w-3/4 animate-pulse" />
@@ -202,12 +203,12 @@ export default function EventsPage() {
                         ) : paginatedEvents.map((event: Event, index: number) => (
                             <div
                                 key={event.id}
-                                className={`group bg-white border border-gray-200 rounded-2xl p-6 md:p-8 hover:border-[#8a8a00]/50 hover:shadow-xl transition-all duration-500 scroll-animate fade-up stagger-${index + 1} ${eventsVisible ? 'is-visible' : ''}`}
+                                className={`ui-event-list-card group bg-white border border-gray-200 rounded-2xl hover:border-[#8a8a00]/50 hover:shadow-xl transition-all duration-500 scroll-animate fade-up stagger-${index + 1} ${eventsVisible ? 'is-visible' : ''}`}
                                 style={{ transitionProperty: 'border-color, box-shadow, transform' }}
                             >
-                                <div className="flex flex-col md:flex-row gap-8 items-center">
+                                <div className="ui-event-list-layout">
                                     {/* Thumbnail */}
-                                    <div className="w-full md:w-64 h-48 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative">
+                                    <div className="ui-event-list-media bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative">
                                         {getEventImageUrl(event) ? (
                                             <img src={getEventImageUrl(event)!} alt={event.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                         ) : (
@@ -228,7 +229,7 @@ export default function EventsPage() {
                                     </div>
 
                                     {/* Content */}
-                                    <div className="flex-1 space-y-4 text-center md:text-left">
+                                    <div className="ui-event-list-content flex-1 space-y-4">
                                         <div>
 
 
@@ -238,7 +239,7 @@ export default function EventsPage() {
 
                                         <div className="flex flex-col gap-2 text-sm text-gray-600">
                                             {/* Row 1: Date + Time */}
-                                            <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start">
+                                            <div className="ui-event-meta-row items-center gap-3">
                                                 <span className="inline-flex items-center gap-1.5 bg-[#8a8a00]/8 text-[#8a8a00] px-3 py-1.5 rounded-full font-medium text-xs">
                                                     <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                                                     {event.rounds?.[0]?.date
@@ -254,7 +255,7 @@ export default function EventsPage() {
                                             </div>
                                             {/* Row 2: Location */}
                                             {(event.rounds?.[0]?.location || event.location) && (
-                                                <div className="flex items-start gap-1.5 justify-center md:justify-start text-gray-500">
+                                                <div className="ui-event-meta-row items-start gap-1.5 text-gray-500">
                                                     <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-[#8a8a00]" />
                                                     <span className="text-xs leading-relaxed line-clamp-2">{event.rounds?.[0]?.location || event.location}</span>
                                                 </div>
@@ -263,7 +264,7 @@ export default function EventsPage() {
                                     </div>
 
                                     {/* Action */}
-                                    <div className="flex-shrink-0">
+                                    <div className="ui-event-list-action flex-shrink-0">
                                         <Link href={`/events/${event.id}`}>
                                             <Button className="h-12 px-8 rounded-full bg-[#8a8a00] hover:bg-[#456339] text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl active:scale-95">
                                                 ลงทะเบียน <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -277,7 +278,7 @@ export default function EventsPage() {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="flex items-center justify-center gap-2 mt-12">
+                        <div className="ui-pagination-row items-center justify-center gap-2 mt-12">
                             {/* Previous Button */}
                             <button
                                 onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}

@@ -10,8 +10,8 @@ export default function CancelPage() {
     return (
         <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
             <Navbar />
-            <main className="pt-24 pb-12 px-4 sm:px-6">
-                <div className="container mx-auto max-w-4xl">
+            <main className="ui-page-main-tight">
+                <div className="ui-shell max-w-4xl">
                     <div className="min-h-[60vh] flex flex-col items-center justify-center text-center">
                         <div className="relative mb-8">
                             <div className="absolute inset-0 bg-teal-500/20 blur-3xl rounded-full" />
@@ -32,7 +32,7 @@ export default function CancelPage() {
                             </ul>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="ui-responsive-actions">
                             <Link href="/events"><Button variant="outline"><ArrowLeft className="w-4 h-4 mr-2" />กลับไปหน้างาน</Button></Link>
                             <Button onClick={() => window.history.back()} className="bg-gradient-to-r from-[#8a8a00] to-[#737300]">
                                 <RefreshCcw className="w-4 h-4 mr-2" />ลองใหม่อีกครั้ง

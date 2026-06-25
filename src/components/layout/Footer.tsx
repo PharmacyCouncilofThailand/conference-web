@@ -9,10 +9,10 @@ export function Footer() {
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
-            <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <div className="ui-footer-shell relative z-10">
 
                 {/* TOP ROW: Brand + Contact + Map */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-10 mb-16">
+                <div className="ui-footer-grid">
 
                     {/* Col 1: Brand */}
                     <div className="space-y-6">
@@ -88,7 +88,7 @@ export function Footer() {
                     </div>
 
                     {/* Col 3: Map */}
-                    <div className="h-[280px] lg:h-auto min-h-[240px] rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative group">
+                    <div className="ui-footer-map rounded-3xl overflow-hidden shadow-2xl border border-white/10 relative group">
                         <iframe
                             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3873.8620801190245!2d100.52762687468208!3d13.847316186554584!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29b5cb4ca105b%3A0xb3aaa2c0ba72d485!2z4Liq4Lig4Liy4LmA4Lig4Liq4Lix4LiK4LiB4Lij4Lij4Lih!5e0!3m2!1sth!2sth!4v1771299997803!5m2!1sth!2sth"
                             width="100%"
@@ -104,13 +104,13 @@ export function Footer() {
                 </div>
 
                 {/* Bottom Bar */}
-                <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-6 border-t border-white/20">
-                    <div className="text-center md:text-left">
+                <div className="ui-footer-bottom pt-8 border-t border-white/20">
+                    <div>
                         <p className="text-xs font-medium text-white/60">© {new Date().getFullYear()} The Pharmacy Council of Thailand. All rights reserved.</p>
                         <p className="text-xs text-white/40 mt-0.5">สภาเภสัชกรรม</p>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 justify-center">
+                    <div className="ui-footer-links gap-2">
                         {[
                             { label: 'หน้าหลัก', href: '/' },
                             { label: 'งานประชุม', href: '/events' },

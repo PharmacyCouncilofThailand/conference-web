@@ -152,29 +152,29 @@ function ProfilePageContent() {
             <Navbar />
 
             {/* Header */}
-            <section className="relative pt-32 pb-12 px-6 bg-white border-b border-gray-200 overflow-hidden">
+            <section className="ui-page-main-tight bg-white border-b border-gray-200 overflow-hidden">
                 <div className="absolute inset-0 -z-10">
                     <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[#737300]/5 to-transparent" />
                 </div>
 
-                <div className={`container mx-auto max-w-6xl scroll-animate fade-up stagger-1 ${mounted ? 'is-visible' : ''}`}>
+                <div className={`ui-shell max-w-6xl scroll-animate fade-up stagger-1 ${mounted ? 'is-visible' : ''}`}>
                     <Link href="/" className="inline-flex items-center gap-2 text-gray-500 hover:text-[#8a8a00] mb-6 transition-colors group">
                         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                         <span>กลับหน้าหลัก</span>
                     </Link>
-                    <h1 className="text-4xl font-bold text-[#737300]">โปรไฟล์ของฉัน</h1>
-                    <p className="text-gray-500 mt-2">จัดการข้อมูลส่วนตัวและดูประวัติการซื้อ</p>
+                    <h1 className="ui-page-title font-bold text-[#737300]">โปรไฟล์ของฉัน</h1>
+                    <p className="ui-subtitle text-gray-500 mt-2">จัดการข้อมูลส่วนตัวและดูประวัติการซื้อ</p>
                 </div>
             </section>
 
             {/* Main Content */}
-            <section className="flex-1 py-8 px-6 bg-gray-50">
-                <div className="container mx-auto max-w-6xl">
-                    <div className="flex flex-col lg:flex-row gap-6">
+            <section className="flex-1 ui-section-tight bg-gray-50">
+                <div className="ui-shell max-w-6xl">
+                    <div className="ui-profile-layout">
 
                         {/* Left Sidebar */}
-                        <div className={`lg:w-72 flex-shrink-0 scroll-animate slide-left stagger-2 ${mounted ? 'is-visible' : ''}`}>
-                            <div className="bg-white border border-gray-200 shadow-sm rounded-3xl p-6 sticky top-24">
+                        <div className={`flex-shrink-0 scroll-animate slide-left stagger-2 ${mounted ? 'is-visible' : ''}`}>
+                            <div className="ui-sticky-panel bg-white border border-gray-200 shadow-sm rounded-3xl p-6">
                                 {/* Profile Avatar */}
                                 <div className="text-center mb-6">
                                     <div className="inline-block">
@@ -240,7 +240,7 @@ function ProfilePageContent() {
 
                         {/* Right Content Area */}
                         <div className={`flex-1 scroll-animate fade-up stagger-3 ${mounted ? 'is-visible' : ''}`}>
-                            <div className="bg-white border border-gray-200 shadow-sm rounded-3xl p-6 sm:p-8">
+                            <div className="ui-page-card bg-white border border-gray-200 shadow-sm rounded-3xl">
 
                                 {/* Profile Tab */}
                                 {activeTab === 'profile' && (
@@ -334,7 +334,7 @@ function ProfilePageContent() {
                                                         key={ticket.regCode}
                                                         className="bg-white border border-gray-200 shadow-sm rounded-2xl p-5 hover:border-[#737300]/50 hover:shadow-md transition-all"
                                                     >
-                                                        <div className="flex justify-between items-start">
+                                                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                                                             <div>
                                                                 <h4 className="font-bold text-gray-900 text-lg">{ticket.event?.eventName || 'Unknown Event'}</h4>
                                                                 <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
@@ -440,7 +440,7 @@ function ProfilePageContent() {
                                                             )}
                                                         >
                                                             {/* Header with Order Date and Purchase Number */}
-                                                            <div className="flex justify-between items-center mb-4 text-sm text-gray-500">
+                                                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mb-4 text-sm text-gray-500">
                                                                 <span>Order on {payment.createdAt ? new Date(payment.createdAt).toLocaleString('th-TH') : '-'}</span>
                                                                 <span className="font-mono text-gray-400">Purchase Number {payment.regCode}</span>
                                                             </div>
@@ -449,7 +449,7 @@ function ProfilePageContent() {
                                                             <h4 className="font-bold text-gray-900 text-lg">{payment.event?.eventName || 'Unknown Event'}</h4>
 
                                                             {/* Ticket Info */}
-                                                            <div className="flex justify-between items-center mt-3">
+                                                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mt-3">
                                                                 <div className="text-sm text-gray-500">
                                                                     <div className="flex items-center gap-2">
                                                                         <Ticket className="w-4 h-4 text-orange-500" />
@@ -466,7 +466,7 @@ function ProfilePageContent() {
                                                             {/* Status Badge and Purchase Again Button */}
                                                             {payment.payment?.status === 'pending' ? (
                                                                 <div className="mt-4 pt-4 border-t border-orange-200">
-                                                                    <div className="flex justify-between items-center">
+                                                                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                                                                         <div className="text-sm">
                                                                             <p className="text-gray-600">Please purchase by <span className="text-orange-600 font-semibold">QR code</span> or</p>
                                                                             <Link href={`/events/${payment.event?.id}`} className="text-orange-600 hover:text-orange-700 underline">

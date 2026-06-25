@@ -1,4 +1,5 @@
 import { api } from './client';
+import { parseAllowedList } from '@/lib/utils';
 
 // Types
 export interface Event {
@@ -34,6 +35,7 @@ export interface TicketType {
     badgeText?: string | null;
     originalPrice?: string | null;
     allowedRoles?: string[];
+    allowedStudentLevels?: string[];
     salesStart?: string;
     salesEnd?: string;
     available?: number;
@@ -81,6 +83,18 @@ export interface EventWithTickets extends Event {
     registeredCount?: number;
 }
 
+function normalizeTicketType(ticket: Record<string, unknown>): TicketType {
+    return {
+        ...(ticket as unknown as TicketType),
+        category: (ticket.category || ticket.ticketCategory) as string | undefined,
+        ticketCategory: (ticket.ticketCategory || ticket.category) as string | undefined,
+        allowedRoles: parseAllowedList(ticket.allowedRoles),
+        allowedStudentLevels: parseAllowedList(ticket.allowedStudentLevels),
+        salesStart: (ticket.salesStart || ticket.saleStartDate) as string | undefined,
+        salesEnd: (ticket.salesEnd || ticket.saleEndDate) as string | undefined,
+    };
+}
+
 interface CreateEventData {
     eventCode: string;
     eventName: string;
@@ -103,7 +117,15 @@ export const eventsApi = {
 
     get: async (id: number) => {
         const res = await api.get<{ event: EventWithTickets }>(`/api/events/${id}`);
-        return { success: true, data: res.event };
+        return {
+            success: true,
+            data: {
+                ...res.event,
+                ticketTypes: (res.event.ticketTypes || []).map((ticket) =>
+                    normalizeTicketType(ticket as unknown as Record<string, unknown>),
+                ),
+            },
+        };
     },
 
     create: (data: CreateEventData) =>
