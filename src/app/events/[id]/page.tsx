@@ -11,7 +11,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { CountdownTimer } from '@/components/ui/countdown-timer';
 import { SpeakerMarquee } from '@/components/ui/speaker-marquee';
-import { Calendar, MapPin, Clock, Share2, ArrowLeft, Users, CheckCircle, Award, Ticket, X, ChevronLeft, ChevronRight, Images, Check, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { Calendar, MapPin, Clock, Share2, ArrowLeft, Users, CheckCircle, Award, Ticket, X, ChevronLeft, ChevronRight, Images, Check, FileText, Globe, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { cn, formatStudentLevelList, getEffectiveTicketIdentity, getStudentLevelLabel, getUserRoleLabel, getUserRoleBadgeColor, ticketAllowsUser } from '@/lib/utils';
@@ -45,7 +45,6 @@ export default function EventDetailPage() {
     const { ref: galleryRef, isVisible: galleryVisible } = useScrollAnimation();
     const { ref: venueRef, isVisible: venueVisible } = useScrollAnimation();
     const { ref: speakersRef, isVisible: speakersVisible } = useScrollAnimation();
-    const { ref: sessionsRef, isVisible: sessionsVisible } = useScrollAnimation();
     const { ref: sidebarRef, isVisible: sidebarVisible } = useScrollAnimation();
 
     useEffect(() => {
@@ -54,14 +53,6 @@ export default function EventDetailPage() {
 
     // Session selection state
     const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
-
-    // Accordion state for sessions
-    const [expandedSessions, setExpandedSessions] = useState<string[]>([]);
-    const toggleSessionAccordion = (id: string) => {
-        setExpandedSessions(prev =>
-            prev.includes(id) ? prev.filter(sId => sId !== id) : [...prev, id]
-        );
-    };
 
     const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
 
@@ -110,10 +101,21 @@ export default function EventDetailPage() {
         retry: 1,
     });
 
+    // Purchase snapshot — authoritative source for "already has a ticket" (works for
+    // SSO users / confirmed registrations that don't surface via my-tickets) and tells
+    // us which add-on groups were already purchased.
+    const { data: myPurchasesData } = useQuery({
+        queryKey: ['my-purchases', id],
+        queryFn: () => paymentsApi.myPurchases(Number(id)),
+        enabled: isLoggedIn && !!id,
+        retry: 1,
+    });
+    const purchases = myPurchasesData?.data;
+
     // Check if user has existing registration for this specific event
     const existingPrimaryTicket = myTicketsData?.data?.find((ticket) => ticket.eventId === Number(id)) || null;
-    const hasExistingRegistration = !!existingPrimaryTicket;
-    const hasExistingPaidTicket = hasExistingRegistration && Number(existingPrimaryTicket.amount) > 0;
+    const hasExistingRegistration = !!existingPrimaryTicket || !!purchases?.hasPrimaryTicket;
+    const hasExistingPaidTicket = !!existingPrimaryTicket && Number(existingPrimaryTicket.amount) > 0;
     const existingTicketHeading = hasExistingPaidTicket ? 'คุณซื้อตั๋วแล้ว' : 'คุณลงทะเบียนแล้ว';
     const existingTicketDescription = hasExistingPaidTicket
         ? 'คุณได้ซื้อตั๋วงานนี้เรียบร้อยแล้ว'
@@ -251,6 +253,13 @@ export default function EventDetailPage() {
 
     // Get add-on tickets (only show add-ons that are within their sale period)
     const addonTickets = event.ticketTypes?.filter(t => t.ticketCategory === 'addon' && isTicketAllowedForUser(t) && isTicketOnSale(t)) || [];
+
+    // Add-ons the user hasn't bought yet (backend tracks purchased add-ons by groupName).
+    const purchasedAddOnGroups = new Set((purchases?.purchasedAddOns || []).map((g) => g.toLowerCase()));
+    const unpurchasedAddons = addonTickets.filter(
+        (a) => !(a.groupName && purchasedAddOnGroups.has(a.groupName.toLowerCase()))
+    );
+    const hasUnpurchasedAddons = unpurchasedAddons.length > 0;
     const checkoutParams = new URLSearchParams();
 
     if (autoSelectedTicket?.id) {
@@ -336,6 +345,20 @@ export default function EventDetailPage() {
                                 <span className="truncate">{currentRound?.location || event.location || 'TBA'}</span>
                             </div>
                         </div>
+
+                        {/* Event website link (only when configured in DB) */}
+                        {event.websiteUrl && (
+                            <a
+                                href={event.websiteUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`group mt-4 sm:mt-5 inline-flex items-center gap-2.5 rounded-full bg-white/15 hover:bg-white/25 border border-white/30 px-5 py-2.5 text-sm sm:text-base font-semibold text-white backdrop-blur-xl shadow-lg drop-shadow-md transition-all hover:scale-[1.03] active:scale-95 scroll-animate fade-up stagger-4 ${mounted ? 'is-visible' : ''}`}
+                            >
+                                <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
+                                เยี่ยมชมเว็บไซต์งาน
+                                <ExternalLink className="w-3.5 h-3.5 opacity-70 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                            </a>
+                        )}
                     </div>
                 </div>
             </section>
@@ -428,90 +451,6 @@ export default function EventDetailPage() {
                                 </div>
                             )}
                         </section>
-
-                        {/* Sessions Section */}
-                        {event.sessions && event.sessions.length > 0 && (
-                            <section ref={sessionsRef} className={`ui-event-detail-card relative bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden scroll-animate fade-up ${sessionsVisible ? 'is-visible' : ''}`}>
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#8a8a00] via-[#737300] to-[#8a8a00]/30" />
-                                <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 text-[#737300] mb-5">
-                                    <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-[#8a8a00]" />
-                                    กำหนดการ Sessions
-                                </h2>
-                                <div className="space-y-3">
-                                    {event.sessions.map((session) => (
-                                        <div
-                                            key={session.id}
-                                            className="rounded-xl border border-gray-200 bg-gray-50/50 overflow-hidden transition-all duration-200"
-                                        >
-                                            <button
-                                                onClick={() => toggleSessionAccordion(String(session.id))}
-                                                className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-100/50 transition-colors"
-                                            >
-                                                <div className="flex-1 min-w-0 pr-4">
-                                                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                                                        <span className="px-2 py-0.5 bg-[#8a8a00]/10 text-[#8a8a00] rounded text-xs font-medium">
-                                                            {session.sessionCode}
-                                                        </span>
-                                                        <h3 className="font-semibold text-gray-900">{session.sessionName}</h3>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-3 flex-shrink-0">
-                                                    <span className="px-2 py-1 bg-gray-200/60 rounded text-xs text-gray-600 font-medium whitespace-nowrap hidden sm:inline-block">
-                                                        {session.maxCapacity === 0 ? 'ไม่จำกัด' : `${session.maxCapacity} seats`}
-                                                    </span>
-                                                    <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-[#8a8a00] hover:border-[#8a8a00] transition-colors">
-                                                        {expandedSessions.includes(String(session.id)) ? (
-                                                            <ChevronUp className="w-4 h-4" />
-                                                        ) : (
-                                                            <ChevronDown className="w-4 h-4" />
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </button>
-
-                                            <div
-                                                className={cn(
-                                                    "grid transition-all duration-200 ease-in-out",
-                                                    expandedSessions.includes(String(session.id)) ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                                                )}
-                                            >
-                                                <div className="overflow-hidden">
-                                                    <div className="p-4 pt-0 border-t border-gray-100/60 bg-white">
-                                                        {session.description && (
-                                                            <p className="text-sm text-gray-600 mb-4 mt-3 leading-relaxed">
-                                                                {session.description}
-                                                            </p>
-                                                        )}
-                                                        <div className="flex flex-wrap gap-4 sm:gap-6 text-xs sm:text-sm text-gray-600 bg-gray-50/50 rounded-lg p-3 border border-gray-100">
-                                                            <span className="flex items-center gap-2">
-                                                                <Clock className="w-4 h-4 text-[#8a8a00]" />
-                                                                <span className="font-medium">
-                                                                    {session.startTime ? new Date(session.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : 'TBA'}
-                                                                    {' - '}
-                                                                    {session.endTime ? new Date(session.endTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : 'TBA'}
-                                                                </span>
-                                                            </span>
-                                                            {session.room && (
-                                                                <span className="flex items-center gap-2">
-                                                                    <MapPin className="w-4 h-4 text-[#8a8a00]" />
-                                                                    <span className="font-medium">{session.room}</span>
-                                                                </span>
-                                                            )}
-                                                            {session.speakers && (
-                                                                <span className="flex items-center gap-2">
-                                                                    <Users className="w-4 h-4 text-[#8a8a00]" />
-                                                                    <span className="font-medium">{session.speakers}</span>
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        )}
 
                         {/* Gallery Section */}
                         {event.images && event.images.length > 0 && (
@@ -728,7 +667,6 @@ export default function EventDetailPage() {
                                                 <div className="text-sm text-[#8a8a00] font-medium">ผู้ลงทะเบียน</div>
                                                 <div className="text-3xl font-bold text-gray-900">
                                                     {event.registeredCount || 0}
-                                                    <span className="text-lg font-normal text-gray-500"> / ไม่จำกัด</span>
                                                 </div>
                                             </>
                                         ) : (
@@ -915,7 +853,7 @@ export default function EventDetailPage() {
                                             </div>
                                             <p className="text-sm text-green-600">{existingTicketDescription}</p>
                                         </div>
-                                        {addonTickets.length > 0 && (
+                                        {hasUnpurchasedAddons && (
                                             <Link href={`/checkout/${event.id}?mode=addon`} className="block">
                                                 <Button className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#8a8a00] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98]">
                                                     <Ticket className="w-5 h-5 mr-2" />
@@ -964,18 +902,6 @@ export default function EventDetailPage() {
                                 </p>
                             </div>
 
-                            <div className="bg-gradient-to-br from-[#8a8a00]/15 to-[#737300]/10 border border-[#8a8a00]/20 rounded-2xl p-6 hover:shadow-md transition-shadow">
-                                <h4 className="font-bold text-[#8a8a00] mb-2 flex items-center gap-2">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    ต้องการความช่วยเหลือ?
-                                </h4>
-                                <p className="text-sm text-gray-500 mb-4">ติดต่อทีมงานสำหรับการจองกลุ่มหรือคำถามเพิ่มเติม</p>
-                                <Link href="/contact">
-                                    <Button variant="link" className="text-[#8a8a00] p-0 h-auto font-semibold hover:text-[#456339]">ติดต่อเรา &rarr;</Button>
-                                </Link>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -992,12 +918,21 @@ export default function EventDetailPage() {
                                         <div className="text-sm font-bold text-[#737300]">{existingTicketSummary}</div>
                                     </div>
                                 </div>
-                                <Link href="/my-tickets" className="flex-1 max-w-[160px]">
-                                    <Button className="w-full bg-gradient-to-r from-[#8a8a00] to-[#737300] hover:from-[#737300] hover:to-[#686805] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95">
-                                        <Ticket className="w-4 h-4 mr-1" />
-                                        ดูตั๋ว
-                                    </Button>
-                                </Link>
+                                {hasUnpurchasedAddons ? (
+                                    <Link href={`/checkout/${event.id}?mode=addon`} className="flex-1 max-w-[160px]">
+                                        <Button className="w-full bg-gradient-to-r from-[#8a8a00] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95">
+                                            <Ticket className="w-4 h-4 mr-1" />
+                                            ซื้อ Add-on
+                                        </Button>
+                                    </Link>
+                                ) : (
+                                    <Link href="/my-tickets" className="flex-1 max-w-[160px]">
+                                        <Button className="w-full bg-gradient-to-r from-[#8a8a00] to-[#737300] hover:from-[#737300] hover:to-[#686805] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95">
+                                            <Ticket className="w-4 h-4 mr-1" />
+                                            ดูตั๋ว
+                                        </Button>
+                                    </Link>
+                                )}
                             </>
                         ) : isSaleNotStarted ? (
                             <>

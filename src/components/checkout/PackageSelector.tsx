@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, Lock } from 'lucide-react';
-import { formatStudentLevelList } from '@/lib/utils';
+import { formatStudentLevelList, isTicketSoldOut } from '@/lib/utils';
 
 export interface PackageOption {
     id: string;
@@ -13,6 +13,8 @@ export interface PackageOption {
     features?: string[];
     badgeText?: string | null;
     originalPrice?: number | null;
+    quota: number;
+    soldCount: number;
     available: number;
     isActive: boolean;
     allowedRoles?: string[];
@@ -22,7 +24,7 @@ export interface PackageOption {
 interface PackageSelectorProps {
     packages: PackageOption[];
     selectedPackage: string;
-    onSelect: (groupName: string) => void;
+    onSelect: (packageId: string) => void;
     isAddonOnly?: boolean;
     primaryTicketName?: string | null;
     currency: 'THB' | 'USD';
@@ -69,14 +71,14 @@ export function PackageSelector({
     return (
         <div className="space-y-3">
             {packages.map((pkg) => {
-                const isSelected = selectedPackage === pkg.groupName;
-                const isSoldOut = pkg.available <= 0;
+                const isSelected = selectedPackage === pkg.id;
+                const isSoldOut = isTicketSoldOut(pkg.quota, pkg.soldCount);
 
                 return (
                     <button
                         key={pkg.id}
                         type="button"
-                        onClick={() => !isSoldOut && onSelect(pkg.groupName)}
+                        onClick={() => !isSoldOut && onSelect(pkg.id)}
                         disabled={isSoldOut}
                         className={`w-full text-left border rounded-xl p-4 transition-all duration-200 ${
                             isSelected

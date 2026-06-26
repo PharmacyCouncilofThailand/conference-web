@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, X } from 'lucide-react';
-import { formatStudentLevelList } from '@/lib/utils';
+import { formatStudentLevelList, isTicketSoldOut } from '@/lib/utils';
 
 export interface AddonOption {
     id: string;
@@ -10,6 +10,8 @@ export interface AddonOption {
     price: number;
     currency: string;
     description?: string | null;
+    quota: number;
+    soldCount: number;
     available: number;
     isActive: boolean;
     allowedRoles?: string[];
@@ -81,7 +83,7 @@ export function AddonSelector({
             {addons.map((addon) => {
                 const isSelected = selectedAddOns.includes(addon.groupName);
                 const isPurchased = purchasedAddOns.includes(addon.groupName.toLowerCase());
-                const isSoldOut = addon.available <= 0 && !isPurchased;
+                const isSoldOut = isTicketSoldOut(addon.quota, addon.soldCount) && !isPurchased;
                 const isGala = addon.groupName.toLowerCase() === 'gala';
                 const isWorkshop = addon.groupName.toLowerCase() === 'workshop';
 

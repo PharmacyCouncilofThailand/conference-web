@@ -87,14 +87,26 @@ function PaymentResultInner() {
             websiteUrl: stored.websiteUrl,
         };
     });
-    const refno = refnoFromUrl || (typeof window !== 'undefined' ? sessionStorage.getItem('payment-refno') : null);
-    const orderRef = orderRefFromUrl || (typeof window !== 'undefined' ? sessionStorage.getItem('payment-orderRef') : null);
-    const storedGateway = typeof window !== 'undefined' ? sessionStorage.getItem('payment-gateway') : null;
-    const gateway = ((searchParams.get('gateway')
-        || (orderRefFromUrl && !refnoFromUrl ? 'ktb' : storedGateway)
-        || 'paysolutions') as 'paysolutions' | 'ktb');
-    const paymentRef = gateway === 'ktb' ? orderRef : refno;
-    const eventId = typeof window !== 'undefined' ? sessionStorage.getItem('payment-event-id') : null;
+    // Capture payment identity ONCE on mount. clearPaymentSession() wipes these
+    // sessionStorage keys on success; reading them on every render would make
+    // paymentRef flip to null after success and re-trigger the "not found" error.
+    const [paymentIdentity] = useState(() => {
+        const ss = typeof window !== 'undefined' ? window.sessionStorage : null;
+        const refnoVal = refnoFromUrl || ss?.getItem('payment-refno') || null;
+        const orderRefVal = orderRefFromUrl || ss?.getItem('payment-orderRef') || null;
+        const storedGateway = ss?.getItem('payment-gateway') || null;
+        const gatewayVal = (searchParams.get('gateway')
+            || (orderRefFromUrl && !refnoFromUrl ? 'ktb' : storedGateway)
+            || 'paysolutions') as 'paysolutions' | 'ktb';
+        return {
+            refno: refnoVal,
+            orderRef: orderRefVal,
+            gateway: gatewayVal,
+            paymentRef: gatewayVal === 'ktb' ? orderRefVal : refnoVal,
+            eventId: ss?.getItem('payment-event-id') || null,
+        };
+    });
+    const { refno, orderRef, gateway, paymentRef, eventId } = paymentIdentity;
     const originApp = redirectContext.originApp
         || (typeof window !== 'undefined' ? sessionStorage.getItem('sso-origin-app') : null);
     const returnTo = redirectContext.returnTo;

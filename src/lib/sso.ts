@@ -31,6 +31,7 @@ export async function ssoRedirectToEventWebsite(
       headers: {
         'Content-Type': 'application/json',
         'X-Source-App': 'conference-web',
+        'ngrok-skip-browser-warning': 'true',
         'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({}),
@@ -73,6 +74,7 @@ export async function ssoRedirectTo(
       headers: {
         'Content-Type': 'application/json',
         'X-Source-App': 'conference-web',
+        'ngrok-skip-browser-warning': 'true',
         'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({ targetApp }),

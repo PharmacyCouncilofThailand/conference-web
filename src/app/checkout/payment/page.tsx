@@ -48,6 +48,7 @@ export default function PaymentPage() {
     const [errorCode, setErrorCode] = useState<string | null>(null);
     const [formData, setFormData] = useState<{ actionUrl: string; fields: Record<string, string> } | null>(null);
     const hasSubmitted = useRef(false);
+    const hasStartedIntent = useRef(false);
 
     useEffect(() => {
         if (authLoading) return;
@@ -55,6 +56,8 @@ export default function PaymentPage() {
             router.push('/login');
             return;
         }
+        if (hasStartedIntent.current) return;
+        hasStartedIntent.current = true;
 
         const createPaymentIntent = async () => {
             try {

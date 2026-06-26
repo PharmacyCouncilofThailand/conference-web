@@ -45,6 +45,7 @@ async function verifyTokenWithApi(tokenToVerify: string): Promise<User | null> {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'}/api/users/profile`, {
             headers: {
                 'Authorization': `Bearer ${tokenToVerify}`,
+                'ngrok-skip-browser-warning': 'true',
             },
         });
 

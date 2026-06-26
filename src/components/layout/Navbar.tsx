@@ -14,10 +14,13 @@ export function Navbar() {
     const { user, isLoggedIn, isLoading, logout } = useAuth();
     const [showDropdown, setShowDropdown] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [isSSOMode] = useState(() => {
-        if (typeof window === 'undefined') return false;
-        return !!sessionStorage.getItem('sso-origin-app');
-    });
+    // Start as `false` to match the server-rendered HTML, then read the
+    // client-only sessionStorage flag after mount — avoids hydration mismatch.
+    const [isSSOMode, setIsSSOMode] = useState(false);
+
+    useEffect(() => {
+        setIsSSOMode(!!sessionStorage.getItem('sso-origin-app'));
+    }, []);
 
     // Close mobile menu when route changes
     useEffect(() => {
@@ -77,10 +80,10 @@ export function Navbar() {
 
                 <div className="flex items-center gap-4">
                     {isLoading ? (
-                        // Loading state
-                        <div className="w-8 h-8 rounded-full bg-white/20 animate-pulse" />
-                    ) : isLoggedIn && user ? (
-                        // Logged in - Show user menu
+                        // Loading state (hide in SSO mode)
+                        !isSSOMode && <div className="w-8 h-8 rounded-full bg-white/20 animate-pulse" />
+                    ) : !isSSOMode && isLoggedIn && user ? (
+                        // Logged in - Show user menu (hidden in SSO mode)
                         <div className="relative">
                             <button
                                 onClick={() => setShowDropdown(!showDropdown)}

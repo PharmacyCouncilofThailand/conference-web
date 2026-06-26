@@ -21,6 +21,7 @@ export async function apiClient<T>(endpoint: string, options: RequestInit = {}):
         headers: {
             ...(!isFormData && { 'Content-Type': 'application/json' }),
             'X-Source-App': 'conference-web',
+            'ngrok-skip-browser-warning': 'true',
             ...(token && { Authorization: `Bearer ${token}` }),
             ...options.headers,
         },
@@ -58,6 +59,7 @@ export async function apiClientWithToken<T>(endpoint: string, token: string, opt
         headers: {
             ...(!isFormData && { 'Content-Type': 'application/json' }),
             'X-Source-App': 'conference-web',
+            'ngrok-skip-browser-warning': 'true',
             Authorization: `Bearer ${token}`,
             ...options.headers,
         },

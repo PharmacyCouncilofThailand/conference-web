@@ -57,7 +57,7 @@ export function OrderSummary({
     const formatPrice = (price: number) =>
         `${currencySymbol}${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    const selectedPkg = packages.find((p) => p.groupName === selectedPackage);
+    const selectedPkg = packages.find((p) => p.id === selectedPackage);
     const selectedAddonItems = addons.filter((a) => selectedAddOns.includes(a.groupName));
 
     const subtotal = useMemo(() => {

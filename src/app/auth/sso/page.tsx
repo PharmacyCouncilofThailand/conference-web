@@ -43,7 +43,10 @@ function SSOCallbackInner() {
       try {
         const res = await fetch(`${API_URL}/auth/sso-verify`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true",
+          },
           body: JSON.stringify({ ssoToken }),
         });
 

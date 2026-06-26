@@ -123,3 +123,14 @@ export function getEffectiveTicketIdentity(
         source: 'account',
     };
 }
+
+/** quota=0 means unlimited (matches conference-api convention). */
+export function isTicketSoldOut(quota: number, soldCount: number): boolean {
+    return quota > 0 && soldCount >= quota;
+}
+
+/** Remaining seats; returns null when quota is unlimited (quota=0). */
+export function computeRemainingTicketQuota(quota: number, soldCount: number): number | null {
+    if (quota === 0) return null;
+    return Math.max(quota - soldCount, 0);
+}

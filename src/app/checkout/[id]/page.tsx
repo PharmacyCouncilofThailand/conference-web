@@ -21,7 +21,7 @@ import { PaymentMethodCard } from '@/components/checkout/PaymentMethodCard';
 import { OrderSummary } from '@/components/checkout/OrderSummary';
 import { User, Mail, Phone, Globe, Lock, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { getEffectiveTicketIdentity, ticketAllowsUser } from '@/lib/utils';
+import { computeRemainingTicketQuota, getEffectiveTicketIdentity, ticketAllowsUser } from '@/lib/utils';
 
 type TicketWithPriority = {
     priority?: string;
@@ -161,6 +161,9 @@ export default function CheckoutPage() {
             if (!isTicketOnSale(tt)) continue;
 
             const priority = (tt as TicketWithPriority).priority ?? 'regular';
+            const quota = tt.quota ?? 0;
+            const soldCount = tt.soldCount ?? 0;
+            const remaining = computeRemainingTicketQuota(quota, soldCount);
             const baseOption: PrioritizedPackageOption = {
                 id: String(tt.id),
                 groupName: tt.groupName || tt.name,
@@ -171,7 +174,9 @@ export default function CheckoutPage() {
                 features: Array.isArray(tt.features) ? tt.features : [],
                 badgeText: tt.badgeText || null,
                 originalPrice: tt.originalPrice ? Number(tt.originalPrice) : null,
-                available: (tt.quota || 0) - (tt.soldCount || 0),
+                quota,
+                soldCount,
+                available: remaining ?? Number.MAX_SAFE_INTEGER,
                 isActive: tt.isActive !== false,
                 priority,
                 allowedRoles: tt.allowedRoles || [],
@@ -207,15 +212,9 @@ export default function CheckoutPage() {
         return { packageOptions: pkgs, addonOptions: addons };
     }, [event?.ticketTypes, currency, effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel]);
 
-    // Smart back link
-    const backUrl = useMemo(() => {
-        if (event?.websiteUrl) return event.websiteUrl;
-        return `/events/${eventId}`;
-    }, [event?.websiteUrl, eventId]);
-
-    const backLabel = event?.websiteUrl
-        ? `กลับไปหน้า ${event?.eventName || 'Event'}`
-        : 'กลับหน้า Event';
+    // Back link → always go to the event detail page
+    const backUrl = `/events/${eventId}`;
+    const backLabel = 'กลับไปหน้ารายละเอียดงาน';
 
     // Promo code apply
     const handleApplyPromo = useCallback(async () => {
@@ -440,7 +439,7 @@ export default function CheckoutPage() {
                                     <PackageSelector
                                         packages={packageOptions}
                                         selectedPackage={checkoutData.selectedPackage}
-                                        onSelect={(groupName) => updateCheckoutData({ selectedPackage: groupName })}
+                                        onSelect={(ticketId) => updateCheckoutData({ selectedPackage: ticketId })}
                                         isAddonOnly={checkoutData.isAddonOnly}
                                         primaryTicketName={purchases?.primaryTicketName}
                                         currency={currency}
