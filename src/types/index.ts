@@ -53,6 +53,8 @@ export interface TicketType {
     name: string;
     ticketCategory: 'primary' | 'addon';
     category?: 'early_bird' | 'member' | 'public' | 'vip';
+    // Add-on grouping key (backend tracks purchased add-ons by this)
+    groupName?: string;
     price: number;
     quota?: number;
     soldCount?: number;
