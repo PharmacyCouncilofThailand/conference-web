@@ -168,7 +168,7 @@ export default function EventDetailPage() {
         });
 
         return sorted.find((ticket) => {
-            const remaining = computeRemainingTicketQuota(ticket.quota, ticket.soldCount);
+            const remaining = computeRemainingTicketQuota(ticket.quota ?? 0, ticket.soldCount ?? 0);
             return remaining === null || remaining === undefined || remaining > 0;
         }) || sorted[0];
     };

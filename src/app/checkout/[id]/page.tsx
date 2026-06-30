@@ -197,7 +197,7 @@ export default function CheckoutPage() {
                 const addonOption: AddonOption = {
                     ...baseOption,
                     sessions: tt.sessions?.map(s => ({
-                        id: s.id,
+                        id: Number(s.id),
                         sessionName: s.sessionName,
                         startTime: s.startTime || '',
                         endTime: s.endTime || '',

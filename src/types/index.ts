@@ -57,17 +57,34 @@ export interface TicketType {
     // Add-on grouping key (backend tracks purchased add-ons by this)
     groupName?: string;
     price: number;
+    currency?: string;
     quota?: number;
     soldCount?: number;
     salesStart?: string;
     salesEnd?: string;
+    saleStartDate?: string;
+    saleEndDate?: string;
     // API compatibility
     description?: string;
     available?: number;
     maxPerOrder?: number;
     benefits?: string[];
+    features?: string[];
+    badgeText?: string | null;
+    originalPrice?: number | string | null;
+    isActive?: boolean;
     allowedRoles?: string[];
     allowedStudentLevels?: string[];
+    sessions?: Array<{
+        id: number;
+        sessionCode?: string;
+        sessionName: string;
+        description?: string | null;
+        startTime?: string;
+        endTime?: string;
+        room?: string | null;
+        maxCapacity?: number;
+    }>;
 }
 
 export interface Round {
