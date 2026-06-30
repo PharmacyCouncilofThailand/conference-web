@@ -72,7 +72,9 @@ function mapApiEventToEvent(apiEvent: any): Event {
             const allowedStudentLevels = parseAllowedList(t.allowedStudentLevels);
             return {
                 ...t,
+                id: String(t.id),
                 ticketCategory: t.ticketCategory || t.category,
+                priority: t.priority || 'regular',
                 category: t.priority || t.category,
                 allowedRoles,
                 allowedStudentLevels,
@@ -80,7 +82,15 @@ function mapApiEventToEvent(apiEvent: any): Event {
                 salesEnd: t.salesEnd || t.saleEndDate || undefined,
             };
         }),
-        sessions: apiEvent.sessions || [],
+        sessions: (apiEvent.sessions || []).map((s: any) => ({
+            ...s,
+            id: String(s.id),
+            isMainSession: s.isMainSession ?? false,
+            requiresOptIn: s.requiresOptIn ?? false,
+            enrolledCount: s.enrolledCount ?? 0,
+            seatsRemaining: s.seatsRemaining ?? null,
+            isFull: s.isFull ?? false,
+        })),
         speakers: apiEvent.speakers || [],
         images: apiEvent.images || [],
         attachments: apiEvent.attachments || [],

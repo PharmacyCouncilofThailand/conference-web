@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { eventsApi } from '@/lib/api/events';
+import { getEventById } from '@/lib/services';
 import { paymentsApi } from '@/lib/api/payments';
 import { hasApprovedPostgraduateEligibility, studentEligibilityApi } from '@/lib/api/studentEligibility';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +16,7 @@ import { PackageSelector } from '@/components/checkout/PackageSelector';
 import type { PackageOption } from '@/components/checkout/PackageSelector';
 import { AddonSelector } from '@/components/checkout/AddonSelector';
 import type { AddonOption } from '@/components/checkout/AddonSelector';
+import { OptionalSessionSelector } from '@/components/checkout/OptionalSessionSelector';
 import { TaxInvoiceSection } from '@/components/checkout/TaxInvoiceSection';
 import { PaymentMethodCard } from '@/components/checkout/PaymentMethodCard';
 import { OrderSummary } from '@/components/checkout/OrderSummary';
@@ -53,20 +54,22 @@ export default function CheckoutPage() {
     const [promoDiscountAmount, setPromoDiscountAmount] = useState(0);
     const [promoDiscountText, setPromoDiscountText] = useState<string | null>(null);
 
-    // Fetch event data
-    const { data: eventData, isLoading: eventLoading, isError: eventError } = useQuery({
-        queryKey: ['event', eventId],
-        queryFn: () => eventsApi.get(Number(eventId)),
+    // Fetch event data (same queryFn/shape as events/[id] to avoid React Query cache collisions)
+    const { data: event, isLoading: eventLoading, isError: eventError } = useQuery({
+        queryKey: ['event', 'detail', eventId],
+        queryFn: async () => {
+            const result = await getEventById(eventId);
+            if (!result) throw new Error('Event not found');
+            return result;
+        },
         enabled: !!eventId,
         retry: 1,
     });
 
-    const event = eventData?.data;
-
     const { data: studentEligibilityData } = useQuery({
-        queryKey: ['student-eligibility', event?.eventCode, user?.id],
-        queryFn: () => studentEligibilityApi.getMe(event!.eventCode),
-        enabled: isLoggedIn && user?.role === 'pharmacist' && !!event?.eventCode,
+        queryKey: ['student-eligibility', event?.code, user?.id],
+        queryFn: () => studentEligibilityApi.getMe(event!.code),
+        enabled: isLoggedIn && user?.role === 'pharmacist' && !!event?.code,
         retry: 1,
     });
 
@@ -183,13 +186,13 @@ export default function CheckoutPage() {
                 allowedStudentLevels: tt.allowedStudentLevels || [],
             };
 
-            if (tt.category === 'primary') {
+            if (tt.ticketCategory !== 'addon') {
                 // Filter by currency
                 if ((currency === 'THB' && (tt.currency === 'THB' || !tt.currency)) ||
                     (currency === 'USD' && tt.currency === 'USD')) {
                     pkgs.push(baseOption);
                 }
-            } else if (tt.category === 'addon') {
+            } else if (tt.ticketCategory === 'addon') {
                 // Include sessions for workshop tickets
                 const addonOption: AddonOption = {
                     ...baseOption,
@@ -206,11 +209,58 @@ export default function CheckoutPage() {
             }
         }
 
-        const priorityOrder: Record<string, number> = { early_bird: 0, regular: 1 };
+        const priorityOrder: Record<string, number> = { early_bird: 0, regular: 1, late: 2, onsite: 3 };
         pkgs.sort((a, b) => (priorityOrder[a.priority ?? 'regular'] ?? 1) - (priorityOrder[b.priority ?? 'regular'] ?? 1));
 
         return { packageOptions: pkgs, addonOptions: addons };
     }, [event?.ticketTypes, currency, effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel]);
+
+    const optionalSessionOptions = useMemo(() => {
+        if (!event?.sessions) return [];
+        return event.sessions
+            .filter((session) => session.requiresOptIn)
+            .map((session) => ({
+                id: String(session.id),
+                sessionName: session.sessionName,
+                room: session.room,
+                maxCapacity: session.maxCapacity,
+                enrolledCount: session.enrolledCount,
+                seatsRemaining: session.seatsRemaining,
+                isFull: session.isFull,
+                description: session.description,
+            }));
+    }, [event?.sessions]);
+
+    const canSelectOptionalSessions = useMemo(() => {
+        if (checkoutData.isAddonOnly || !checkoutData.selectedPackage) return false;
+        const ticket = event?.ticketTypes?.find((t) => String(t.id) === checkoutData.selectedPackage);
+        if (!ticket) return false;
+        const roles = ticket.allowedRoles || [];
+        const levels = ticket.allowedStudentLevels || [];
+        if (roles.includes('student') && levels.length === 1 && levels[0] === 'undergraduate') {
+            return false;
+        }
+        return optionalSessionOptions.length > 0;
+    }, [
+        checkoutData.isAddonOnly,
+        checkoutData.selectedPackage,
+        event?.ticketTypes,
+        optionalSessionOptions.length,
+    ]);
+
+    const toggleOptionalSession = useCallback((sessionId: string) => {
+        const current = checkoutData.selectedOptionalSessions;
+        const updated = current.includes(sessionId)
+            ? current.filter((id) => id !== sessionId)
+            : [...current, sessionId];
+        updateCheckoutData({ selectedOptionalSessions: updated });
+    }, [checkoutData.selectedOptionalSessions, updateCheckoutData]);
+
+    useEffect(() => {
+        if (!canSelectOptionalSessions && checkoutData.selectedOptionalSessions.length > 0) {
+            updateCheckoutData({ selectedOptionalSessions: [] });
+        }
+    }, [canSelectOptionalSessions, checkoutData.selectedOptionalSessions.length, updateCheckoutData]);
 
     // Back link → always go to the event detail page
     const backUrl = `/events/${eventId}`;
@@ -227,7 +277,7 @@ export default function CheckoutPage() {
                 packageId: checkoutData.isAddonOnly ? '' : checkoutData.selectedPackage,
                 addOnIds: checkoutData.selectedAddOns,
                 currency,
-                paymentMethod: checkoutData.paymentMethod,
+                paymentMethod: checkoutData.paymentMethod ?? 'card',
                 promoCode: checkoutData.promoCode,
             });
 
@@ -317,7 +367,7 @@ export default function CheckoutPage() {
                     {/* Event Banner */}
                     <div className="mb-6">
                         <EventBanner
-                            eventName={event.eventName}
+                            eventName={event.name}
                             startDate={event.startDate}
                             endDate={event.endDate}
                             location={event.location}
@@ -445,6 +495,14 @@ export default function CheckoutPage() {
                                         currency={currency}
                                     />
 
+                                    {canSelectOptionalSessions && (
+                                        <OptionalSessionSelector
+                                            sessions={optionalSessionOptions}
+                                            selectedSessionIds={checkoutData.selectedOptionalSessions}
+                                            onToggle={toggleOptionalSession}
+                                        />
+                                    )}
+
                                     {/* Add-on Selection */}
                                     {addonOptions.length > 0 && (
                                         <div className="pt-4 border-t border-gray-100 space-y-3">
@@ -556,7 +614,7 @@ export default function CheckoutPage() {
                         {/* Right: Order Summary */}
                         <div>
                             <OrderSummary
-                                eventName={event.eventName}
+                                eventName={event.name}
                                 selectedPackage={checkoutData.selectedPackage}
                                 selectedAddOns={checkoutData.selectedAddOns}
                                 packages={packageOptions}
@@ -574,7 +632,7 @@ export default function CheckoutPage() {
                                 promoDiscountText={promoDiscountText}
                                 onSubmit={handleSubmit}
                                 isSubmitting={isSubmitting}
-                                canSubmit={canProceedToPayment()}
+                                canSubmit={currentStep === 4 && canProceedToPayment()}
                             />
                         </div>
                     </div>

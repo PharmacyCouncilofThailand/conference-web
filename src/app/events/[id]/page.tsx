@@ -14,7 +14,7 @@ import { SpeakerMarquee } from '@/components/ui/speaker-marquee';
 import { Calendar, MapPin, Clock, Share2, ArrowLeft, Users, CheckCircle, Award, Ticket, X, ChevronLeft, ChevronRight, Images, Check, FileText, Globe, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { cn, formatStudentLevelList, getEffectiveTicketIdentity, getStudentLevelLabel, getUserRoleLabel, getUserRoleBadgeColor, ticketAllowsUser } from '@/lib/utils';
+import { cn, computeRemainingTicketQuota, formatStudentLevelList, getEffectiveTicketIdentity, getStudentLevelLabel, getUserRoleLabel, getUserRoleBadgeColor, ticketAllowsUser } from '@/lib/utils';
 import { Event, Round } from '@/types';
 import { useScrollAnimation } from '@/hooks/use-scroll-animation';
 
@@ -51,9 +51,6 @@ export default function EventDetailPage() {
         requestAnimationFrame(() => setMounted(true));
     }, []);
 
-    // Session selection state
-    const [selectedSessions, setSelectedSessions] = useState<string[]>([]);
-
     const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
 
     // User role from AuthContext
@@ -63,7 +60,7 @@ export default function EventDetailPage() {
     const returnTo = searchParams.get('returnTo');
 
     const { data: event, isLoading, isError } = useQuery({
-        queryKey: ['event', id],
+        queryKey: ['event', 'detail', id],
         queryFn: async () => {
             const result = await getEventById(id);
             if (!result) {
@@ -123,15 +120,6 @@ export default function EventDetailPage() {
     const existingTicketLabel = hasExistingPaidTicket ? 'ซื้อตั๋วแล้ว' : 'ลงทะเบียนแล้ว';
     const existingTicketSummary = hasExistingPaidTicket ? 'คุณซื้อตั๋วงานนี้แล้ว' : 'คุณลงทะเบียนงานนี้แล้ว';
 
-    // Toggle session selection
-    const toggleSession = (sessionId: string) => {
-        setSelectedSessions(prev =>
-            prev.includes(sessionId)
-                ? prev.filter(id => id !== sessionId)
-                : [...prev, sessionId]
-        );
-    };
-
     // Helper: check if a ticket is within its sale period
     const isTicketOnSale = (ticket: { salesStart?: string; salesEnd?: string }) => {
         const now = new Date();
@@ -154,53 +142,35 @@ export default function EventDetailPage() {
         return futureDates[0] || null;
     };
 
-    // Auto-detect the best ticket for current user (like Eventpass)
-    // Priority: Early Bird (if available and within sale period) > Member (if logged in) > Public
+    // Auto-detect the best ticket for current user based on priority + sale window
     const getAutoSelectedTicket = () => {
         if (!event?.ticketTypes || event.ticketTypes.length === 0) return null;
 
-        // Filter out add-on tickets AND filter by user role
-        const primaryTickets = event.ticketTypes.filter(t => t.ticketCategory !== 'addon' && isTicketAllowedForUser(t));
+        const primaryTickets = event.ticketTypes.filter(
+            (t) => t.ticketCategory !== 'addon' && isTicketAllowedForUser(t)
+        );
         if (primaryTickets.length === 0) return null;
 
-        // Only consider tickets that are currently within their sale period
-        const onSaleTickets = primaryTickets.filter(t => isTicketOnSale(t));
+        const onSaleTickets = primaryTickets.filter((t) => isTicketOnSale(t));
         if (onSaleTickets.length === 0) return null;
 
-        // Find tickets by category from on-sale tickets only
-        const earlyBirdTicket = onSaleTickets.find(t =>
-            t.name.toLowerCase().includes('early') || t.name.toLowerCase().includes('bird')
-        );
-        const memberTicket = onSaleTickets.find(t =>
-            t.name.toLowerCase().includes('member') || t.name.toLowerCase().includes('สมาชิก')
-        );
-        const publicTicket = onSaleTickets.find(t =>
-            t.name.toLowerCase().includes('public') || t.name.toLowerCase().includes('ทั่วไป') || t.name.toLowerCase().includes('general')
-        );
+        const priorityOrder: Record<string, number> = {
+            early_bird: 0,
+            regular: 1,
+            late: 2,
+            onsite: 3,
+        };
 
-        // Check Early Bird availability
-        if (earlyBirdTicket) {
-            const hasAvailability = earlyBirdTicket.available === undefined || earlyBirdTicket.available > 0;
-            if (hasAvailability) {
-                return earlyBirdTicket;
-            }
-        }
+        const sorted = [...onSaleTickets].sort((a, b) => {
+            const aPriority = priorityOrder[a.priority || a.category || 'regular'] ?? 99;
+            const bPriority = priorityOrder[b.priority || b.category || 'regular'] ?? 99;
+            return aPriority - bPriority;
+        });
 
-        // If user is member, return member ticket
-        if (userRole === 'member' && memberTicket) {
-            const hasAvailability = memberTicket.available === undefined || memberTicket.available > 0;
-            if (hasAvailability) {
-                return memberTicket;
-            }
-        }
-
-        // Default to public ticket
-        if (publicTicket) {
-            return publicTicket;
-        }
-
-        // Fallback to first available on-sale ticket
-        return onSaleTickets[0];
+        return sorted.find((ticket) => {
+            const remaining = computeRemainingTicketQuota(ticket.quota, ticket.soldCount);
+            return remaining === null || remaining === undefined || remaining > 0;
+        }) || sorted[0];
     };
 
     if (isLoading) return (
@@ -266,10 +236,6 @@ export default function EventDetailPage() {
         checkoutParams.set('ticket', String(autoSelectedTicket.id));
     }
 
-    if (selectedSessions.length > 0) {
-        checkoutParams.set('sessions', selectedSessions.join(','));
-    }
-
     if (originApp) {
         checkoutParams.set('originApp', originApp);
     }
@@ -285,7 +251,14 @@ export default function EventDetailPage() {
     const isFreeEvent = autoSelectedTicket && Number(autoSelectedTicket.price) === 0;
     const freeRegisterHref = `/register/${event.id}${originApp ? `?originApp=${originApp}` : ''}${returnTo ? `${originApp ? '&' : '?'}returnTo=${encodeURIComponent(returnTo)}` : ''}`;
     const actionHref = isFreeEvent ? freeRegisterHref : checkoutHref;
-    const actionLabel = isFreeEvent ? 'ลงทะเบียนฟรี' : 'จองตั๋วเลย';
+    const actionLabel = isFreeEvent ? 'ลงทะเบียนฟรี' : 'ลงทะเบียนเลย';
+
+    const sortedEventSessions = [...(event.sessions || [])].sort(
+        (a, b) => Number(a.id) - Number(b.id)
+    );
+
+    const cpeCreditsValue = Number(event.cpeCredits);
+    const hasCpeCredits = Number.isFinite(cpeCreditsValue) && cpeCreditsValue > 0;
 
     return (
         <div className="min-h-screen bg-white text-gray-900 overflow-x-hidden">
@@ -382,7 +355,9 @@ export default function EventDetailPage() {
                                 </div>
                                 <div>
                                     <div className="text-xs text-[#8a8a00]">CPE Credits</div>
-                                    <div className="text-xl font-bold text-gray-900">{event.cpeCredits}</div>
+                                    <div className="text-xl font-bold text-gray-900 min-h-[1.75rem]">
+                                        {hasCpeCredits ? event.cpeCredits : null}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -451,6 +426,68 @@ export default function EventDetailPage() {
                                 </div>
                             )}
                         </section>
+
+                        {sortedEventSessions.length > 0 && (
+                            <section className="ui-event-detail-card relative bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                                <h2 className="text-xl sm:text-2xl font-bold mb-2 text-[#737300]">
+                                    โซนและกิจกรรมในงาน
+                                </h2>
+                                <p className="text-sm sm:text-base text-gray-600 leading-relaxed mb-5">
+                                    รายการพื้นที่และกิจกรรมที่ท่านสามารถเข้าร่วมได้ตามสิทธิ์การลงทะเบียน กิจกรรมที่มีจำกัดที่นั่งต้องเลือกล่วงหน้าตอนลงทะเบียนเข้างาน
+                                </p>
+                                <div className="space-y-3">
+                                    {sortedEventSessions.map((session) => {
+                                        const seatsLabel =
+                                            session.maxCapacity > 0
+                                                ? session.requiresOptIn
+                                                    ? `เหลือ ${session.seatsRemaining ?? Math.max(0, session.maxCapacity - (session.enrolledCount ?? 0))} / ${session.maxCapacity} ที่`
+                                                    : `${session.enrolledCount ?? 0} / ${session.maxCapacity} ที่`
+                                                : null;
+
+                                        const sessionBadgeClass =
+                                            'inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full normal-case tracking-normal';
+
+                                        return (
+                                            <div
+                                                key={session.id}
+                                                className="p-4 rounded-xl border border-gray-200 bg-gray-50/60"
+                                            >
+                                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                    <h3 className="font-semibold text-gray-900">{session.sessionName}</h3>
+                                                    {session.isMainSession && (
+                                                        <span className={`${sessionBadgeClass} bg-[#8a8a00]/15 text-[#737300]`}>
+                                                            เข้างาน
+                                                        </span>
+                                                    )}
+                                                    {session.requiresOptIn && (
+                                                        <span className={`${sessionBadgeClass} bg-amber-100 text-amber-800`}>
+                                                            ลงทะเบียนล่วงหน้า
+                                                        </span>
+                                                    )}
+                                                    {session.isFull && (
+                                                        <span className={`${sessionBadgeClass} bg-red-100 text-red-700`}>
+                                                            เต็มแล้ว
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {session.room && (
+                                                    <p className="text-sm text-gray-500">{session.room}</p>
+                                                )}
+                                                {session.description && (
+                                                    <p className="text-sm text-gray-600 mt-2">{session.description}</p>
+                                                )}
+                                                {seatsLabel && (
+                                                    <p className="text-sm text-[#737300] mt-2">{seatsLabel}</p>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-4">
+                                    Main Session คือสิทธิ์เข้างานหลัก ไม่ใช่ห้อง Main Stage — กิจกรรมที่มีจำกัดที่นั่งต้องเลือกตอนลงทะเบียนเข้างาน
+                                </p>
+                            </section>
+                        )}
 
                         {/* Gallery Section */}
                         {event.images && event.images.length > 0 && (
@@ -646,7 +683,14 @@ export default function EventDetailPage() {
                                     </div>
                                     <div>
                                         <div className="text-sm text-[#8a8a00] font-medium">CPE Credits</div>
-                                        <div className="text-3xl font-bold text-gray-900">{event.cpeCredits} <span className="text-lg font-normal text-gray-500">หน่วยกิต</span></div>
+                                        <div className="text-3xl font-bold text-gray-900 min-h-[2.25rem]">
+                                            {hasCpeCredits ? (
+                                                <>
+                                                    {event.cpeCredits}{' '}
+                                                    <span className="text-lg font-normal text-gray-500">หน่วยกิต</span>
+                                                </>
+                                            ) : null}
+                                        </div>
                                     </div>
                                 </div>
                                 <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
@@ -996,7 +1040,7 @@ export default function EventDetailPage() {
                                         onClick={() => setMobileBookingOpen(true)}
                                         className="flex-1 max-w-[200px] bg-gradient-to-r from-[#8a8a00] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white h-12 font-bold rounded-xl transition-all hover:scale-105 hover:shadow-lg active:scale-95"
                                     >
-                                        จองตั๋วเลย
+                                        ลงทะเบียนเลย
                                     </Button>
                                 )}
                             </>
@@ -1143,7 +1187,7 @@ export default function EventDetailPage() {
                                         onClick={() => setMobileBookingOpen(false)}
                                     >
                                         <Button className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[#8a8a00] to-[#456339] hover:from-[#456339] hover:to-[#3a5430] text-white shadow-lg rounded-xl transition-all active:scale-[0.98]">
-                                            {isFreeEvent ? 'ลงทะเบียนฟรี' : 'จองตั๋วเลย'}
+                                            {isFreeEvent ? 'ลงทะเบียนฟรี' : 'ลงทะเบียนเลย'}
                                         </Button>
                                     </Link>
                                 )}

@@ -52,7 +52,8 @@ export interface TicketType {
     id: string;
     name: string;
     ticketCategory: 'primary' | 'addon';
-    category?: 'early_bird' | 'member' | 'public' | 'vip';
+    category?: 'early_bird' | 'regular' | 'late' | 'onsite' | 'member' | 'public' | 'vip';
+    priority?: 'early_bird' | 'regular' | 'late' | 'onsite';
     // Add-on grouping key (backend tracks purchased add-ons by this)
     groupName?: string;
     price: number;
@@ -95,6 +96,11 @@ export interface Session {
     endTime: string;
     speakers?: string;
     maxCapacity: number;
+    isMainSession?: boolean;
+    requiresOptIn?: boolean;
+    enrolledCount?: number;
+    seatsRemaining?: number | null;
+    isFull?: boolean;
 }
 
 export interface Speaker {

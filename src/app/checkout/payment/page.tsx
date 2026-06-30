@@ -24,6 +24,7 @@ interface CheckoutPaymentData {
     dietaryRequirement: string;
     dietaryOtherText: string;
     selectedWorkshopTopic?: string;
+    selectedOptionalSessions?: string[];
     promoCode: string;
     promoApplied: boolean;
     currency: 'THB' | 'USD';
@@ -75,6 +76,10 @@ export default function PaymentPage() {
                     ? Number(data.selectedWorkshopTopic)
                     : undefined;
 
+                const optionalSessionIds = (data.selectedOptionalSessions || [])
+                    .map((id) => Number(id))
+                    .filter((id) => Number.isInteger(id) && id > 0);
+
                 // Build create-intent request body
                 const requestBody = {
                     eventId: parsedEventId,
@@ -84,6 +89,7 @@ export default function PaymentPage() {
                     paymentMethod: data.paymentMethod,
                     promoCode: data.promoApplied ? data.promoCode : undefined,
                     workshopSessionId: Number.isFinite(workshopSessionId) ? workshopSessionId : undefined,
+                    optionalSessionIds: optionalSessionIds.length > 0 ? optionalSessionIds : undefined,
                     dietaryRequirement: data.dietaryRequirement === 'other'
                         ? data.dietaryOtherText
                         : data.dietaryRequirement || undefined,

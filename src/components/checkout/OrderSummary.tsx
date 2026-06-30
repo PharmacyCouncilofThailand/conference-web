@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
-import { calculatePaySolutionsFeeExact, resolvePaySolutionsFeeMethod } from '@/lib/paySolutionsFee';
 import type { PackageOption } from './PackageSelector';
 import type { AddonOption } from './AddonSelector';
 import { PromoCodeSection } from './PromoCodeSection';
@@ -14,7 +13,7 @@ interface OrderSummaryProps {
     packages: PackageOption[];
     addons: AddonOption[];
     currency: 'THB' | 'USD';
-    paymentMethod: 'qr' | 'card';
+    paymentMethod: 'qr' | 'card' | null;
     isAddonOnly?: boolean;
     // Promo
     promoCode: string;
@@ -67,11 +66,6 @@ export function OrderSummary({
     }, [isAddonOnly, selectedPkg, selectedAddonItems]);
 
     const netAmount = Math.max(0, subtotal - promoDiscountAmount);
-
-    const feeBreakdown = useMemo(() => {
-        const feeMethod = resolvePaySolutionsFeeMethod(paymentMethod, currency);
-        return calculatePaySolutionsFeeExact(netAmount, feeMethod);
-    }, [netAmount, paymentMethod, currency]);
 
     const hasItems = isAddonOnly ? selectedAddOns.length > 0 : !!selectedPackage;
 
@@ -139,17 +133,9 @@ export function OrderSummary({
                             </div>
                         )}
 
-                        <div className="flex justify-between text-sm text-gray-500">
-                            <span>ค่าธรรมเนียมการชำระเงิน</span>
-                            <span>{formatPrice(feeBreakdown.fee)}</span>
-                        </div>
-                        <div className="text-[10px] text-gray-400 text-right -mt-1">
-                            (Processing Fee {formatPrice(feeBreakdown.processingFee)} + VAT 7% {formatPrice(feeBreakdown.processingVat)})
-                        </div>
-
                         <div className="flex justify-between items-center text-lg font-bold text-[#8a8a00] pt-3 border-t border-[#8a8a00]/20">
                             <span>ยอดชำระสุทธิ</span>
-                            <span>{formatPrice(feeBreakdown.total)}</span>
+                            <span>{formatPrice(netAmount)}</span>
                         </div>
                     </div>
                 )}
@@ -168,7 +154,7 @@ export function OrderSummary({
                             กำลังดำเนินการ...
                         </>
                     ) : (
-                        `ชำระเงิน ${hasItems ? formatPrice(feeBreakdown.total) : ''}`
+                        `ชำระเงิน ${hasItems ? formatPrice(netAmount) : ''}`
                     )}
                 </button>
             </div>

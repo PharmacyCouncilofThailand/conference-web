@@ -23,7 +23,7 @@ function PaymentSuccessContent() {
     const deliverySms = searchParams.get('sms') === 'true';
 
     const { data: event, isLoading } = useQuery({
-        queryKey: ['event', eventId],
+        queryKey: ['event', 'detail', eventId],
         queryFn: async () => {
             if (!eventId) return null;
             const result = await getEventById(eventId);

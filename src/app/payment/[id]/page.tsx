@@ -23,7 +23,7 @@ export default function PaymentPage() {
     const [cardSuccess, setCardSuccess] = useState(false);
 
     const { data: event } = useQuery({
-        queryKey: ['event', eventId],
+        queryKey: ['event', 'detail', eventId],
         queryFn: async () => {
             const result = await getEventById(eventId);
             if (!result) throw new Error('Event not found');

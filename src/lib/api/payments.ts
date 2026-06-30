@@ -47,6 +47,7 @@ export interface CreateIntentRequest {
     paymentMethod: 'qr' | 'card';
     promoCode?: string;
     workshopSessionId?: number;
+    optionalSessionIds?: number[];
     dietaryRequirement?: string;
     needTaxInvoice: boolean;
     taxName?: string;

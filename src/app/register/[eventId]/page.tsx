@@ -44,7 +44,7 @@ export default function FreeRegisterPage() {
     const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
     const { data: event, isLoading, isError } = useQuery({
-        queryKey: ['event', eventId],
+        queryKey: ['event', 'detail', eventId],
         queryFn: () => getEventById(eventId),
         enabled: !!eventId,
     });

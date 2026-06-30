@@ -18,6 +18,7 @@ export interface CheckoutData {
     dietaryRequirement: string;
     dietaryOtherText: string;
     selectedWorkshopTopic?: string;
+    selectedOptionalSessions: string[];
 
     // Addon-only mode
     isAddonOnly?: boolean;
@@ -33,8 +34,8 @@ export interface CheckoutData {
     taxProvince: string;
     taxPostalCode: string;
 
-    // Step 4: Payment Method
-    paymentMethod: 'qr' | 'card';
+    // Step 4: Payment Method (null = ยังไม่เลือก)
+    paymentMethod: 'qr' | 'card' | null;
 
     // Currency (auto-detect from user.delegateType)
     currency?: 'THB' | 'USD';
@@ -55,6 +56,7 @@ const INITIAL_CHECKOUT_DATA: CheckoutData = {
     dietaryRequirement: '',
     dietaryOtherText: '',
     selectedWorkshopTopic: undefined,
+    selectedOptionalSessions: [],
     isAddonOnly: false,
     purchasedAddOns: [],
     needTaxInvoice: false,
@@ -65,7 +67,7 @@ const INITIAL_CHECKOUT_DATA: CheckoutData = {
     taxDistrict: '',
     taxProvince: '',
     taxPostalCode: '',
-    paymentMethod: 'qr',
+    paymentMethod: null,
     currency: 'THB',
     promoCode: '',
     promoApplied: false,
@@ -118,7 +120,14 @@ export function useCheckoutWizard(eventId: string) {
     }, []);
 
     const nextStep = useCallback(() => {
-        setCurrentStep(prev => Math.min(prev + 1, STEPS.length));
+        setCurrentStep((prev) => {
+            const next = Math.min(prev + 1, STEPS.length);
+            // เข้าขั้นตอนที่ 4 จากขั้นที่ 3 — บังคับเลือกวิธีชำระใหม่ทุกครั้ง
+            if (next === 4 && prev === 3) {
+                setCheckoutData((d) => ({ ...d, paymentMethod: null }));
+            }
+            return next;
+        });
     }, []);
 
     const prevStep = useCallback(() => {
@@ -158,8 +167,8 @@ export function useCheckoutWizard(eventId: string) {
     }, [checkoutData]);
 
     const isStep4Valid = useCallback(() => {
-        return !!checkoutData.paymentMethod;
-    }, [checkoutData]);
+        return checkoutData.paymentMethod === 'qr' || checkoutData.paymentMethod === 'card';
+    }, [checkoutData.paymentMethod]);
 
     const isCurrentStepValid = useCallback(() => {
         switch (currentStep) {
