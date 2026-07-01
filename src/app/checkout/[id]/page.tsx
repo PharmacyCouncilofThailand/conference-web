@@ -17,6 +17,7 @@ import type { PackageOption } from '@/components/checkout/PackageSelector';
 import { AddonSelector } from '@/components/checkout/AddonSelector';
 import type { AddonOption } from '@/components/checkout/AddonSelector';
 import { OptionalSessionSelector } from '@/components/checkout/OptionalSessionSelector';
+import { OPTIONAL_SESSION_OPT_IN_ENABLED } from '@/lib/featureFlags';
 import { TaxInvoiceSection } from '@/components/checkout/TaxInvoiceSection';
 import { PaymentMethodCard } from '@/components/checkout/PaymentMethodCard';
 import { OrderSummary } from '@/components/checkout/OrderSummary';
@@ -232,6 +233,7 @@ export default function CheckoutPage() {
     }, [event?.sessions]);
 
     const canSelectOptionalSessions = useMemo(() => {
+        if (!OPTIONAL_SESSION_OPT_IN_ENABLED) return false;
         if (checkoutData.isAddonOnly || !checkoutData.selectedPackage) return false;
         const ticket = event?.ticketTypes?.find((t) => String(t.id) === checkoutData.selectedPackage);
         if (!ticket) return false;
