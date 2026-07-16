@@ -85,6 +85,20 @@ export interface TicketType {
         room?: string | null;
         maxCapacity?: number;
     }>;
+    optionalSessions?: Array<{
+        id: number;
+        sessionCode?: string;
+        sessionName: string;
+        description?: string | null;
+        startTime?: string;
+        endTime?: string;
+        room?: string | null;
+        maxCapacity?: number;
+        requiresOptIn?: boolean;
+        enrolledCount?: number;
+        seatsRemaining?: number | null;
+        isFull?: boolean;
+    }>;
 }
 
 export interface Round {

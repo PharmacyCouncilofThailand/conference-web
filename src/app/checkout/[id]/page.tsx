@@ -217,8 +217,10 @@ export default function CheckoutPage() {
     }, [event?.ticketTypes, currency, effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel]);
 
     const optionalSessionOptions = useMemo(() => {
-        if (!event?.sessions) return [];
-        return event.sessions
+        const selectedTicket = event?.ticketTypes?.find((t) => String(t.id) === checkoutData.selectedPackage);
+        const linkedOptionalSessions = selectedTicket?.optionalSessions || [];
+
+        return linkedOptionalSessions
             .filter((session) => session.requiresOptIn)
             .map((session) => ({
                 id: String(session.id),
@@ -230,7 +232,7 @@ export default function CheckoutPage() {
                 isFull: session.isFull,
                 description: session.description,
             }));
-    }, [event?.sessions]);
+    }, [event?.ticketTypes, checkoutData.selectedPackage]);
 
     const canSelectOptionalSessions = useMemo(() => {
         if (!OPTIONAL_SESSION_OPT_IN_ENABLED) return false;
@@ -244,6 +246,7 @@ export default function CheckoutPage() {
         }
         return optionalSessionOptions.length > 0;
     }, [
+        OPTIONAL_SESSION_OPT_IN_ENABLED,
         checkoutData.isAddonOnly,
         checkoutData.selectedPackage,
         event?.ticketTypes,
