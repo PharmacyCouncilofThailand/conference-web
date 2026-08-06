@@ -23,7 +23,7 @@ import { PaymentMethodCard } from '@/components/checkout/PaymentMethodCard';
 import { OrderSummary } from '@/components/checkout/OrderSummary';
 import { User, Mail, Phone, Globe, Lock, Loader2, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { computeRemainingTicketQuota, getEffectiveTicketIdentity, ticketAllowsUser } from '@/lib/utils';
+import { computeRemainingTicketQuota, getEffectiveTicketIdentity, getUserCurrency, ticketAllowsUser } from '@/lib/utils';
 
 type TicketWithPriority = {
     priority?: string;
@@ -89,10 +89,17 @@ export default function CheckoutPage() {
 
     const purchases = purchasesData?.data;
 
-    // Currency detection from user.delegateType
+    // Currency detection from the canonical user identity. Medical Professional
+    // delegateType is shared by Thai and international users, so it cannot be
+    // used as the primary nationality signal.
     const isThai = useMemo(() => {
-        return user?.delegateType?.startsWith('thai') ?? true;
-    }, [user?.delegateType]);
+        return getUserCurrency({
+            role: user?.role,
+            country: user?.country,
+            delegateType: user?.delegateType,
+            isThai: user?.isThai,
+        }) === 'THB';
+    }, [user?.country, user?.delegateType, user?.isThai, user?.role]);
 
     const currency: 'THB' | 'USD' = isThai ? 'THB' : 'USD';
     const currentCheckoutPath = useMemo(() => {

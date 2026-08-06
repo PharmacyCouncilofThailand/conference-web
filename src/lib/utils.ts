@@ -81,6 +81,39 @@ export function parseAllowedList(raw: unknown): string[] {
         .filter(Boolean);
 }
 
+export interface UserCurrencyIdentity {
+    role?: string | null;
+    country?: string | null;
+    delegateType?: string | null;
+    isThai?: boolean | null;
+}
+
+/**
+ * Resolve the payment currency from the authenticated user's canonical identity.
+ *
+ * `delegateType` is not nationality-safe for medical professionals because the
+ * API uses `medical_professional` for both Thai and international users. Prefer
+ * the explicit `isThai` flag, then profile country, and only use the legacy
+ * delegateType prefix as a fallback.
+ */
+export function getUserCurrency(user?: UserCurrencyIdentity | null): 'THB' | 'USD' {
+    if (typeof user?.isThai === 'boolean') {
+        return user.isThai ? 'THB' : 'USD';
+    }
+
+    const country = user?.country?.trim().toLowerCase();
+    if (country) {
+        return country === 'thailand' ? 'THB' : 'USD';
+    }
+
+    const delegateType = user?.delegateType?.trim().toLowerCase();
+    if (delegateType) {
+        return delegateType.startsWith('thai') ? 'THB' : 'USD';
+    }
+
+    return 'THB';
+}
+
 export function ticketAllowsUser(
     ticket: { allowedRoles?: string[] | string | null; allowedStudentLevels?: string[] | string | null },
     userRole?: string | null,
