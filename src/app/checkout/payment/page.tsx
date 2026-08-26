@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
+import { clearPaymentProviderSessionForFreeResult } from '@/lib/paymentSession';
 
 interface CheckoutPaymentData {
     eventId: string;
@@ -112,11 +113,11 @@ export default function PaymentPage() {
                 const result = await paymentsApi.createIntent(requestBody);
 
                 if (result.success && result.free) {
-                    // Free registration — already completed on backend
-                    sessionStorage.removeItem('checkout-payment-data');
-                    sessionStorage.removeItem('payment-gateway');
-                    sessionStorage.removeItem('payment-orderRef');
-                    sessionStorage.removeItem('payment-refno');
+                    // Free registration — already completed on backend.
+                    // Keep checkout-payment-data until the result page initializes so it can
+                    // recover SSO return context (originApp/returnTo/event websiteUrl), then
+                    // the result page clears the payment session after reading it.
+                    clearPaymentProviderSessionForFreeResult(sessionStorage);
                     sessionStorage.setItem('payment-event-id', data.eventId);
                     const resultParams = new URLSearchParams({
                         free: '1',
