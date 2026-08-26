@@ -6,8 +6,9 @@ import { paymentsApi } from '@/lib/api/payments';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { Loader2, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Clock, AlertCircle, Mail, QrCode } from 'lucide-react';
 import Link from 'next/link';
+import { QRCodeTicket } from '@/components/ticket/QRCodeTicket';
 
 type PaymentStatus = 'polling' | 'paid' | 'pending' | 'failed' | 'cancelled' | 'error';
 
@@ -263,33 +264,55 @@ function PaymentResultInner() {
 
             case 'paid':
                 return (
-                    <div className="text-center space-y-5">
-                        <div className="w-20 h-20 mx-auto bg-green-50 rounded-full flex items-center justify-center">
-                            <CheckCircle className="w-12 h-12 text-green-500" />
-                        </div>
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-800">ชำระเงินสำเร็จ!</h2>
-                            <p className="text-gray-500 text-sm mt-1">ขอบคุณสำหรับการลงทะเบียน</p>
+                    <div className="min-h-[60vh] flex flex-col items-center justify-center text-center">
+                        <div className="relative mb-8">
+                            <div className="absolute inset-0 bg-[#8a8a00]/20 blur-3xl rounded-full animate-pulse" />
+                            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-[#8a8a00] to-[#737300] flex items-center justify-center shadow-[0_0_40px_rgba(138,138,0,0.28)]">
+                                <CheckCircle className="w-12 h-12 text-white" />
+                            </div>
                         </div>
 
-                        {(regCode || orderNumber || amount) && (
-                            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2 text-sm max-w-sm mx-auto">
-                                {regCode && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500">รหัสลงทะเบียน</span>
-                                        <span className="font-mono font-bold text-[#8a8a00]">{regCode}</span>
+                        <div className="inline-block px-4 py-1 bg-[#8a8a00]/20 text-[#8a8a00] rounded-full text-sm mb-4">
+                            {isFreeRegistration ? 'ลงทะเบียนสำเร็จ' : 'ชำระเงินสำเร็จ'}
+                        </div>
+                        <h1 className="text-3xl sm:text-4xl font-bold mb-4">ลงทะเบียนเรียบร้อยแล้ว!</h1>
+                        <p className="text-gray-400 mb-8 max-w-lg">
+                            เราได้ส่งรายละเอียดพร้อม QR Code ไปยังอีเมลของคุณแล้ว
+                        </p>
+
+                        <div className="ui-form-grid max-w-md mb-8 w-full">
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-left">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-10 h-10 rounded-lg bg-[#8a8a00]/20 flex items-center justify-center">
+                                        <Mail className="w-5 h-5 text-[#8a8a00]" />
                                     </div>
-                                )}
+                                    <div className="text-sm font-medium">ตรวจสอบอีเมล</div>
+                                </div>
+                                <p className="text-xs text-gray-400">อีเมลยืนยันและใบเสร็จถูกส่งแล้ว</p>
+                            </div>
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-left">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className="w-10 h-10 rounded-lg bg-[#8a8a00]/20 flex items-center justify-center">
+                                        <QrCode className="w-5 h-5 text-[#8a8a00]" />
+                                    </div>
+                                    <div className="text-sm font-medium">QR Code</div>
+                                </div>
+                                <p className="text-xs text-gray-400">ใช้สำหรับ Check-in ในวันงาน</p>
+                            </div>
+                        </div>
+
+                        {(orderNumber || amount) && (
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2 text-sm w-full max-w-md mb-8">
                                 {orderNumber && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500">เลขที่คำสั่งซื้อ</span>
-                                        <span className="font-mono text-gray-700">{orderNumber}</span>
+                                    <div className="flex justify-between gap-4">
+                                        <span className="text-gray-400">เลขที่คำสั่งซื้อ</span>
+                                        <span className="font-mono text-right">{orderNumber}</span>
                                     </div>
                                 )}
                                 {amount && (
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-500">ยอดชำระ</span>
-                                        <span className="font-bold text-gray-900">
+                                    <div className="flex justify-between gap-4">
+                                        <span className="text-gray-400">ยอดชำระ</span>
+                                        <span className="font-bold text-[#8a8a00]">
                                             {currency === 'USD' ? '$' : '฿'}{Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                         </span>
                                     </div>
@@ -297,35 +320,43 @@ function PaymentResultInner() {
                             </div>
                         )}
 
-                        <p className="text-xs text-gray-400">ใบเสร็จและรายละเอียดจะถูกส่งไปยังอีเมลที่ลงทะเบียน</p>
+                        {regCode && (
+                            <div className="mb-8">
+                                <QRCodeTicket
+                                    regCode={regCode}
+                                    size={180}
+                                    showDownload={true}
+                                />
+                            </div>
+                        )}
 
                         {isReturning && countdown > 0 && (
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-400 mb-6">
                                 กลับไปหน้าเว็บไซต์อัตโนมัติใน <span className="font-bold text-[#8a8a00]">{countdown}</span> วินาที
                             </div>
                         )}
 
-                        <div className="ui-responsive-actions pt-2">
+                        <div className="ui-responsive-actions">
                             {backToWebsiteUrl ? (
                                 <a
                                     href={backToWebsiteUrl}
-                                    className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                    className="px-5 py-2.5 border border-white/20 text-foreground font-medium rounded-lg hover:bg-white/10 transition-colors text-sm"
                                 >
                                     กลับไปหน้าเว็บไซต์
                                 </a>
                             ) : (
                                 <Link
                                     href="/my-tickets"
-                                    className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                    className="px-5 py-2.5 border border-white/20 text-foreground font-medium rounded-lg hover:bg-white/10 transition-colors text-sm"
                                 >
                                     ดูตั๋วของฉัน
                                 </Link>
                             )}
                             <Link
                                 href="/events"
-                                className="px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                                className="px-5 py-2.5 bg-gradient-to-r from-[#8a8a00] to-[#737300] text-white font-medium rounded-lg hover:from-[#737300] hover:to-[#686805] transition-colors text-sm"
                             >
-                                กลับหน้ารายการ
+                                ดูงานอื่นๆ
                             </Link>
                         </div>
                     </div>
@@ -445,13 +476,15 @@ function PaymentResultInner() {
     };
 
     return (
-        <div className="min-h-screen bg-white flex flex-col">
+        <div className={status === 'paid'
+            ? 'min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden'
+            : 'min-h-screen bg-white flex flex-col'}>
             <Navbar />
-            <div className="ui-centered-page">
-                <div className="max-w-lg w-full">
+            <main className={status === 'paid' ? 'ui-page-main-tight flex-1' : 'ui-centered-page'}>
+                <div className={status === 'paid' ? 'ui-shell max-w-4xl w-full' : 'max-w-lg w-full'}>
                     {renderContent()}
                 </div>
-            </div>
+            </main>
             <Footer />
         </div>
     );
