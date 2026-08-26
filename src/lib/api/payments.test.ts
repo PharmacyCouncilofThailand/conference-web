@@ -14,6 +14,43 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
+describe('paymentsApi.createIntent', () => {
+    it('preserves zero-total free checkout without inventing a gateway', async () => {
+        vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                success: true,
+                data: {
+                    free: true,
+                    gateway: null,
+                    redirectForm: null,
+                    refno: null,
+                    orderRef: null,
+                    orderNumber: 'CONF-FREE-1',
+                    regCode: 'REG-FREE-1',
+                    total: 0,
+                },
+            }),
+        } as Response);
+
+        const result = await paymentsApi.createIntent({
+            eventId: 2,
+            packageId: '1',
+            addOnIds: [],
+            currency: 'THB',
+            paymentMethod: 'card',
+            promoCode: 'FREE100',
+            needTaxInvoice: false,
+        });
+
+        expect(result.free).toBe(true);
+        expect(result.gateway).toBeNull();
+        expect(result.redirectForm).toBeNull();
+        expect(result.regCode).toBe('REG-FREE-1');
+        expect(result.totalAmount).toBe('0');
+    });
+});
+
 describe('paymentsApi.preview', () => {
     it('unwraps the backend data envelope for a valid promo code', async () => {
         vi.spyOn(globalThis, 'fetch').mockResolvedValue({
