@@ -159,12 +159,21 @@ export interface PreviewResponse {
     success: boolean;
     subtotal: number;
     discountAmount: number;
-    finalAmount: number;
+    discountType: 'percentage' | 'fixed' | null;
+    discountValue: number | null;
+    netAmount: number;
+    fee: number;
+    total: number;
+    currency: 'THB' | 'USD';
+    feeMethod: string | null;
     promoValid: boolean;
     promoError: string | null;
-    discountType: string | null;
-    discountValue: number | null;
 }
+
+type PreviewApiResponse = {
+    success: boolean;
+    data?: Omit<PreviewResponse, 'success'>;
+};
 
 function normalizeGateway(value?: string | null): PaymentGateway | null {
     switch (value) {
@@ -281,6 +290,17 @@ export const paymentsApi = {
                 : '/api/payments/my-purchases'
         ),
 
-    preview: (data: PreviewRequest) =>
-        api.post<PreviewResponse>('/api/payments/preview', data),
+    preview: async (data: PreviewRequest): Promise<PreviewResponse> => {
+        const response = await api.post<PreviewApiResponse>('/api/payments/preview', data);
+        const payload = response.data;
+
+        if (!payload) {
+            throw new Error('Invalid payment preview response');
+        }
+
+        return {
+            success: response.success,
+            ...payload,
+        };
+    },
 };
