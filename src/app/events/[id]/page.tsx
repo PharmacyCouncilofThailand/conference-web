@@ -4,6 +4,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getEventById } from '@/lib/services';
 import { paymentsApi } from '@/lib/api/payments';
+import { pricingEligibilityApi } from '@/lib/api/pricingEligibility';
 import { hasApprovedPostgraduateEligibility, studentEligibilityApi } from '@/lib/api/studentEligibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
@@ -15,6 +16,7 @@ import { Calendar, MapPin, Clock, Share2, ArrowLeft, Users, CheckCircle, Award, 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { cn, computeRemainingTicketQuota, formatStudentLevelList, getEffectiveTicketIdentity, getStudentLevelLabel, getUserRoleLabel, getUserRoleBadgeColor, ticketAllowsUser } from '@/lib/utils';
+import { selectPersonalizedPrimaryTicket } from '@/lib/events/personalizedPrimaryTicket';
 import { Event, Round } from '@/types';
 import { useScrollAnimation } from '@/hooks/use-scroll-animation';
 
@@ -54,7 +56,7 @@ export default function EventDetailPage() {
     const [mobileBookingOpen, setMobileBookingOpen] = useState(false);
 
     // User role from AuthContext
-    const { user: authUser, isLoggedIn } = useAuth();
+    const { user: authUser, isLoggedIn, isLoading: authLoading } = useAuth();
     const userRole = authUser?.role || 'public';
     const originApp = searchParams.get('originApp');
     const returnTo = searchParams.get('returnTo');
@@ -70,6 +72,22 @@ export default function EventDetailPage() {
         },
         enabled: !!id,
         retry: 1,
+    });
+
+    const eventIdForPricing = Number(event?.id);
+    const canResolvePersonalizedPricing =
+        isLoggedIn && !!authUser?.id && Number.isInteger(eventIdForPricing) && eventIdForPricing > 0;
+    const {
+        data: pricingEligibility,
+        isLoading: pricingLoading,
+        isError: pricingError,
+        refetch: refetchPricing,
+    } = useQuery({
+        queryKey: ['pricing-eligibility', event?.id, 'THB', authUser?.id],
+        queryFn: () => pricingEligibilityApi.get(eventIdForPricing, 'THB'),
+        enabled: canResolvePersonalizedPricing,
+        retry: 1,
+        staleTime: 30_000,
     });
 
     const { data: studentEligibilityData } = useQuery({
@@ -154,6 +172,23 @@ export default function EventDetailPage() {
         const onSaleTickets = primaryTickets.filter((t) => isTicketOnSale(t));
         if (onSaleTickets.length === 0) return null;
 
+        const personalizationRequired = authLoading || isLoggedIn;
+        if (personalizationRequired) {
+            const personalizationReady =
+                !authLoading &&
+                isLoggedIn &&
+                !pricingLoading &&
+                !pricingError &&
+                !!pricingEligibility;
+
+            return selectPersonalizedPrimaryTicket({
+                tickets: onSaleTickets,
+                pricing: pricingEligibility ?? null,
+                personalizationRequired: true,
+                personalizationReady,
+            });
+        }
+
         const priorityOrder: Record<string, number> = {
             early_bird: 0,
             regular: 1,
@@ -195,13 +230,23 @@ export default function EventDetailPage() {
 
     const currentRound = event.rounds?.find((r: Round) => r.id === selectedRound) || event.rounds?.[0];
     const autoSelectedTicket = getAutoSelectedTicket();
-    const nextSaleStart = !autoSelectedTicket ? getNextSaleStartDate() : null;
-    const isSaleNotStarted = !autoSelectedTicket && !!nextSaleStart;
+    const personalizedPricingPending =
+        authLoading || (isLoggedIn && canResolvePersonalizedPricing && pricingLoading);
+    const personalizedPricingFailed =
+        !authLoading &&
+        isLoggedIn &&
+        (pricingError ||
+            !canResolvePersonalizedPricing ||
+            (!pricingLoading && !pricingEligibility) ||
+            (!!pricingEligibility?.applies && !autoSelectedTicket));
+    const personalizedPricingBlocked = personalizedPricingPending || personalizedPricingFailed;
+    const nextSaleStart = !personalizedPricingBlocked && !autoSelectedTicket ? getNextSaleStartDate() : null;
+    const isSaleNotStarted = !personalizedPricingBlocked && !autoSelectedTicket && !!nextSaleStart;
 
     // Detect "no tickets for your role" scenario
     const allPrimaryTickets = event.ticketTypes?.filter(t => t.ticketCategory !== 'addon') || [];
     const roleFilteredTickets = allPrimaryTickets.filter(t => isTicketAllowedForUser(t));
-    const hasTicketsButNotForRole = !autoSelectedTicket && !isSaleNotStarted && allPrimaryTickets.length > 0 && roleFilteredTickets.length === 0;
+    const hasTicketsButNotForRole = !personalizedPricingBlocked && !autoSelectedTicket && !isSaleNotStarted && allPrimaryTickets.length > 0 && roleFilteredTickets.length === 0;
     const studentRestrictedPrimaryTickets = allPrimaryTickets.filter(t =>
         t.allowedRoles?.includes('student') && (t.allowedStudentLevels?.length || 0) > 0
     );
@@ -219,7 +264,7 @@ export default function EventDetailPage() {
 
     // Detect "all sold out" scenario
     const onSaleForRole = roleFilteredTickets.filter(t => isTicketOnSale(t));
-    const allSoldOut = !autoSelectedTicket && !isSaleNotStarted && !hasTicketsButNotForRole && onSaleForRole.length > 0 && onSaleForRole.every(t => t.available !== undefined && t.available <= 0);
+    const allSoldOut = !personalizedPricingBlocked && !autoSelectedTicket && !isSaleNotStarted && !hasTicketsButNotForRole && onSaleForRole.length > 0 && onSaleForRole.every(t => t.available !== undefined && t.available <= 0);
 
     // Get add-on tickets (only show add-ons that are within their sale period)
     const addonTickets = event.ticketTypes?.filter(t => t.ticketCategory === 'addon' && isTicketAllowedForUser(t) && isTicketOnSale(t)) || [];
@@ -776,6 +821,31 @@ export default function EventDetailPage() {
                                         )}
                                     </div>
 
+                                    {personalizedPricingPending && (
+                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="w-4 h-4 text-slate-500" />
+                                                <span className="text-sm font-semibold text-slate-700">กำลังตรวจสอบอัตราค่าลงทะเบียนของบัญชีนี้...</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {personalizedPricingFailed && (
+                                        <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 space-y-3">
+                                            <p className="text-sm font-semibold text-amber-800">
+                                                ไม่สามารถตรวจสอบอัตราค่าลงทะเบียนของบัญชีนี้ได้ กรุณาลองใหม่อีกครั้ง
+                                            </p>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="h-9 border-amber-300 text-amber-800 hover:bg-amber-100"
+                                                onClick={() => void refetchPricing()}
+                                            >
+                                                ลองใหม่
+                                            </Button>
+                                        </div>
+                                    )}
+
                                     {/* Sale Not Started Notice */}
                                     {isSaleNotStarted && nextSaleStart && (
                                         <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
@@ -912,6 +982,10 @@ export default function EventDetailPage() {
                                             </Button>
                                         </Link>
                                     </div>
+                                ) : personalizedPricingBlocked ? (
+                                    <Button disabled className="w-full h-14 text-lg font-bold bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed">
+                                        {personalizedPricingFailed ? 'ตรวจสอบราคาอีกครั้งด้านบน' : 'กำลังตรวจสอบราคา...'}
+                                    </Button>
                                 ) : isSaleNotStarted ? (
                                     <Button disabled className="w-full h-14 text-lg font-bold bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed">
                                         ยังไม่เปิดจำหน่าย
@@ -977,6 +1051,20 @@ export default function EventDetailPage() {
                                         </Button>
                                     </Link>
                                 )}
+                            </>
+                        ) : personalizedPricingBlocked ? (
+                            <>
+                                <div>
+                                    <div className="text-xs text-gray-500">
+                                        {personalizedPricingFailed ? 'ตรวจสอบราคาไม่สำเร็จ' : 'กำลังตรวจสอบราคา'}
+                                    </div>
+                                </div>
+                                <Button
+                                    disabled
+                                    className="flex-1 max-w-[200px] bg-gray-300 text-gray-500 h-12 font-bold rounded-xl cursor-not-allowed text-sm"
+                                >
+                                    {personalizedPricingFailed ? 'ลองใหม่ด้านบน' : 'กรุณารอสักครู่'}
+                                </Button>
                             </>
                         ) : isSaleNotStarted ? (
                             <>
@@ -1168,7 +1256,11 @@ export default function EventDetailPage() {
 
                             {/* Bottom Actions inside Drawer */}
                             <div className="p-4 border-t border-gray-200 bg-gray-50">
-                                {isSaleNotStarted ? (
+                                {personalizedPricingBlocked ? (
+                                    <Button disabled className="w-full h-14 text-lg font-bold bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed">
+                                        {personalizedPricingFailed ? 'ตรวจสอบราคาอีกครั้ง' : 'กำลังตรวจสอบราคา...'}
+                                    </Button>
+                                ) : isSaleNotStarted ? (
                                     <Button disabled className="w-full h-14 text-lg font-bold bg-gray-300 text-gray-500 rounded-xl cursor-not-allowed">
                                         ยังไม่เปิดจำหน่าย
                                     </Button>
