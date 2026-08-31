@@ -162,7 +162,26 @@ export default function PaymentPage() {
                 }
             } catch (error) {
                 const apiError = error as ApiError;
-                if (apiError.code === 'STUDENT_ELIGIBILITY_REQUIRED') {
+                if (apiError.code === 'TICKET_NOT_ELIGIBLE') {
+                    const saved = sessionStorage.getItem('checkout-payment-data');
+                    const data = saved ? (JSON.parse(saved) as CheckoutPaymentData) : null;
+
+                    if (data) {
+                        sessionStorage.setItem(
+                            'checkout-payment-data',
+                            JSON.stringify({
+                                ...data,
+                                selectedPackage: '',
+                                selectedOptionalSessions: [],
+                                promoCode: '',
+                                promoApplied: false,
+                            }),
+                        );
+                    }
+
+                    setErrorCode(apiError.code);
+                    setErrorMessage('อัตราค่าลงทะเบียนมีการเปลี่ยนแปลง กรุณากลับไปตรวจสอบแพ็กเกจและราคาอีกครั้ง');
+                } else if (apiError.code === 'STUDENT_ELIGIBILITY_REQUIRED') {
                     setErrorCode(apiError.code);
                     setErrorMessage('Postgraduate student-rate payment requires approved eligibility for this event. Please submit or review your document from Profile before trying again.');
                 } else {
@@ -198,6 +217,27 @@ export default function PaymentPage() {
                         <h2 className="text-xl font-bold text-gray-700">เกิดข้อผิดพลาด</h2>
                         <p className="text-gray-500 text-sm">{errorMessage}</p>
                         <div className="ui-responsive-actions pt-2">
+                            {errorCode === 'TICKET_NOT_ELIGIBLE' && (
+                                <button
+                                    onClick={() => {
+                                        const saved = sessionStorage.getItem('checkout-payment-data');
+                                        const data = saved ? (JSON.parse(saved) as CheckoutPaymentData) : null;
+                                        if (!data?.eventId) {
+                                            router.push('/events');
+                                            return;
+                                        }
+
+                                        const params = new URLSearchParams();
+                                        if (data.originApp) params.set('originApp', data.originApp);
+                                        if (data.returnTo) params.set('returnTo', data.returnTo);
+                                        const query = params.toString();
+                                        router.push(`/checkout/${data.eventId}${query ? `?${query}` : ''}`);
+                                    }}
+                                    className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                >
+                                    กลับไปตรวจสอบราคา
+                                </button>
+                            )}
                             {errorCode === 'STUDENT_ELIGIBILITY_REQUIRED' && (
                                 <button
                                     onClick={() => router.push('/profile')}
@@ -212,18 +252,20 @@ export default function PaymentPage() {
                             >
                                 ย้อนกลับ
                             </button>
-                            <button
-                                onClick={() => {
-                                    setStatus('loading');
-                                    setErrorMessage('');
-                                    setErrorCode(null);
-                                    hasSubmitted.current = false;
-                                    window.location.reload();
-                                }}
-                                className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
-                            >
-                                ลองใหม่
-                            </button>
+                            {errorCode !== 'TICKET_NOT_ELIGIBLE' && (
+                                <button
+                                    onClick={() => {
+                                        setStatus('loading');
+                                        setErrorMessage('');
+                                        setErrorCode(null);
+                                        hasSubmitted.current = false;
+                                        window.location.reload();
+                                    }}
+                                    className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
+                                >
+                                    ลองใหม่
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

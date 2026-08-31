@@ -49,6 +49,30 @@ describe('paymentsApi.createIntent', () => {
         expect(result.regCode).toBe('REG-FREE-1');
         expect(result.totalAmount).toBe('0');
     });
+
+    it('preserves TICKET_NOT_ELIGIBLE code and status from create-intent', async () => {
+        vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+            ok: false,
+            status: 409,
+            json: async () => ({
+                success: false,
+                code: 'TICKET_NOT_ELIGIBLE',
+                error: 'Selected ticket is not available for your current PRIS 2026 registration rate',
+            }),
+        } as Response);
+
+        await expect(paymentsApi.createIntent({
+            eventId: 2,
+            packageId: '2',
+            addOnIds: [],
+            currency: 'THB',
+            paymentMethod: 'card',
+            needTaxInvoice: false,
+        })).rejects.toMatchObject({
+            code: 'TICKET_NOT_ELIGIBLE',
+            status: 409,
+        });
+    });
 });
 
 describe('paymentsApi.preview', () => {
@@ -119,5 +143,22 @@ describe('paymentsApi.preview', () => {
 
         expect(result.promoValid).toBe(false);
         expect(result.promoError).toBe('Promo code not found');
+    });
+
+    it('preserves TICKET_NOT_ELIGIBLE code and status from preview', async () => {
+        vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+            ok: false,
+            status: 409,
+            json: async () => ({
+                success: false,
+                code: 'TICKET_NOT_ELIGIBLE',
+                error: 'Selected ticket is not available for your current PRIS 2026 registration rate',
+            }),
+        } as Response);
+
+        await expect(paymentsApi.preview(previewRequest)).rejects.toMatchObject({
+            code: 'TICKET_NOT_ELIGIBLE',
+            status: 409,
+        });
     });
 });

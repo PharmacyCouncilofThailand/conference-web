@@ -5,6 +5,9 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getEventById } from '@/lib/services';
 import { paymentsApi } from '@/lib/api/payments';
+import { pricingEligibilityApi } from '@/lib/api/pricingEligibility';
+import type { ApiError } from '@/lib/api/client';
+import { applyPersonalizedPricing } from '@/lib/checkout/prisPricing';
 import { hasApprovedPostgraduateEligibility, studentEligibilityApi } from '@/lib/api/studentEligibility';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCheckoutWizard } from '@/hooks/checkout/useCheckoutWizard';
@@ -102,6 +105,20 @@ export default function CheckoutPage() {
     }, [user?.country, user?.delegateType, user?.isThai, user?.role]);
 
     const currency: 'THB' | 'USD' = isThai ? 'THB' : 'USD';
+
+    const {
+        data: pricingEligibility,
+        isLoading: pricingLoading,
+        isError: pricingError,
+        refetch: refetchPricing,
+    } = useQuery({
+        queryKey: ['pricing-eligibility', eventId, currency, user?.id],
+        queryFn: () => pricingEligibilityApi.get(Number(eventId), currency),
+        enabled: isLoggedIn && !!user?.id && Number.isInteger(Number(eventId)) && Number(eventId) > 0,
+        retry: 1,
+        staleTime: 30_000,
+    });
+
     const currentCheckoutPath = useMemo(() => {
         const currentParams = new URLSearchParams(searchParams.toString());
         const query = currentParams.toString();
@@ -152,7 +169,7 @@ export default function CheckoutPage() {
     }, [authLoading, currentCheckoutPath, isLoggedIn, router]);
 
     // Build package and addon options from event ticket types
-    const { packageOptions, addonOptions } = useMemo(() => {
+    const { packageOptions: genericPackageOptions, addonOptions } = useMemo(() => {
         if (!event?.ticketTypes) return { packageOptions: [], addonOptions: [] };
 
         const isTicketOnSale = (tt: { salesStart?: string; saleStartDate?: string; salesEnd?: string; saleEndDate?: string }) => {
@@ -222,6 +239,64 @@ export default function CheckoutPage() {
 
         return { packageOptions: pkgs, addonOptions: addons };
     }, [event?.ticketTypes, currency, effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel]);
+
+    const personalizedPackages = useMemo(() => {
+        if (!event?.ticketTypes) {
+            return {
+                packages: [] as PrioritizedPackageOption[],
+                selectedPackage: checkoutData.selectedPackage,
+                selectionWasInvalidated: false,
+            };
+        }
+
+        if (isLoggedIn && (pricingLoading || pricingError || !pricingEligibility)) {
+            return {
+                packages: [] as PrioritizedPackageOption[],
+                selectedPackage: checkoutData.selectedPackage,
+                selectionWasInvalidated: false,
+            };
+        }
+
+        return applyPersonalizedPricing({
+            packages: genericPackageOptions,
+            pricing: pricingEligibility ?? null,
+            selectedPackage: checkoutData.selectedPackage,
+        });
+    }, [
+        checkoutData.selectedPackage,
+        event?.ticketTypes,
+        genericPackageOptions,
+        isLoggedIn,
+        pricingEligibility,
+        pricingError,
+        pricingLoading,
+    ]);
+
+    const packageOptions = personalizedPackages.packages;
+    const selectionWasInvalidated = personalizedPackages.selectionWasInvalidated;
+
+    useEffect(() => {
+        if (!pricingEligibility?.applies || !selectionWasInvalidated) return;
+
+        updateCheckoutData({
+            selectedPackage: '',
+            selectedOptionalSessions: [],
+            promoCode: '',
+            promoApplied: false,
+        });
+        setPromoDiscountAmount(0);
+        setPromoDiscountText(null);
+        setPromoError(null);
+        if (currentStep > 2) {
+            goToStep(2);
+        }
+    }, [
+        currentStep,
+        goToStep,
+        pricingEligibility?.applies,
+        selectionWasInvalidated,
+        updateCheckoutData,
+    ]);
 
     const optionalSessionOptions = useMemo(() => {
         const selectedTicket = event?.ticketTypes?.find((t) => String(t.id) === checkoutData.selectedPackage);
@@ -304,9 +379,24 @@ export default function CheckoutPage() {
                 setPromoError(result.promoError || 'โค้ดส่วนลดไม่ถูกต้อง');
             }
         } catch (err) {
+            const apiError = err as ApiError;
+            if (apiError.code === 'TICKET_NOT_ELIGIBLE') {
+                await refetchPricing();
+                updateCheckoutData({
+                    selectedPackage: '',
+                    promoCode: '',
+                    promoApplied: false,
+                    selectedOptionalSessions: [],
+                });
+                setPromoDiscountAmount(0);
+                setPromoDiscountText(null);
+                goToStep(2);
+                setPromoError('อัตราค่าลงทะเบียนมีการเปลี่ยนแปลง กรุณาตรวจสอบแพ็กเกจอีกครั้ง');
+                return;
+            }
             setPromoError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด');
         }
-    }, [checkoutData, currency, eventId, updateCheckoutData]);
+    }, [checkoutData, currency, eventId, goToStep, refetchPricing, updateCheckoutData]);
 
     const handleRemovePromo = useCallback(() => {
         updateCheckoutData({ promoCode: '', promoApplied: false });
@@ -341,7 +431,7 @@ export default function CheckoutPage() {
     }, [canProceedToPayment, isSubmitting, checkoutData, eventId, currency, originApp, returnTo, event?.websiteUrl, router]);
 
     // Loading states
-    if (authLoading || eventLoading) {
+    if (authLoading || eventLoading || (isLoggedIn && pricingLoading)) {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center">
                 <div className="text-center space-y-3">
@@ -498,14 +588,27 @@ export default function CheckoutPage() {
                                     </h3>
 
                                     {/* Package Selection */}
-                                    <PackageSelector
-                                        packages={packageOptions}
-                                        selectedPackage={checkoutData.selectedPackage}
-                                        onSelect={(ticketId) => updateCheckoutData({ selectedPackage: ticketId })}
-                                        isAddonOnly={checkoutData.isAddonOnly}
-                                        primaryTicketName={purchases?.primaryTicketName}
-                                        currency={currency}
-                                    />
+                                    {pricingError && !checkoutData.isAddonOnly ? (
+                                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 space-y-3">
+                                            <p>ไม่สามารถตรวจสอบอัตราค่าลงทะเบียนของบัญชีนี้ได้ กรุณาลองใหม่อีกครั้งก่อนเลือกแพ็กเกจ</p>
+                                            <button
+                                                type="button"
+                                                onClick={() => refetchPricing()}
+                                                className="inline-flex items-center rounded-lg bg-[#8a8a00] px-4 py-2 text-sm font-medium text-white hover:bg-[#456339] transition-colors"
+                                            >
+                                                ลองใหม่
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <PackageSelector
+                                            packages={packageOptions}
+                                            selectedPackage={checkoutData.selectedPackage}
+                                            onSelect={(ticketId) => updateCheckoutData({ selectedPackage: ticketId })}
+                                            isAddonOnly={checkoutData.isAddonOnly}
+                                            primaryTicketName={purchases?.primaryTicketName}
+                                            currency={currency}
+                                        />
+                                    )}
 
                                     {canSelectOptionalSessions && (
                                         <OptionalSessionSelector

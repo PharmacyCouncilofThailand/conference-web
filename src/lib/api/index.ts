@@ -3,6 +3,12 @@ export { api, apiClient, apiClientWithToken, type ApiError } from './client';
 
 // API Modules
 export { authApi, type User } from './auth';
+export {
+    pricingEligibilityApi,
+    type PricingEligibility,
+    type PricingEligibilityReason,
+    type PricingPhase,
+} from './pricingEligibility';
 export { eventsApi, type Event, type EventWithTickets, type TicketType, type Speaker } from './events';
 export { registrationsApi, checkinApi, type Registration, type CreateRegistrationData, type FreeRegistrationRequest, type FreeRegistrationResponse } from './registrations';
 export {
