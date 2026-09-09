@@ -60,4 +60,25 @@ describe('pricingEligibilityApi.get', () => {
 
         await expect(pricingEligibilityApi.get(9, 'USD')).resolves.toEqual(data);
     });
+
+    it('preserves approved postgraduate override payload unchanged', async () => {
+        const data = {
+            eventId: 2,
+            policyCode: null,
+            applies: false,
+            phase: 'not_applicable',
+            qualifiedForExtension: false,
+            effectivePriority: null,
+            effectiveTicketTypeId: null,
+            offerExpiresAt: null,
+            reason: 'postgraduate_override',
+        } as const;
+
+        vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+            ok: true,
+            json: async () => ({ success: true, data }),
+        } as Response);
+
+        await expect(pricingEligibilityApi.get(2, 'THB')).resolves.toEqual(data);
+    });
 });

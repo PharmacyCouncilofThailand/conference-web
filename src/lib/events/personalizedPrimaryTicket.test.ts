@@ -91,6 +91,35 @@ describe('selectPersonalizedPrimaryTicket', () => {
         expect(result?.id).toBe('2');
     });
 
+    it('uses role-filtered postgraduate ticket when backend yields to approved postgraduate override', () => {
+        const postgraduate = {
+            id: '5',
+            name: 'Postgraduate',
+            ticketCategory: 'primary',
+            priority: 'regular',
+            price: 1250,
+            currency: 'THB',
+        } as TicketType;
+
+        const result = selectPersonalizedPrimaryTicket({
+            tickets: [postgraduate],
+            pricing: pricing({
+                policyCode: null,
+                applies: false,
+                phase: 'not_applicable',
+                qualifiedForExtension: false,
+                effectivePriority: null,
+                effectiveTicketTypeId: null,
+                offerExpiresAt: null,
+                reason: 'postgraduate_override',
+            }),
+            personalizationRequired: true,
+            personalizationReady: true,
+        });
+
+        expect(result?.id).toBe('5');
+    });
+
     it('fails closed while authenticated personalized pricing is unresolved', () => {
         const result = selectPersonalizedPrimaryTicket({
             tickets: [earlyBird, regular],

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cn, getUserCurrency } from '@/lib/utils';
+import { cn, getEffectiveTicketIdentity, getUserCurrency, ticketAllowsUser } from '@/lib/utils';
 
 describe('cn utility', () => {
     it('should merge class names', () => {
@@ -48,5 +48,29 @@ describe('getUserCurrency', () => {
             delegateType: 'medical_professional',
             isThai: false,
         })).toBe('USD');
+    });
+});
+
+describe('effective ticket identity', () => {
+    it('gives approved pharmacist postgraduate ticket identity without changing account role input', () => {
+        expect(getEffectiveTicketIdentity('pharmacist', null, true)).toEqual({
+            role: 'student',
+            studentLevel: 'postgraduate',
+            source: 'pharmacist_postgraduate_eligibility',
+        });
+    });
+
+    it('approved postgraduate identity matches postgraduate but not undergraduate ticket', () => {
+        const identity = getEffectiveTicketIdentity('pharmacist', null, true);
+        expect(ticketAllowsUser(
+            { allowedRoles: ['student'], allowedStudentLevels: ['postgraduate'] },
+            identity.role,
+            identity.studentLevel,
+        )).toBe(true);
+        expect(ticketAllowsUser(
+            { allowedRoles: ['student'], allowedStudentLevels: ['undergraduate'] },
+            identity.role,
+            identity.studentLevel,
+        )).toBe(false);
     });
 });

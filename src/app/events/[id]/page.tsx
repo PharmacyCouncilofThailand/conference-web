@@ -90,7 +90,12 @@ export default function EventDetailPage() {
         staleTime: 30_000,
     });
 
-    const { data: studentEligibilityData } = useQuery({
+    const {
+        data: studentEligibilityData,
+        isLoading: studentEligibilityLoading,
+        isError: studentEligibilityError,
+        refetch: refetchStudentEligibility,
+    } = useQuery({
         queryKey: ['student-eligibility', event?.code, authUser?.id],
         queryFn: () => studentEligibilityApi.getMe(event!.code),
         enabled: isLoggedIn && userRole === 'pharmacist' && !!event?.code,
@@ -105,6 +110,13 @@ export default function EventDetailPage() {
         userStudentLevel,
         hasApprovedPostgraduateEligibility(studentEligibilityData?.eligibility),
     );
+    const requiresStudentEligibilityContext =
+        isLoggedIn && userRole === 'pharmacist' && !!event?.code;
+    const studentEligibilityReady =
+        !requiresStudentEligibilityContext ||
+        (!studentEligibilityLoading &&
+            !studentEligibilityError &&
+            studentEligibilityData !== undefined);
     const isTicketAllowedForUser = (ticket: { allowedRoles?: string[]; allowedStudentLevels?: string[] }) =>
         ticketAllowsUser(ticket, effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel);
 
@@ -179,7 +191,8 @@ export default function EventDetailPage() {
                 isLoggedIn &&
                 !pricingLoading &&
                 !pricingError &&
-                !!pricingEligibility;
+                !!pricingEligibility &&
+                studentEligibilityReady;
 
             return selectPersonalizedPrimaryTicket({
                 tickets: onSaleTickets,
@@ -231,13 +244,18 @@ export default function EventDetailPage() {
     const currentRound = event.rounds?.find((r: Round) => r.id === selectedRound) || event.rounds?.[0];
     const autoSelectedTicket = getAutoSelectedTicket();
     const personalizedPricingPending =
-        authLoading || (isLoggedIn && canResolvePersonalizedPricing && pricingLoading);
+        authLoading ||
+        (isLoggedIn && canResolvePersonalizedPricing && pricingLoading) ||
+        (requiresStudentEligibilityContext && studentEligibilityLoading);
     const personalizedPricingFailed =
         !authLoading &&
         isLoggedIn &&
         (pricingError ||
             !canResolvePersonalizedPricing ||
             (!pricingLoading && !pricingEligibility) ||
+            (requiresStudentEligibilityContext &&
+                (studentEligibilityError ||
+                    (!studentEligibilityLoading && studentEligibilityData === undefined))) ||
             (!!pricingEligibility?.applies && !autoSelectedTicket));
     const personalizedPricingBlocked = personalizedPricingPending || personalizedPricingFailed;
     const nextSaleStart = !personalizedPricingBlocked && !autoSelectedTicket ? getNextSaleStartDate() : null;
@@ -839,7 +857,12 @@ export default function EventDetailPage() {
                                                 type="button"
                                                 variant="outline"
                                                 className="h-9 border-amber-300 text-amber-800 hover:bg-amber-100"
-                                                onClick={() => void refetchPricing()}
+                                                onClick={() => {
+                                                    void Promise.all([
+                                                        refetchPricing(),
+                                                        ...(requiresStudentEligibilityContext ? [refetchStudentEligibility()] : []),
+                                                    ]);
+                                                }}
                                             >
                                                 ลองใหม่
                                             </Button>

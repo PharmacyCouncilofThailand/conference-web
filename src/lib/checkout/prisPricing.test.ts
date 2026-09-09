@@ -48,6 +48,25 @@ describe('applyPersonalizedPricing', () => {
         }).packages).toEqual([{ id: '3', name: 'Regular' }]);
     });
 
+    it('keeps postgraduate package when PRIS pricing yields to postgraduate override', () => {
+        const postgraduatePackages = [{ id: '5', name: 'Postgraduate' }];
+        const result = applyPersonalizedPricing({
+            packages: postgraduatePackages,
+            pricing: pricing({
+                policyCode: null,
+                applies: false,
+                phase: 'not_applicable',
+                qualifiedForExtension: false,
+                effectivePriority: null,
+                effectiveTicketTypeId: null,
+                offerExpiresAt: null,
+                reason: 'postgraduate_override',
+            }),
+            selectedPackage: '',
+        });
+        expect(result.packages).toEqual(postgraduatePackages);
+    });
+
     it('clears a stale Regular selection when Early Bird is effective', () => {
         const result = applyPersonalizedPricing({ packages, pricing: pricing(), selectedPackage: '3' });
         expect(result.selectedPackage).toBe('');

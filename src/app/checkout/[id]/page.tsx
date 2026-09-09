@@ -70,7 +70,12 @@ export default function CheckoutPage() {
         retry: 1,
     });
 
-    const { data: studentEligibilityData } = useQuery({
+    const {
+        data: studentEligibilityData,
+        isLoading: studentEligibilityLoading,
+        isError: studentEligibilityError,
+        refetch: refetchStudentEligibility,
+    } = useQuery({
         queryKey: ['student-eligibility', event?.code, user?.id],
         queryFn: () => studentEligibilityApi.getMe(event!.code),
         enabled: isLoggedIn && user?.role === 'pharmacist' && !!event?.code,
@@ -82,6 +87,13 @@ export default function CheckoutPage() {
         user?.studentLevel || null,
         hasApprovedPostgraduateEligibility(studentEligibilityData?.eligibility),
     ), [studentEligibilityData?.eligibility, user?.role, user?.studentLevel]);
+    const requiresStudentEligibilityContext =
+        isLoggedIn && user?.role === 'pharmacist' && !!event?.code;
+    const studentEligibilityReady =
+        !requiresStudentEligibilityContext ||
+        (!studentEligibilityLoading &&
+            !studentEligibilityError &&
+            studentEligibilityData !== undefined);
 
     // Fetch purchase status (for addon-only detection)
     const { data: purchasesData } = useQuery({
@@ -249,7 +261,13 @@ export default function CheckoutPage() {
             };
         }
 
-        if (isLoggedIn && (pricingLoading || pricingError || !pricingEligibility)) {
+        if (
+            isLoggedIn &&
+            (pricingLoading ||
+                pricingError ||
+                !pricingEligibility ||
+                !studentEligibilityReady)
+        ) {
             return {
                 packages: [] as PrioritizedPackageOption[],
                 selectedPackage: checkoutData.selectedPackage,
@@ -270,6 +288,7 @@ export default function CheckoutPage() {
         pricingEligibility,
         pricingError,
         pricingLoading,
+        studentEligibilityReady,
     ]);
 
     const packageOptions = personalizedPackages.packages;
@@ -381,7 +400,10 @@ export default function CheckoutPage() {
         } catch (err) {
             const apiError = err as ApiError;
             if (apiError.code === 'TICKET_NOT_ELIGIBLE') {
-                await refetchPricing();
+                await Promise.all([
+                    refetchPricing(),
+                    ...(requiresStudentEligibilityContext ? [refetchStudentEligibility()] : []),
+                ]);
                 updateCheckoutData({
                     selectedPackage: '',
                     promoCode: '',
@@ -396,7 +418,16 @@ export default function CheckoutPage() {
             }
             setPromoError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด');
         }
-    }, [checkoutData, currency, eventId, goToStep, refetchPricing, updateCheckoutData]);
+    }, [
+        checkoutData,
+        currency,
+        eventId,
+        goToStep,
+        refetchPricing,
+        refetchStudentEligibility,
+        requiresStudentEligibilityContext,
+        updateCheckoutData,
+    ]);
 
     const handleRemovePromo = useCallback(() => {
         updateCheckoutData({ promoCode: '', promoApplied: false });
@@ -588,12 +619,17 @@ export default function CheckoutPage() {
                                     </h3>
 
                                     {/* Package Selection */}
-                                    {pricingError && !checkoutData.isAddonOnly ? (
+                                    {(pricingError || studentEligibilityError) && !checkoutData.isAddonOnly ? (
                                         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 space-y-3">
                                             <p>ไม่สามารถตรวจสอบอัตราค่าลงทะเบียนของบัญชีนี้ได้ กรุณาลองใหม่อีกครั้งก่อนเลือกแพ็กเกจ</p>
                                             <button
                                                 type="button"
-                                                onClick={() => refetchPricing()}
+                                                onClick={() => {
+                                                    void Promise.all([
+                                                        refetchPricing(),
+                                                        ...(requiresStudentEligibilityContext ? [refetchStudentEligibility()] : []),
+                                                    ]);
+                                                }}
                                                 className="inline-flex items-center rounded-lg bg-[#8a8a00] px-4 py-2 text-sm font-medium text-white hover:bg-[#456339] transition-colors"
                                             >
                                                 ลองใหม่

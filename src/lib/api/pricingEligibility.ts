@@ -12,6 +12,7 @@ export type PricingEligibilityReason =
     | 'account_after_cutoff'
     | 'no_qualifying_abstract'
     | 'offer_expired'
+    | 'postgraduate_override'
     | 'not_applicable';
 
 export interface PricingEligibility {
