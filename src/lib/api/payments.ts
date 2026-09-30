@@ -88,9 +88,22 @@ export interface VerifyResponse {
     currency?: string;
 }
 
+export interface AdminGrantedSessionDto {
+    registrationId: number;
+    sessionId: number;
+    sessionName: string;
+    sessionType: string | null;
+    startTime: string;
+    endTime: string;
+    room: string | null;
+    grantedAt: string;
+    source: 'admin_grant';
+}
+
 export interface MyTicketsResponse {
     success: boolean;
     data: Array<{
+        registrationId: number;
         regCode: string;
         eventId: number;
         eventCode?: string | null;
@@ -109,6 +122,8 @@ export interface MyTicketsResponse {
         currency: string;
         includes: string[];
         receiptUrl: string | null;
+        ownedSessionIds: number[];
+        adminGrantedSessions: AdminGrantedSessionDto[];
         galaTicket: {
             id: string;
             status: string;

@@ -21,6 +21,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserRegistrations, UserRegistration } from '@/lib/services';
 import { QRCodeTicket, QRCodeTicketCompact } from '@/components/ticket/QRCodeTicket';
+import { AdminGrantedSessions } from '@/components/ticket/AdminGrantedSessions';
 import { cn } from '@/lib/utils';
 
 type MenuTab = 'profile' | 'tickets' | 'payment';
@@ -372,6 +373,7 @@ function ProfilePageContent() {
                                                                 )}
                                                             </div>
                                                         </div>
+                                                        <AdminGrantedSessions sessions={ticket.adminGrantedSessions} />
                                                     </div>
                                                 ))}
                                             </div>

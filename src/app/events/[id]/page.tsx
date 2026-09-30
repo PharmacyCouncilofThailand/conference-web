@@ -12,6 +12,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { CountdownTimer } from '@/components/ui/countdown-timer';
 import { SpeakerMarquee } from '@/components/ui/speaker-marquee';
+import { AdminGrantedSessions } from '@/components/ticket/AdminGrantedSessions';
 import { Calendar, MapPin, Clock, Share2, ArrowLeft, Users, CheckCircle, Award, Ticket, X, ChevronLeft, ChevronRight, Images, Check, FileText, Globe, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -997,6 +998,9 @@ export default function EventDetailPage() {
                                                     ซื้อ Add-on เพิ่มเติม
                                                 </Button>
                                             </Link>
+                                        )}
+                                        {existingPrimaryTicket && (
+                                            <AdminGrantedSessions sessions={existingPrimaryTicket.adminGrantedSessions || []} />
                                         )}
                                         <Link href="/my-tickets" className="block">
                                             <Button variant="outline" className="w-full h-12 text-base font-semibold border-[#8a8a00] text-[#737300] hover:bg-[#8a8a00]/5 rounded-xl transition-all">

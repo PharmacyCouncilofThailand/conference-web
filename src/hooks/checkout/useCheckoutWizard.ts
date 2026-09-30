@@ -19,6 +19,8 @@ export interface CheckoutData {
     dietaryOtherText: string;
     selectedWorkshopTopic?: string;
     selectedOptionalSessions: string[];
+    // Server-authoritative entitlements; refreshed on checkout entry and never persisted.
+    ownedSessionIds: number[];
 
     // Addon-only mode
     isAddonOnly?: boolean;
@@ -57,6 +59,7 @@ const INITIAL_CHECKOUT_DATA: CheckoutData = {
     dietaryOtherText: '',
     selectedWorkshopTopic: undefined,
     selectedOptionalSessions: [],
+    ownedSessionIds: [],
     isAddonOnly: false,
     purchasedAddOns: [],
     needTaxInvoice: false,
@@ -92,7 +95,11 @@ export function useCheckoutWizard(eventId: string) {
             if (saved) {
                 const parsed = JSON.parse(saved);
                 if (parsed.checkoutData) {
-                    setCheckoutData(parsed.checkoutData);
+                    setCheckoutData({
+                        ...INITIAL_CHECKOUT_DATA,
+                        ...parsed.checkoutData,
+                        ownedSessionIds: [],
+                    });
                 }
                 if (parsed.currentStep) {
                     setCurrentStep(parsed.currentStep);
@@ -106,8 +113,11 @@ export function useCheckoutWizard(eventId: string) {
     // Persist to sessionStorage on change
     useEffect(() => {
         try {
+            const persistedCheckoutData = Object.fromEntries(
+                Object.entries(checkoutData).filter(([key]) => key !== 'ownedSessionIds'),
+            );
             sessionStorage.setItem(storageKey, JSON.stringify({
-                checkoutData,
+                checkoutData: persistedCheckoutData,
                 currentStep,
             }));
         } catch {

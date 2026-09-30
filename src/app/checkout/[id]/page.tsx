@@ -104,6 +104,65 @@ export default function CheckoutPage() {
 
     const purchases = purchasesData?.data;
 
+    // Refresh server-authoritative session entitlements on checkout entry. These
+    // IDs are intentionally not restored from sessionStorage.
+    const { data: myTicketsData } = useQuery({
+        queryKey: ['my-tickets', eventId, user?.id],
+        queryFn: () => paymentsApi.myTickets(),
+        enabled: isLoggedIn && !!user?.id && !!eventId,
+        staleTime: 0,
+        refetchOnMount: 'always',
+    });
+
+    const ownedSessionIds = useMemo(() => {
+        const numericEventId = Number(eventId);
+        return [...new Set(
+            (myTicketsData?.data || [])
+                .filter((registration) => registration.eventId === numericEventId)
+                .flatMap((registration) => registration.ownedSessionIds || []),
+        )].sort((a, b) => a - b);
+    }, [eventId, myTicketsData?.data]);
+
+    useEffect(() => {
+        if (!myTicketsData) return;
+        const owned = new Set(ownedSessionIds);
+        const selectedWorkshopId = Number(checkoutData.selectedWorkshopTopic);
+        const nextWorkshopTopic =
+            Number.isInteger(selectedWorkshopId) && owned.has(selectedWorkshopId)
+                ? undefined
+                : checkoutData.selectedWorkshopTopic;
+        const nextOptionalSessions = checkoutData.selectedOptionalSessions.filter(
+            (sessionId) => !owned.has(Number(sessionId)),
+        );
+        const ownedUnchanged =
+            checkoutData.ownedSessionIds.length === ownedSessionIds.length &&
+            checkoutData.ownedSessionIds.every((id, index) => id === ownedSessionIds[index]);
+        const optionalUnchanged =
+            checkoutData.selectedOptionalSessions.length === nextOptionalSessions.length &&
+            checkoutData.selectedOptionalSessions.every(
+                (id, index) => id === nextOptionalSessions[index],
+            );
+        if (
+            ownedUnchanged &&
+            optionalUnchanged &&
+            nextWorkshopTopic === checkoutData.selectedWorkshopTopic
+        ) {
+            return;
+        }
+        updateCheckoutData({
+            ownedSessionIds,
+            selectedWorkshopTopic: nextWorkshopTopic,
+            selectedOptionalSessions: nextOptionalSessions,
+        });
+    }, [
+        checkoutData.ownedSessionIds,
+        checkoutData.selectedOptionalSessions,
+        checkoutData.selectedWorkshopTopic,
+        myTicketsData,
+        ownedSessionIds,
+        updateCheckoutData,
+    ]);
+
     // Currency detection from the canonical user identity. Medical Professional
     // delegateType is shared by Thai and international users, so it cannot be
     // used as the primary nationality signal.
@@ -321,8 +380,9 @@ export default function CheckoutPage() {
         const selectedTicket = event?.ticketTypes?.find((t) => String(t.id) === checkoutData.selectedPackage);
         const linkedOptionalSessions = selectedTicket?.optionalSessions || [];
 
+        const owned = new Set(ownedSessionIds);
         return linkedOptionalSessions
-            .filter((session) => session.requiresOptIn)
+            .filter((session) => session.requiresOptIn && !owned.has(Number(session.id)))
             .map((session) => ({
                 id: String(session.id),
                 sessionName: session.sessionName,
@@ -333,7 +393,7 @@ export default function CheckoutPage() {
                 isFull: session.isFull,
                 description: session.description,
             }));
-    }, [event?.ticketTypes, checkoutData.selectedPackage]);
+    }, [event?.ticketTypes, checkoutData.selectedPackage, ownedSessionIds]);
 
     const canSelectOptionalSessions = useMemo(() => {
         if (!OPTIONAL_SESSION_OPT_IN_ENABLED) return false;
@@ -671,6 +731,7 @@ export default function CheckoutPage() {
                                                 purchasedAddOns={checkoutData.purchasedAddOns}
                                                 currency={currency}
                                                 selectedWorkshopTopic={checkoutData.selectedWorkshopTopic}
+                                                ownedSessionIds={checkoutData.ownedSessionIds}
                                                 onWorkshopTopicChange={(id) => updateCheckoutData({ selectedWorkshopTopic: id })}
                                                 dietaryRequirement={checkoutData.dietaryRequirement}
                                                 onDietaryChange={(val) => updateCheckoutData({ dietaryRequirement: val })}

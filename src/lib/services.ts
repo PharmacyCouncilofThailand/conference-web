@@ -10,6 +10,7 @@ import {
 import { apiClient } from './api/client';
 import { API_URL } from '@/config';
 import { parseAllowedList } from '@/lib/utils';
+import type { AdminGrantedSessionDto } from '@/lib/api/payments';
 
 // ===========================================
 // Service Layer — Real API calls
@@ -217,6 +218,8 @@ export interface UserRegistration {
     regCode: string;
     status: string;
     createdAt: string;
+    ownedSessionIds: number[];
+    adminGrantedSessions: AdminGrantedSessionDto[];
     event: {
         id: number;
         eventName: string;
@@ -253,10 +256,12 @@ export async function getUserRegistrations(token: string): Promise<UserRegistrat
         const data = await res.json();
         if (!data.success || !Array.isArray(data.data)) return [];
         return data.data.map((reg: any) => ({
-            id: reg.eventId || 0,
+            id: reg.registrationId || reg.eventId || 0,
             regCode: reg.regCode || '',
             status: reg.status || '',
             createdAt: reg.purchasedAt || '',
+            ownedSessionIds: Array.isArray(reg.ownedSessionIds) ? reg.ownedSessionIds : [],
+            adminGrantedSessions: Array.isArray(reg.adminGrantedSessions) ? reg.adminGrantedSessions : [],
             event: reg.eventName ? {
                 id: reg.eventId,
                 eventName: reg.eventName,

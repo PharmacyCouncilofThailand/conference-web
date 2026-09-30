@@ -35,6 +35,7 @@ interface AddonSelectorProps {
     currency: 'THB' | 'USD';
     // Workshop topic selection
     selectedWorkshopTopic?: string;
+    ownedSessionIds?: number[];
     onWorkshopTopicChange?: (sessionId: string) => void;
     // Dietary requirement (for gala)
     dietaryRequirement?: string;
@@ -59,6 +60,7 @@ export function AddonSelector({
     purchasedAddOns = [],
     currency,
     selectedWorkshopTopic,
+    ownedSessionIds = [],
     onWorkshopTopicChange,
     dietaryRequirement,
     onDietaryChange,
@@ -178,18 +180,26 @@ export function AddonSelector({
                             <div className="ml-8 p-3 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
                                 <label className="text-sm font-medium text-gray-700">เลือก Workshop</label>
                                 <div className="space-y-2">
-                                    {addon.sessions.map((session) => (
+                                    {addon.sessions.map((session) => {
+                                        const isOwned = ownedSessionIds.includes(session.id);
+                                        return (
                                         <button
                                             key={session.id}
                                             type="button"
-                                            onClick={() => onWorkshopTopicChange(String(session.id))}
+                                            disabled={isOwned}
+                                            onClick={() => !isOwned && onWorkshopTopicChange(String(session.id))}
                                             className={`w-full text-left p-3 border rounded-lg text-sm transition-all ${
-                                                selectedWorkshopTopic === String(session.id)
-                                                    ? 'border-[#8a8a00] bg-[#8a8a00]/5'
-                                                    : 'border-gray-200 bg-white hover:border-[#8a8a00]/40'
+                                                isOwned
+                                                    ? 'border-green-200 bg-green-50 opacity-75 cursor-not-allowed'
+                                                    : selectedWorkshopTopic === String(session.id)
+                                                        ? 'border-[#8a8a00] bg-[#8a8a00]/5'
+                                                        : 'border-gray-200 bg-white hover:border-[#8a8a00]/40'
                                             }`}
                                         >
-                                            <div className="font-medium text-gray-900">{session.sessionName}</div>
+                                            <div className="flex items-center justify-between gap-2">
+                                                <div className="font-medium text-gray-900">{session.sessionName}</div>
+                                                {isOwned && <span className="text-xs font-medium text-green-700">มีสิทธิ์แล้ว</span>}
+                                            </div>
                                             <div className="text-xs text-gray-500 mt-0.5">
                                                 {session.room && `${session.room} · `}
                                                 {new Date(session.startTime).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
@@ -197,7 +207,8 @@ export function AddonSelector({
                                                 {new Date(session.endTime).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                                             </div>
                                         </button>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
