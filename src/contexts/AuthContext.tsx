@@ -9,6 +9,8 @@ interface User {
     lastName: string;
     role: string;
     studentLevel?: string | null;
+    healthHackLevel?: string | null;
+    boothName?: string | null;
     country?: string | null;
     delegateType?: string;
     isThai?: boolean;

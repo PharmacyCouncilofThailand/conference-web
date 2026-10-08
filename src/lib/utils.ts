@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Map backend role codes to Conference-hub display labels.
- * Roles: pharmacist, medical_professional, student, general
+ * Roles: pharmacist, medical_professional, student, general, healthhack, booth
  */
 export function getUserRoleLabel(role: string): string {
     switch (role) {
@@ -19,6 +19,10 @@ export function getUserRoleLabel(role: string): string {
             return 'Student';
         case 'general':
             return 'General';
+        case 'healthhack':
+            return 'HealthHack';
+        case 'booth':
+            return 'Booth';
         case 'public':
         default:
             return 'Guest';
@@ -36,6 +40,10 @@ export function getUserRoleBadgeColor(role: string): string {
             return 'bg-blue-100 text-blue-600';
         case 'general':
             return 'bg-gray-100 text-gray-600';
+        case 'healthhack':
+            return 'bg-sky-100 text-sky-800';
+        case 'booth':
+            return 'bg-amber-100 text-amber-800';
         case 'public':
         default:
             return 'bg-gray-200 text-gray-600';

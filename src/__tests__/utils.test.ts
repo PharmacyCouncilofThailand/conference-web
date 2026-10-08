@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cn, getEffectiveTicketIdentity, getUserCurrency, ticketAllowsUser } from '@/lib/utils';
+import { cn, getEffectiveTicketIdentity, getUserCurrency, getUserRoleLabel, ticketAllowsUser } from '@/lib/utils';
 
 describe('cn utility', () => {
     it('should merge class names', () => {
@@ -73,4 +73,16 @@ describe('effective ticket identity', () => {
             identity.studentLevel,
         )).toBe(false);
     });
+});
+
+describe('special attendee identities', () => {
+  it.each([['healthhack','HealthHack'],['booth','Booth']])('keeps %s identity, THB, labels and ticket restrictions', (role,label) => {
+    expect(getUserRoleLabel(role)).toBe(label);
+    expect(getUserCurrency({ role, country: 'Thailand', delegateType: role })).toBe('THB');
+    expect(getEffectiveTicketIdentity(role, null, false)).toEqual({ role, studentLevel: null, source: 'account' });
+    expect(ticketAllowsUser({ allowedRoles: [role] },role,null)).toBe(true);
+    expect(ticketAllowsUser({ allowedRoles: [role] },'general',null)).toBe(false);
+    expect(ticketAllowsUser({ allowedRoles: [] },role,null)).toBe(true);
+    expect(ticketAllowsUser({ allowedRoles: ['student'], allowedStudentLevels: ['undergraduate'] },role,null)).toBe(false);
+  });
 });

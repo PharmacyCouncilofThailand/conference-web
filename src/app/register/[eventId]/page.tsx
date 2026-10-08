@@ -99,6 +99,8 @@ export default function FreeRegisterPage() {
             medical_professional: 'medical_professional',
             student: 'student',
             general: 'general',
+            healthhack: 'healthhack',
+            booth: 'booth',
         };
         return roleToPackage[effectiveTicketIdentity.role] || 'pharmacist';
     }, [effectiveTicketIdentity.role]);

@@ -8,6 +8,8 @@ export interface User {
     lastName: string;
     role: string;
     studentLevel?: string | null;
+    healthHackLevel?: string | null;
+    boothName?: string | null;
     country: string | null;
     delegateType?: string;
     isThai?: boolean;
@@ -30,6 +32,8 @@ interface RegisterResponse {
         lastName: string;
         role: string;
         studentLevel?: string | null;
+        healthHackLevel?: string | null;
+        boothName?: string | null;
         status: string;
     };
 }
