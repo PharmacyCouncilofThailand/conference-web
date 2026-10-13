@@ -352,12 +352,6 @@ function PaymentResultInner() {
                                     ดูตั๋วของฉัน
                                 </Link>
                             )}
-                            <Link
-                                href="/events"
-                                className="px-5 py-2.5 bg-gradient-to-r from-[#8a8a00] to-[#737300] text-white font-medium rounded-lg hover:from-[#737300] hover:to-[#686805] transition-colors text-sm"
-                            >
-                                ดูงานอื่นๆ
-                            </Link>
                         </div>
                     </div>
                 );
