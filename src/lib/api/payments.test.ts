@@ -75,6 +75,25 @@ describe('paymentsApi.createIntent', () => {
     });
 });
 
+it('sends no method for free checkout and preserves the server currency', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        json: async () => ({
+            success: true, data: {
+                free: true, gateway: null, redirectForm: null, refno: null, orderRef: null,
+                orderNumber: 'CONF-FREE-USD', regCode: 'REG-FREE-USD', total: 0, currency: 'USD',
+            }
+        }),
+    } as Response);
+    const result = await paymentsApi.createIntent({
+        eventId: 2, packageId: '7', addOnIds: [], currency: 'USD', needTaxInvoice: false,
+    });
+    const body = JSON.parse(String(fetchSpy.mock.calls[0][1]?.body));
+    expect(body).not.toHaveProperty('paymentMethod');
+    expect(result.currency).toBe('USD');
+    expect(result.gateway).toBeNull();
+});
+
 describe('paymentsApi.preview', () => {
     it('unwraps the backend data envelope for a valid promo code', async () => {
         vi.spyOn(globalThis, 'fetch').mockResolvedValue({

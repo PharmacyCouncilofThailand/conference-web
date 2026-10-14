@@ -18,6 +18,7 @@ interface CreateIntentApiResponse {
         orderNumber?: string | null;
         regCode?: string | null;
         total?: string | number | null;
+        currency?: 'THB' | 'USD' | null;
     };
 }
 
@@ -44,7 +45,7 @@ export interface CreateIntentRequest {
     packageId: string;
     addOnIds: string[];
     currency: 'THB' | 'USD';
-    paymentMethod: 'qr' | 'card';
+    paymentMethod?: 'qr' | 'card';
     promoCode?: string;
     workshopSessionId?: number;
     optionalSessionIds?: number[];
@@ -69,6 +70,7 @@ export interface CreateIntentResponse {
     orderNumber: string | null;
     regCode?: string | null;
     totalAmount?: string | null;
+    currency?: 'THB' | 'USD' | null;
 }
 
 export interface VerifyRequest {
@@ -166,7 +168,7 @@ export interface PreviewRequest {
     packageId: string;
     addOnIds: string[];
     currency: 'THB' | 'USD';
-    paymentMethod: 'qr' | 'card';
+    paymentMethod?: 'qr' | 'card';
     promoCode?: string;
 }
 
@@ -272,6 +274,7 @@ export const paymentsApi = {
             orderNumber: payload?.orderNumber || null,
             regCode: payload?.regCode || null,
             totalAmount: payload?.total != null ? String(payload.total) : null,
+            currency: payload?.currency === 'THB' || payload?.currency === 'USD' ? payload.currency : null,
         };
     },
 
