@@ -1,5 +1,7 @@
 # Checkout Zero-Total Confirmation Implementation Plan
 
+> Execution authorized in the same chat on 2026-10-14, without subagents. T1-T7 and local T8 verification are complete. The disposable Docker database was deleted after all local feature gates passed. See `../verification/checkout-zero-total/README.md` for checkpoints and release limitations.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** แสดงปุ่มท้ายกล่องสรุปรายการเฉพาะขั้นสุดท้าย และให้รายการที่ API ยืนยันยอด 0 ข้ามใบกำกับภาษีและวิธีชำระเงิน ก่อนกดยืนยันการลงทะเบียนด้วยตนเอง
@@ -142,7 +144,7 @@ Positive-total conflict:
 - Produce `paymentMethodRequiredResponse(): { statusCode: 409; body: { success: false; code: 'PAYMENT_METHOD_REQUIRED'; error: string } }`.
 - Preserve existing `freeCheckoutResponse` unchanged.
 
-- [ ] **Step 1: Add failing schema and response tests**
+- [x] **Step 1: Add failing schema and response tests**
 
 Create this schema test file:
 
@@ -195,7 +197,7 @@ test('missing method conflict preserves the existing error envelope', () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Working directory API:
 
@@ -205,7 +207,7 @@ npx tsx --test src/schemas/payment.schema.test.ts src/modules/payments/api-contr
 
 Expected: omission test fails because card is defaulted; new response symbol does not exist. Record actual failure before editing implementation.
 
-- [ ] **Step 3: Remove default and add the response helper**
+- [x] **Step 3: Remove default and add the response helper**
 
 Replace only the schema method field:
 
@@ -239,7 +241,7 @@ if (!paymentMethod) {
 
 This narrows paymentMethod for the following paid code. Do not set a later `paymentMethod || 'card'`. The route currently has a second legacy zero-total block after paid order creation; leave unrelated cleanup out of this task. The new guard follows the authoritative first branch.
 
-- [ ] **Step 4: Prevent a partial/empty preview from looking free**
+- [x] **Step 4: Prevent a partial/empty preview from looking free**
 
 In preview, after deriving `isAddonOnly` and before DB reads:
 
@@ -272,7 +274,7 @@ for (const addOnId of addOnIds) {
 
 No new reservation/side effect is added to preview. Quote still does not guarantee a seat or reserve a promo; create-intent retains full validation.
 
-- [ ] **Step 5: Suppress tax requests on the successful free branch**
+- [x] **Step 5: Suppress tax requests on the successful free branch**
 
 Replace the `taxInvoice` argument passed to `completeFreeCheckout` in the first zero-total branch:
 
@@ -292,7 +294,7 @@ taxInvoice: {
 
 In that branch's `sendPaymentReceiptEmail` call replace the conditional tax-info argument with `undefined`; keep every other argument, promotion metadata and best-effort post-commit delivery. The paid tax path remains unchanged. Malformed tax fields can still fail schema validation; normal new free clients strip them in T3. Do not weaken paid tax field validation to accommodate stale storage.
 
-- [ ] **Step 6: Verify GREEN and build**
+- [x] **Step 6: Verify GREEN and build**
 
 ```powershell
 npx tsx --test src/schemas/payment.schema.test.ts src/modules/payments/api-contract.test.ts src/utils/promoDiscount.test.ts src/services/emailTemplates.test.ts src/services/receiptPdf.test.ts
@@ -301,7 +303,7 @@ npm run build
 
 Expected: focused tests pass and tsc accepts optional method because paid code is narrowed after the free branch. Route ordering is proven by T2 rather than a source-text assertion.
 
-- [ ] **Step 7: Commit scoped API files**
+- [x] **Step 7: Commit scoped API files**
 
 ```powershell
 git add -- src/schemas/payment.schema.ts src/schemas/payment.schema.test.ts src/modules/payments/api-contract.ts src/modules/payments/api-contract.test.ts src/routes/payments/index.ts
@@ -320,7 +322,7 @@ git commit -m "fix(checkout): require a selected method only for positive totals
 - Produce explicit npm command `test:checkout-flow:integration` (isolated DB required).
 - Do not replace a missing test database with DATABASE_URL. No production credentials, email or gateway requests are used.
 
-- [ ] **Step 1: Add an HTTP integration test before accepting T1**
+- [x] **Step 1: Add an HTTP integration test before accepting T1**
 
 Use this complete initial fixture/test file. It calls real route handlers with test-only authentication and blocks outbound axios calls. Extend the case table in Step 3 in the same file.
 
@@ -492,7 +494,7 @@ Register this script in package.json without changing existing payments scripts:
 "test:checkout-flow:integration": "tsx --test --test-concurrency=1 src/modules/payments/checkout-flow.integration.test.ts"
 ```
 
-- [ ] **Step 2: Demonstrate RED against the old route, then GREEN against T1**
+- [x] **Step 2: Demonstrate RED against the old route, then GREEN against T1**
 
 Run this test after T1 schema/response RED and before applying T1 route snippets, following the ordering above. Do not revert user files in place. Expected old failures: positive omission produces a paid attempt; missing Add-on yields a partial quote; free legacy tax input is stored.
 
@@ -502,7 +504,7 @@ npm run test:checkout-flow:integration
 
 Only run with a configured, migrated, isolated TEST_DATABASE_URL. Missing configuration is a blocked integration gate, not a passing test. Never set PAYMENTS_ALLOW_SHARED_TEST_DATABASE to bypass isolation.
 
-- [ ] **Step 3: Extend the route matrix with actual requests**
+- [x] **Step 3: Extend the route matrix with actual requests**
 
 Insert before the initial test file's finally block; use fresh users per successful primary checkout. These statements use variables/functions already defined above:
 
@@ -574,7 +576,7 @@ assert.equal(entitlement.count, 1);
 
 The current active route uses Pay Solutions; KTB code is disabled in that route. Preserve KTB utilities and existing tests, but do not claim this HTTP script exercised a live KTB path. For free email proof inspect existing template tests separately: blocked outbound email is intentionally not proof of deliverability.
 
-- [ ] **Step 4: Run existing atomicity/concurrency regression in the same isolated target**
+- [x] **Step 4: Run existing atomicity/concurrency regression in the same isolated target**
 
 ```powershell
 npm run test:payments:integration
@@ -584,7 +586,7 @@ npm run build
 
 Expected: free settlement rollback/concurrency and new HTTP cases pass. Record fixture cleanup, no live outbound request, and exact counts. Do not run both integration processes in parallel against one target.
 
-- [ ] **Step 5: Commit HTTP proof**
+- [x] **Step 5: Commit HTTP proof**
 
 ```powershell
 git add -- src/modules/payments/checkout-flow.integration.test.ts package.json
@@ -605,7 +607,7 @@ git commit -m "test(checkout): prove method-free registration and paid guards"
 - Produce `CheckoutPaymentData extends CheckoutData` with eventId, quotedTotal, currency and return context. quotedTotal is advisory session data only and is never sent as an amount to create-intent.
 - Produce `buildCreateIntentRequest(data: CheckoutPaymentData): CreateIntentRequest` and `isCheckoutRecoveryError(code?: string): boolean`.
 
-- [ ] **Step 1: Add serialization and payload tests before the builder exists**
+- [x] **Step 1: Add serialization and payload tests before the builder exists**
 
 Append this test inside paymentsApi.createIntent's existing describe:
 
@@ -683,7 +685,7 @@ describe('checkout request boundary', () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Working directory Web:
 
@@ -693,7 +695,7 @@ npx vitest run src/lib/api/payments.test.ts src/lib/checkout/paymentRequest.test
 
 Expected: new builder import missing / currency not normalized. Type checking should also reject method omission until types change.
 
-- [ ] **Step 3: Update API types and normalization**
+- [x] **Step 3: Update API types and normalization**
 
 Change method fields to optional in both request interfaces. Add the optional currency property to the raw/normalized create response interfaces. Add this property to the return object in paymentsApi.createIntent:
 
@@ -703,7 +705,7 @@ currency: payload?.currency === 'THB' || payload?.currency === 'USD' ? payload.c
 
 Keep all existing free/gateway/order/ref normalizers and error propagation. The existing generic api.post uses JSON.stringify, so undefined properties are omitted; no new transport wrapper is needed.
 
-- [ ] **Step 4: Add the exact request builder**
+- [x] **Step 4: Add the exact request builder**
 
 Create paymentRequest.ts:
 
@@ -767,7 +769,7 @@ export function isCheckoutRecoveryError(code?: string): boolean {
 
 quotedTotal is not trusted by the backend: modifying storage from free to positive or vice versa cannot change the actual charge; server recalculation and missing-method guard decide it. Malformed storage is a client-side recovery case; T7 directs users back to checkout instead of guessing a quote.
 
-- [ ] **Step 5: Verify GREEN and commit**
+- [x] **Step 5: Verify GREEN and commit**
 
 ```powershell
 npx vitest run src/lib/api/payments.test.ts src/lib/checkout/paymentRequest.test.ts
@@ -788,7 +790,7 @@ git commit -m "refactor(checkout): serialize free and paid requests explicitly"
 - Produce `useCheckoutQuote(input: CheckoutQuoteInput | null): { state: CheckoutQuoteState; retry: () => Promise<unknown> }`.
 - No cached quote or local fallback may qualify as ready while fetching the current quote.
 
-- [ ] **Step 1: Write observable hook tests**
+- [x] **Step 1: Write observable hook tests**
 
 Create the test file using a QueryClient per test and controlled promises:
 
@@ -907,7 +909,7 @@ it('recovers a failed preview only after a successful explicit retry', async () 
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 ```powershell
 npx vitest run src/hooks/checkout/useCheckoutQuote.test.tsx
@@ -915,7 +917,7 @@ npx vitest run src/hooks/checkout/useCheckoutQuote.test.tsx
 
 Expected: missing hook import. Do not install a different query library to implement it.
 
-- [ ] **Step 3: Implement the hook**
+- [x] **Step 3: Implement the hook**
 
 ```ts
 'use client';
@@ -978,7 +980,7 @@ export function useCheckoutQuote(input: CheckoutQuoteInput | null) {
 
 Important: do not add placeholderData/keepPreviousData or staleTime that enables an old zero quote while revalidating. The query key contains normalized requested promo, not draft text or paymentMethod; existing backend fee=0 means selecting a method does not change this quote. Old requests may finish in their own cache, but cannot update the current observer.
 
-- [ ] **Step 4: Verify GREEN and commit**
+- [x] **Step 4: Verify GREEN and commit**
 
 ```powershell
 npx vitest run src/hooks/checkout/useCheckoutQuote.test.tsx
@@ -1002,7 +1004,7 @@ git commit -m "feat(checkout): use a current server quote for payment decisions"
 - Wizard returns `isRestored`, `getSteps(flow)`, and existing navigation/validation callbacks with a CheckoutFlow argument. `goToStep(step, flow)` retains logical IDs.
 - Initial/loading/failed quote: quoteReady=false and isFree=false; no submission is valid.
 
-- [ ] **Step 1: Add failing navigation/validation tests**
+- [x] **Step 1: Add failing navigation/validation tests**
 
 Create useCheckoutWizard.test.tsx:
 
@@ -1094,7 +1096,7 @@ it('displays consecutive numbers while retaining logical step IDs', () => {
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 ```powershell
 npx vitest run src/hooks/checkout/useCheckoutWizard.test.tsx src/components/checkout/StepIndicator.test.tsx
@@ -1102,7 +1104,7 @@ npx vitest run src/hooks/checkout/useCheckoutWizard.test.tsx src/components/chec
 
 Expected: new flow interface/getSteps/isRestored missing; logical 4 still renders as 4.
 
-- [ ] **Step 3: Add shared flow/clear-data declarations**
+- [x] **Step 3: Add shared flow/clear-data declarations**
 
 Keep existing CheckoutData/INITIAL_CHECKOUT_DATA fields; add the requestedPromoCode field/default described above and append before the hook:
 
@@ -1119,7 +1121,7 @@ export const FREE_CHECKOUT_DATA = {
 } satisfies Partial<CheckoutData>;
 ```
 
-- [ ] **Step 4: Replace only the hook implementation with the following complete body**
+- [x] **Step 4: Replace only the hook implementation with the following complete body**
 
 ```ts
 export function useCheckoutWizard(eventId: string) {
@@ -1239,7 +1241,7 @@ useEffect(() => {
   checkoutData.email, checkoutData.phone, checkoutData.country, updateCheckoutData]);
 ```
 
-- [ ] **Step 5: Use consecutive visible step numbers**
+- [x] **Step 5: Use consecutive visible step numbers**
 
 In StepIndicator's existing circle replace its non-completed text expression:
 
@@ -1249,7 +1251,7 @@ In StepIndicator's existing circle replace its non-completed text expression:
 
 Keep key=step.id, comparisons with currentStep, and callback argument step.id. Do not renumber persisted logical IDs.
 
-- [ ] **Step 6: Verify GREEN and update dependent calls in T6 before build**
+- [x] **Step 6: Verify GREEN and update dependent calls in T6 before build**
 
 ```powershell
 npx vitest run src/hooks/checkout/useCheckoutWizard.test.tsx src/components/checkout/StepIndicator.test.tsx
@@ -1274,7 +1276,7 @@ Commit T5 together with the page wiring in T6 so the committed application does 
 - Page computes `flow` from the current quote and initializes a requested promo from restored wizard state once per account/event.
 - Page writes `CheckoutPaymentData.quotedTotal` only from a ready quote.
 
-- [ ] **Step 1: Add final-action tests**
+- [x] **Step 1: Add final-action tests**
 
 Create OrderSummary.test.tsx:
 
@@ -1326,7 +1328,7 @@ describe('checkout final action', () => {
 
 Add `beforeEach(() => vi.clearAllMocks())` to the test import/setup to isolate callback assertions.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 ```powershell
 npx vitest run src/components/checkout/OrderSummary.test.tsx
@@ -1334,7 +1336,7 @@ npx vitest run src/components/checkout/OrderSummary.test.tsx
 
 Expected old component always renders the payment button and cannot use quote props.
 
-- [ ] **Step 3: Replace local total computation and final action in OrderSummary**
+- [x] **Step 3: Replace local total computation and final action in OrderSummary**
 
 Remove useMemo subtotal/netAmount calculation and its import. Keep item names and line prices, filtering selectedAddonItems by both selected group and currency to avoid including both THB/USD variants. Use these variables:
 
@@ -1392,7 +1394,7 @@ Replace the submit wrapper with:
 
 Keep the button at the existing right-summary position. No second final action is added to the left or a sticky mobile footer. Preserve existing responsive grid/sticky behavior.
 
-- [ ] **Step 4: Synchronize promo busy state and errors**
+- [x] **Step 4: Synchronize promo busy state and errors**
 
 Add props to PromoCodeSection, destructure with defaults, and compute:
 
@@ -1411,7 +1413,7 @@ disabled={isSubmitting}
 
 This is a local component extension; the only caller is OrderSummary. Do not trigger registration from promo apply.
 
-- [ ] **Step 5: Wire restored promo identity and quote inputs in CheckoutPage**
+- [x] **Step 5: Wire restored promo identity and quote inputs in CheckoutPage**
 
 Add useRef to the React import, import useCheckoutQuote, CheckoutFlow/FREE_CHECKOUT_DATA, and CheckoutPaymentData. Change wizard destructuring to use `getSteps` and `isRestored`; remove local promoDiscountAmount/promoDiscountText state and all their setters. Keep eligibility/session-specific invalidation logic.
 
@@ -1456,7 +1458,7 @@ const steps = getSteps(flow);
 
 Preserve currency filtering and personalized eligibility. Do not enable a quote for a selected ID absent from the current allowed package list. For add-on-only mode this still requires pricing context to finish; it does not remove existing primary-ownership checks in create-intent.
 
-- [ ] **Step 6: Replace apply/remove handlers and reconcile confirmed amount changes**
+- [x] **Step 6: Replace apply/remove handlers and reconcile confirmed amount changes**
 
 ```ts
 const handleApplyPromo = useCallback(async () => {
@@ -1525,7 +1527,7 @@ useEffect(() => {
 
 All existing package-eligibility reset handlers must clear requestedPromo and requestedPromoCode as well as stored promo fields. Quote key changes automatically on package/Add-on/currency changes; typing a draft code clears requestedPromo, requestedPromoCode and promoApplied until the user presses Apply again. A failed explicitly requested code retains requestedPromoCode across reload; it is not silently dropped from the next preview.
 
-- [ ] **Step 7: Wire exact UI changes and submit serialization**
+- [x] **Step 7: Wire exact UI changes and submit serialization**
 
 Replace callbacks with `() => nextStep(flow)`, `() => prevStep(flow)`, and StepIndicator `onStepClick={(step) => goToStep(step, flow)}`. Replace all `isCurrentStepValid()` with `isCurrentStepValid(flow)`.
 
@@ -1615,7 +1617,7 @@ const handlePromoCodeChange = (code: string) => {
 
 Pass onPromoCodeChange={handlePromoCodeChange}. Add requestedPromoCode:'' to each existing package-eligibility invalidation update. Never leave that persisted candidate behind after clearing a package for changed pricing eligibility.
 
-- [ ] **Step 8: Add integrated page acceptance tests**
+- [x] **Step 8: Add integrated page acceptance tests**
 
 The test exercises the actual page + hook + summary, with external data mocked. Use this complete initial test; expand tests via the specified transitions below.
 
@@ -1726,7 +1728,7 @@ it('blocks navigation during pricing and offers recovery on quote failure', asyn
 });
 ```
 
-- [ ] **Step 9: Verify focused tests, caller consistency, lint, and commit T5/T6 together**
+- [x] **Step 9: Verify focused tests, caller consistency, lint, and commit T5/T6 together**
 
 ```powershell
 npx vitest run src/hooks/checkout/useCheckoutQuote.test.tsx src/hooks/checkout/useCheckoutWizard.test.tsx src/components/checkout/StepIndicator.test.tsx src/components/checkout/OrderSummary.test.tsx 'src/app/checkout/[id]/page.test.tsx'
@@ -1756,7 +1758,7 @@ Inspect React effect dependencies and query count. A ready quote writing promoAp
 - Price conflicts offer a checkout review action; no automatic retry/re-registration/gateway transition is added.
 - Preserve existing hasStartedIntent/hasSubmitted refs, provider auto-form submission, and free result branch.
 
-- [ ] **Step 1: Add request/processing/error tests before changing PaymentPage**
+- [x] **Step 1: Add request/processing/error tests before changing PaymentPage**
 
 Create payment/page.test.tsx:
 
@@ -1869,7 +1871,7 @@ it('preserves explicit paid card selection and submits the provider form once', 
 });
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 ```powershell
 npx vitest run src/app/checkout/payment/page.test.tsx
@@ -1877,7 +1879,7 @@ npx vitest run src/app/checkout/payment/page.test.tsx
 
 Expected: existing page forwards null method and does not add currency or recover missing method/stale quote.
 
-- [ ] **Step 3: Replace request construction and classify stale stored quotes**
+- [x] **Step 3: Replace request construction and classify stale stored quotes**
 
 Use the T3 builder rather than the old handwritten requestBody/workshop/optional mapping. Keep parsedEventId checks only if still used; remove redundant copies after the builder takes responsibility.
 
@@ -1909,7 +1911,7 @@ Add `const [isFreeProcessing, setIsFreeProcessing] = useState(false);`. Replace 
 
 When no saved data exists or JSON is malformed, keep an explicit start-over action; do not invent totals/methods. An older page opened after deployment with missing quotedTotal offers review, not silent card fallback.
 
-- [ ] **Step 4: Add conflict recovery action that resets the actual wizard store**
+- [x] **Step 4: Add conflict recovery action that resets the actual wizard store**
 
 Keep existing TICKET_NOT_ELIGIBLE and STUDENT_ELIGIBILITY_REQUIRED branches. For other recovery errors map to a Thai explanation and set errorCode. Example branch after existing eligibility checks:
 
@@ -1969,7 +1971,7 @@ In CheckoutPage display a static mapped explanation when `checkoutError` is one 
 
 Do not render arbitrary raw query text as an error. A recovered invalid code remains requested and blocks submission until successfully revalidated or explicitly removed. Network/unknown failures are not proof that registration failed: preserve current generic error behavior, avoid automatic retry, and retain existing server duplicate checks. General idempotency keys or outcome-lookup redesign are out of scope.
 
-- [ ] **Step 5: Preserve free currency before clearing session**
+- [x] **Step 5: Preserve free currency before clearing session**
 
 In PaymentPage's existing free result URLSearchParams add:
 
@@ -1995,7 +1997,7 @@ setCurrency(resolveFreeResultCurrency(searchParams.get('currency'), redirectCont
 
 Include redirectContext.currency in effect dependencies. Do not re-read sessionStorage after clearPaymentSession to determine currency/return context. Keep orderNumber/regCode result handling and current SSO countdown/return status parameter unchanged. Old free links with neither currency nor storage retain the prior THB fallback; this limitation is documented, not inferred as USD.
 
-- [ ] **Step 6: Add currency/result tests**
+- [x] **Step 6: Add currency/result tests**
 
 Append to paymentSession.test.ts (import resolveFreeResultCurrency):
 
@@ -2083,7 +2085,7 @@ it('keeps the existing SSO countdown after capturing and clearing context', asyn
 
 The staging SSO smoke case in T8 verifies the actual return URL parameters/navigation. Unit tests preserve the current countdown behavior and never contact the source website.
 
-- [ ] **Step 7: Verify GREEN, build, and commit**
+- [x] **Step 7: Verify GREEN, build, and commit**
 
 ```powershell
 npx vitest run src/lib/checkout/paymentRequest.test.ts src/lib/paymentSession.test.ts src/app/checkout/payment/page.test.tsx src/app/checkout/payment/result/page.test.tsx
@@ -2104,7 +2106,7 @@ git commit -m "fix(checkout): recover changed totals and preserve free result co
 - Publish contract examples and deployment evidence to repository docs; no external message or live deployment is implied.
 - Record API SHA, web SHA, test commands/results, isolated DB gate, and staging outcomes. Never record secret connection strings.
 
-- [ ] **Step 1: Write consumer contract documentation**
+- [x] **Step 1: Write consumer contract documentation**
 
 The new API markdown document must contain this contract text and JSON examples:
 
@@ -2150,7 +2152,7 @@ that registration failed. Existing registration/duplicate checks remain.
 
 Use fenced JSON blocks when writing the document for readability. No new runtime OpenAPI generator is required; if the API already publishes a relevant payment schema elsewhere, update that consumer description alongside this document rather than duplicating incompatible definitions.
 
-- [ ] **Step 2: Inventory every method-dependent caller**
+- [ ] **Step 2: Inventory every method-dependent caller — repository search complete; external release inventory remains**
 
 From workspace root:
 
@@ -2160,7 +2162,7 @@ rg -n 'create-intent|/payments/preview|createPaymentIntentSchema|paymentsApi.cre
 
 Expected repository callers are web checkout preview/payment, API route schema, and tests. Confirm with current output. Check external consumer inventory/deployment logs through the existing release process; do not infer absence of external consumers solely from rg. No tool sends a message to a consumer or operator unless the user separately authorizes it.
 
-- [ ] **Step 3: Run the web acceptance suite once changes stabilize**
+- [x] **Step 3: Run the web acceptance suite once changes stabilize**
 
 Working directory Web:
 
@@ -2173,7 +2175,7 @@ npm run build
 
 Vitest literal bracket paths are quoted in PowerShell; file edits/reads use LiteralPath when needed. Do not treat an empty test selection as a pass. Broaden to the repository suite only if a failure/new dependency warrants it; do not add screenshot-pixel tests for a single button visibility change.
 
-- [ ] **Step 4: Run API regression and isolated integrations**
+- [x] **Step 4: Run API regression and isolated integrations**
 
 Working directory API:
 
@@ -2187,7 +2189,7 @@ npm run test:checkout-flow:integration
 
 The first three commands are local gates. The last two require the isolated migrated target checked by test-database.ts. Generic npm test may skip integration suites; record skipped versus executed explicitly. Existing promo migration 0030 remains an existing deployment prerequisite if absent, but this feature introduces no new migration. Do not reuse historical migration notes as evidence of today's target state.
 
-- [ ] **Step 5: Perform browser smoke checks on local/staging build**
+- [x] **Step 5: Perform browser smoke checks on local build — target staging release checks remain**
 
 Start the existing dev servers using repository scripts only after implementation authorization. Use sandbox/staging accounts and campaign codes, not real production registrations. Check at desktop and mobile viewport sizes:
 
@@ -2222,14 +2224,14 @@ Existing API free settlement tests cover promo concurrency/rollback; no claim is
 5. Release API first and web second using the project's normal release authorization. Monitor missing-method/promo-conflict errors and registration outcomes. No cron, queue, or new monitoring integration is introduced.
 6. Only count a release as verified after both deployed SHAs and smoke results are recorded. This planning request does not authorize steps 2-5 to run now.
 
-- [ ] **Step 7: Rollback procedure**
+- [x] **Step 7: Rollback procedure documented — no deployment rollback was performed**
 
 - If new web has an issue, restore the previous web build while retaining the new API. Old explicit-method checkout remains compatible.
 - Before rolling API back, restore the previous web build first. Do not leave new method-free clients on the API with implicit card behavior.
 - Successful free orders, registrations, promo usage and coupons are valid committed data. Do not delete/reverse them as a software rollback.
 - There is no new migration to reverse. Any existing migration prerequisite is outside this feature rollback.
 
-- [ ] **Step 8: Commit docs/evidence after actual verification**
+- [x] **Step 8: Commit docs/evidence after actual verification**
 
 Working directory API:
 
@@ -2279,3 +2281,8 @@ git commit -m "docs: record checkout verification and release evidence"
 **Implementation stop condition:** T1-T7 satisfy the acceptance matrix and focused build/test gates; T8 records compatibility and staging evidence. No unrelated refactor, additional payment mode, generalized idempotency protocol, new gateway, or schema migration is added.
 
 **Planning stop condition (this request):** Save and review this complete document, report its location and material contract/rollout implications, and stop. The user explicitly asked not to implement. Execution-method selection and implementation approval belong to a later request; no worker is dispatched now.
+
+
+## Execution outcome — 2026-10-14
+
+Completed in this chat without subagents. Web acceptance: 64 passed; focused lint/type/build passed. API focused tests: 20 passed; payment unit suite: 12 passed with 3 explicit integration gates subsequently executed successfully. Real THB/USD browser registrations and joined DB invariants were verified. Container checkout-zero-test-20261014 and database checkout_zero_test were removed after passing the gates; pre-existing Docker containers were preserved. Runtime behavior and screenshots are recorded in ../verification/checkout-zero-total/README.md. No deployment, merge, remote push, real payment, or real email was performed. External consumer inventory and target rollout are release tasks, not claims of completed production verification.
