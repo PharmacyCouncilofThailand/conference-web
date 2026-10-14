@@ -104,6 +104,23 @@ it('restores tax review after removing a full discount at the final step', async
     expect(navigation.push).not.toHaveBeenCalled();
 });
 
+it('shows an invalid promo message only under the promo input', async () => {
+    sessionStorage.setItem('checkout-wizard-2', JSON.stringify({
+        currentStep: 2, checkoutData: { selectedPackage: '7', requestedPromoCode: 'TESTBOOTH', promoCode: 'TESTBOOTH' }
+    }));
+    vi.spyOn(paymentsApi, 'preview').mockResolvedValue({
+        success: true, subtotal: 500, discountAmount: 0, discountType: null, discountValue: null,
+        netAmount: 500, fee: 0, total: 500, currency: 'THB', feeMethod: null,
+        promoValid: false, promoError: 'Promo code does not apply to selected tickets',
+    });
+    render(<QueryClientProvider client={client}><CheckoutPage /></QueryClientProvider>);
+    await screen.findByText('Promo code does not apply to selected tickets');
+    expect(screen.getAllByText('Promo code does not apply to selected tickets')).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: 'ตรวจสอบราคาอีกครั้ง' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'ถัดไป' })).toBeDisabled();
+});
+
 it('blocks navigation during pricing and offers recovery on quote failure', async () => {
     sessionStorage.setItem('checkout-wizard-2', JSON.stringify({ currentStep: 2, checkoutData: { selectedPackage: '7' } }));
     let rejectPreview!: (error: Error) => void;

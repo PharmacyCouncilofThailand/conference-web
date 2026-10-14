@@ -637,7 +637,7 @@ export default function CheckoutPage() {
                         />
                     </div>
 
-                    {quoteState.status === 'error' && (
+                    {quoteState.status === 'error' && quoteState.error.code !== 'INVALID_PROMO' && (
                         <div role="alert" className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
                             <p>{quoteState.error.message}</p>
                             <button type="button" onClick={() => { void retryQuote(); }} className="mt-3 rounded-lg border border-amber-300 px-4 py-2">
