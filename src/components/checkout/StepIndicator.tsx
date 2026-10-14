@@ -30,24 +30,22 @@ export function StepIndicator({ steps, currentStep, onStepClick }: StepIndicator
                             className={`flex items-center gap-2 group ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
                         >
                             <div
-                                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                                    isCompleted
+                                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${isCompleted
                                         ? 'bg-[#8a8a00] text-white'
                                         : isCurrent
                                             ? 'bg-[#8a8a00] text-white ring-4 ring-[#8a8a00]/20'
                                             : 'bg-gray-200 text-gray-500'
-                                }`}
+                                    }`}
                             >
-                                {isCompleted ? <Check className="w-4 h-4" /> : step.id}
+                                {isCompleted ? <Check className="w-4 h-4" /> : index + 1}
                             </div>
                             <span
-                                className={`text-xs sm:text-sm font-medium hidden sm:inline ${
-                                    isCurrent
+                                className={`text-xs sm:text-sm font-medium hidden sm:inline ${isCurrent
                                         ? 'text-[#8a8a00]'
                                         : isCompleted
                                             ? 'text-gray-700 group-hover:text-[#8a8a00]'
                                             : 'text-gray-400'
-                                }`}
+                                    }`}
                             >
                                 {step.label}
                             </span>
@@ -56,9 +54,8 @@ export function StepIndicator({ steps, currentStep, onStepClick }: StepIndicator
                         {index < steps.length - 1 && (
                             <div className="flex-1 mx-2 sm:mx-4">
                                 <div
-                                    className={`h-0.5 rounded-full transition-colors ${
-                                        isCompleted ? 'bg-[#8a8a00]' : 'bg-gray-200'
-                                    }`}
+                                    className={`h-0.5 rounded-full transition-colors ${isCompleted ? 'bg-[#8a8a00]' : 'bg-gray-200'
+                                        }`}
                                 />
                             </div>
                         )}

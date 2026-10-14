@@ -11,6 +11,8 @@ interface PromoCodeSectionProps {
     onRemove: () => void;
     error?: string | null;
     discountText?: string | null;
+    isChecking?: boolean;
+    disabled?: boolean;
 }
 
 export function PromoCodeSection({
@@ -21,11 +23,14 @@ export function PromoCodeSection({
     onRemove,
     error,
     discountText,
+    isChecking = false,
+    disabled = false,
 }: PromoCodeSectionProps) {
     const [isApplying, setIsApplying] = useState(false);
+    const busy = isApplying || isChecking;
 
     const handleApply = async () => {
-        if (!promoCode.trim() || isApplying) return;
+        if (!promoCode.trim() || busy || disabled) return;
         setIsApplying(true);
         try {
             await onApply();
@@ -36,21 +41,26 @@ export function PromoCodeSection({
 
     if (promoApplied) {
         return (
-            <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                <div className="flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-700">{promoCode}</span>
-                    {discountText && (
-                        <span className="text-xs text-green-600">({discountText})</span>
-                    )}
+            <div className="space-y-2">
+                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-700">{promoCode}</span>
+                        {discountText && (
+                            <span className="text-xs text-green-600">({discountText})</span>
+                        )}
+                    </div>
+                    <button
+                        type="button"
+                        onClick={onRemove}
+                        aria-label="ลบโค้ดส่วนลด"
+                        disabled={disabled}
+                        className="p-1 hover:bg-green-100 rounded transition-colors"
+                    >
+                        <X className="w-4 h-4 text-green-600" />
+                    </button>
                 </div>
-                <button
-                    type="button"
-                    onClick={onRemove}
-                    className="p-1 hover:bg-green-100 rounded transition-colors"
-                >
-                    <X className="w-4 h-4 text-green-600" />
-                </button>
+                {error && <p className="text-xs text-red-500">{error}</p>}
             </div>
         );
     }
@@ -63,6 +73,7 @@ export function PromoCodeSection({
                     <input
                         type="text"
                         value={promoCode}
+                        disabled={disabled}
                         onChange={(e) => onPromoCodeChange(e.target.value.toUpperCase())}
                         placeholder="รหัสส่วนลด"
                         className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:border-[#8a8a00] focus:ring-1 focus:ring-[#8a8a00] outline-none"
@@ -72,10 +83,10 @@ export function PromoCodeSection({
                 <button
                     type="button"
                     onClick={handleApply}
-                    disabled={!promoCode.trim() || isApplying}
+                    disabled={!promoCode.trim() || busy || disabled}
                     className="px-4 py-2 bg-[#8a8a00] text-white text-sm font-medium rounded-lg hover:bg-[#456339] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
                 >
-                    {isApplying ? <Loader2 className="w-4 h-4 animate-spin" /> : 'ใช้โค้ด'}
+                    {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'ใช้โค้ด'}
                 </button>
             </div>
             {error && (

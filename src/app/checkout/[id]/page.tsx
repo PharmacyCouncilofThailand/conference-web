@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { getEventById } from '@/lib/services';
@@ -10,7 +10,9 @@ import type { ApiError } from '@/lib/api/client';
 import { applyPersonalizedPricing } from '@/lib/checkout/prisPricing';
 import { hasApprovedPostgraduateEligibility, studentEligibilityApi } from '@/lib/api/studentEligibility';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCheckoutWizard } from '@/hooks/checkout/useCheckoutWizard';
+import { useCheckoutWizard, FREE_CHECKOUT_DATA, type CheckoutFlow } from '@/hooks/checkout/useCheckoutWizard';
+import { useCheckoutQuote } from '@/hooks/checkout/useCheckoutQuote';
+import { isCheckoutRecoveryError, type CheckoutPaymentData } from '@/lib/checkout/paymentRequest';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { EventBanner } from '@/components/checkout/EventBanner';
@@ -48,15 +50,29 @@ export default function CheckoutPage() {
     const { user, isLoggedIn, isLoading: authLoading } = useAuth();
 
     const {
-        currentStep, checkoutData, steps, updateCheckoutData,
+        currentStep, checkoutData, getSteps, isRestored, updateCheckoutData,
         nextStep, prevStep, goToStep,
         isCurrentStepValid, canProceedToPayment,
     } = useCheckoutWizard(eventId);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [promoError, setPromoError] = useState<string | null>(null);
-    const [promoDiscountAmount, setPromoDiscountAmount] = useState(0);
-    const [promoDiscountText, setPromoDiscountText] = useState<string | null>(null);
+    const lastConfirmedFree = useRef<boolean | null>(null);
+    const promoIdentity = `${user?.id ?? ''}:${eventId}`;
+    const [requestedPromo, setRequestedPromo] = useState({ identity: '', code: '' });
+    useEffect(() => {
+        let cancelled = false;
+        queueMicrotask(() => {
+            if (cancelled) return;
+            if (!isRestored || requestedPromo.identity === promoIdentity) return;
+            lastConfirmedFree.current = null;
+            setRequestedPromo({
+                identity: promoIdentity,
+                code: (checkoutData.requestedPromoCode || (checkoutData.promoApplied ? checkoutData.promoCode : '')).trim().toUpperCase(),
+            });
+        });
+        return () => { cancelled = true; };
+    }, [isRestored, requestedPromo.identity, promoIdentity, checkoutData.requestedPromoCode, checkoutData.promoApplied, checkoutData.promoCode]);
 
     // Fetch event data (same queryFn/shape as events/[id] to avoid React Query cache collisions)
     const { data: event, isLoading: eventLoading, isError: eventError } = useQuery({
@@ -218,19 +234,21 @@ export default function CheckoutPage() {
         }
     }, [isThai, checkoutData.paymentMethod, updateCheckoutData]);
 
-    // Pre-fill user info
     useEffect(() => {
-        if (user && isLoggedIn) {
-            updateCheckoutData({
-                firstName: user.firstName || checkoutData.firstName,
-                lastName: user.lastName || checkoutData.lastName,
-                email: user.email || checkoutData.email,
-                phone: user.phone || checkoutData.phone,
-                country: user.country || checkoutData.country,
-            });
+        if (!isRestored || !user || !isLoggedIn) return;
+        const updates = {
+            firstName: user.firstName || checkoutData.firstName,
+            lastName: user.lastName || checkoutData.lastName,
+            email: user.email || checkoutData.email,
+            phone: user.phone || checkoutData.phone,
+            country: user.country || checkoutData.country,
+        };
+        if (updates.firstName !== checkoutData.firstName || updates.lastName !== checkoutData.lastName
+            || updates.email !== checkoutData.email || updates.phone !== checkoutData.phone || updates.country !== checkoutData.country) {
+            updateCheckoutData(updates);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, isLoggedIn]);
+    }, [isRestored, user, isLoggedIn, checkoutData.firstName, checkoutData.lastName,
+        checkoutData.email, checkoutData.phone, checkoutData.country, updateCheckoutData]);
 
     // Redirect to login if not authenticated
     useEffect(() => {
@@ -309,7 +327,7 @@ export default function CheckoutPage() {
         pkgs.sort((a, b) => (priorityOrder[a.priority ?? 'regular'] ?? 1) - (priorityOrder[b.priority ?? 'regular'] ?? 1));
 
         return { packageOptions: pkgs, addonOptions: addons };
-    }, [event?.ticketTypes, currency, effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel]);
+    }, [event, currency, effectiveTicketIdentity.role, effectiveTicketIdentity.studentLevel]);
 
     const personalizedPackages = useMemo(() => {
         if (!event?.ticketTypes) {
@@ -353,25 +371,51 @@ export default function CheckoutPage() {
     const packageOptions = personalizedPackages.packages;
     const selectionWasInvalidated = personalizedPackages.selectionWasInvalidated;
 
-    useEffect(() => {
-        if (!pricingEligibility?.applies || !selectionWasInvalidated) return;
+    const selectionResolved = checkoutData.isAddonOnly
+        ? checkoutData.selectedAddOns.length > 0
+        : packageOptions.some((pkg) => pkg.id === checkoutData.selectedPackage);
+    const addonsResolved = checkoutData.selectedAddOns.every((group) => addonOptions.some((addon) => addon.groupName === group && addon.currency === currency));
+    const quoteEnabled = isLoggedIn && Boolean(user?.id) && isRestored
+        && requestedPromo.identity === promoIdentity && selectionResolved && addonsResolved
+        && !pricingLoading && !pricingError && Boolean(pricingEligibility) && studentEligibilityReady;
+    const { state: quoteState, retry: retryQuote } = useCheckoutQuote(quoteEnabled ? {
+        accountId: String(user!.id),
+        request: {
+            eventId: Number(eventId), packageId: checkoutData.isAddonOnly ? '' : checkoutData.selectedPackage,
+            addOnIds: checkoutData.selectedAddOns, currency,
+            ...(requestedPromo.code ? { promoCode: requestedPromo.code } : {}),
+        },
+    } : null);
+    const quoteReady = quoteState.status === 'ready';
+    const isFree = quoteState.status === 'ready' && quoteState.quote.total === 0;
+    const flow = useMemo<CheckoutFlow>(() => ({ quoteReady, isFree }), [quoteReady, isFree]);
+    const steps = getSteps(flow);
 
-        updateCheckoutData({
-            selectedPackage: '',
-            selectedOptionalSessions: [],
-            promoCode: '',
-            promoApplied: false,
+    useEffect(() => {
+        let cancelled = false;
+        queueMicrotask(() => {
+            if (cancelled) return;
+            if (!pricingEligibility?.applies || !selectionWasInvalidated) return;
+
+            setRequestedPromo({ identity: promoIdentity, code: '' });
+            updateCheckoutData({
+                selectedPackage: '',
+                selectedOptionalSessions: [],
+                promoCode: '',
+                promoApplied: false,
+                requestedPromoCode: '',
+            });
+            setPromoError(null);
+            if (currentStep > 2) {
+                goToStep(2, { quoteReady: false, isFree: false });
+            }
         });
-        setPromoDiscountAmount(0);
-        setPromoDiscountText(null);
-        setPromoError(null);
-        if (currentStep > 2) {
-            goToStep(2);
-        }
+        return () => { cancelled = true; };
     }, [
         currentStep,
         goToStep,
         pricingEligibility?.applies,
+        promoIdentity,
         selectionWasInvalidated,
         updateCheckoutData,
     ]);
@@ -407,7 +451,6 @@ export default function CheckoutPage() {
         }
         return optionalSessionOptions.length > 0;
     }, [
-        OPTIONAL_SESSION_OPT_IN_ENABLED,
         checkoutData.isAddonOnly,
         checkoutData.selectedPackage,
         event?.ticketTypes,
@@ -432,94 +475,107 @@ export default function CheckoutPage() {
     const backUrl = `/events/${eventId}`;
     const backLabel = 'กลับไปหน้ารายละเอียดงาน';
 
-    // Promo code apply
     const handleApplyPromo = useCallback(async () => {
-        if (!checkoutData.promoCode.trim()) return;
+        const code = checkoutData.promoCode.trim().toUpperCase();
+        if (!code || isSubmitting) return;
         setPromoError(null);
+        updateCheckoutData({ promoApplied: false, requestedPromoCode: code });
+        if (requestedPromo.code === code) await retryQuote();
+        else setRequestedPromo({ identity: promoIdentity, code });
+    }, [checkoutData.promoCode, isSubmitting, requestedPromo.code, retryQuote, updateCheckoutData, promoIdentity]);
 
-        try {
-            const result = await paymentsApi.preview({
-                eventId: Number(eventId),
-                packageId: checkoutData.isAddonOnly ? '' : checkoutData.selectedPackage,
-                addOnIds: checkoutData.selectedAddOns,
-                currency,
-                paymentMethod: checkoutData.paymentMethod ?? 'card',
-                promoCode: checkoutData.promoCode,
-            });
+    const handleRemovePromo = useCallback(() => {
+        setRequestedPromo({ identity: promoIdentity, code: '' });
+        updateCheckoutData({ promoCode: '', promoApplied: false, requestedPromoCode: '' });
+        setPromoError(null);
+    }, [promoIdentity, updateCheckoutData]);
 
-            if (result.promoValid) {
-                updateCheckoutData({ promoApplied: true });
-                setPromoDiscountAmount(result.discountAmount);
-                const typeText = result.discountType === 'percentage'
-                    ? `${result.discountValue}%`
-                    : `${currency === 'USD' ? '$' : '฿'}${result.discountValue}`;
-                setPromoDiscountText(`ลด ${typeText}`);
-            } else {
-                setPromoError(result.promoError || 'โค้ดส่วนลดไม่ถูกต้อง');
+    useEffect(() => {
+        let cancelled = false;
+        queueMicrotask(() => {
+            if (cancelled) return;
+            if (quoteState.status !== 'ready') return;
+            const isFree = quoteState.quote.total === 0;
+            if (isFree) {
+                const hasTaxOrMethod = checkoutData.needTaxInvoice || checkoutData.paymentMethod !== null
+                    || Boolean(checkoutData.taxName || checkoutData.taxId || checkoutData.taxAddress || checkoutData.taxSubDistrict
+                        || checkoutData.taxDistrict || checkoutData.taxProvince || checkoutData.taxPostalCode);
+                if (hasTaxOrMethod) updateCheckoutData(FREE_CHECKOUT_DATA);
+                if (currentStep === 3) goToStep(4, { quoteReady: true, isFree: true });
+            } else if (lastConfirmedFree.current === true) {
+                updateCheckoutData(FREE_CHECKOUT_DATA);
+                if (currentStep === 4) goToStep(3, { quoteReady: true, isFree: false });
+            } else if (lastConfirmedFree.current === null && currentStep === 4 && checkoutData.paymentMethod === null) {
+                // A restored final step without a method must review the paid tax choice.
+                goToStep(3, { quoteReady: true, isFree: false });
             }
-        } catch (err) {
-            const apiError = err as ApiError;
-            if (apiError.code === 'TICKET_NOT_ELIGIBLE') {
-                await Promise.all([
+            lastConfirmedFree.current = isFree;
+            if (requestedPromo.code && !checkoutData.promoApplied) updateCheckoutData({ promoApplied: true });
+            setPromoError(null);
+        });
+        return () => { cancelled = true; };
+    }, [quoteState, checkoutData, currentStep, requestedPromo.code, updateCheckoutData, goToStep]);
+
+    const lastHandledQuoteError = useRef<ApiError | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        queueMicrotask(() => {
+            if (cancelled) return;
+            if (quoteState.status !== 'error') { lastHandledQuoteError.current = null; return; }
+            if (lastHandledQuoteError.current === quoteState.error) return;
+            lastHandledQuoteError.current = quoteState.error;
+            if (checkoutData.promoApplied) updateCheckoutData({ promoApplied: false });
+            setPromoError(quoteState.error.message);
+            if (quoteState.error.code === 'TICKET_NOT_ELIGIBLE') {
+                void Promise.all([
                     refetchPricing(),
                     ...(requiresStudentEligibilityContext ? [refetchStudentEligibility()] : []),
                 ]);
-                updateCheckoutData({
-                    selectedPackage: '',
-                    promoCode: '',
-                    promoApplied: false,
-                    selectedOptionalSessions: [],
-                });
-                setPromoDiscountAmount(0);
-                setPromoDiscountText(null);
-                goToStep(2);
+                updateCheckoutData({ selectedPackage: '', selectedOptionalSessions: [], promoCode: '', promoApplied: false, requestedPromoCode: '' });
+                setRequestedPromo({ identity: promoIdentity, code: '' });
+                goToStep(2, { quoteReady: false, isFree: false });
                 setPromoError('อัตราค่าลงทะเบียนมีการเปลี่ยนแปลง กรุณาตรวจสอบแพ็กเกจอีกครั้ง');
-                return;
             }
-            setPromoError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด');
-        }
-    }, [
-        checkoutData,
-        currency,
-        eventId,
-        goToStep,
-        refetchPricing,
-        refetchStudentEligibility,
-        requiresStudentEligibilityContext,
-        updateCheckoutData,
-    ]);
+        });
+        return () => { cancelled = true; };
+    }, [quoteState, checkoutData.promoApplied, updateCheckoutData, refetchPricing,
+        requiresStudentEligibilityContext, refetchStudentEligibility, promoIdentity, goToStep]);
 
-    const handleRemovePromo = useCallback(() => {
-        updateCheckoutData({ promoCode: '', promoApplied: false });
-        setPromoDiscountAmount(0);
-        setPromoDiscountText(null);
+    const promoDiscountText = quoteState.status === 'ready' && quoteState.quote.promoValid
+        ? quoteState.quote.discountType === 'percentage'
+            ? `ลด ${quoteState.quote.discountValue}%`
+            : `ลด ${currency === 'USD' ? '$' : '฿'}${quoteState.quote.discountValue}`
+        : null;
+    const handlePromoCodeChange = (code: string) => {
+        setRequestedPromo({ identity: promoIdentity, code: '' });
+        updateCheckoutData({ promoCode: code, promoApplied: false, requestedPromoCode: '' });
         setPromoError(null);
-    }, [updateCheckoutData]);
+    };
 
-    // Submit: save checkout data to sessionStorage and navigate to payment page
+    const websiteUrl = event?.websiteUrl || null;
+    const submitStarted = useRef(false);
     const handleSubmit = useCallback(async () => {
-        if (!canProceedToPayment() || isSubmitting) return;
+        if (currentStep !== 4 || quoteState.status !== 'ready'
+            || !canProceedToPayment(flow) || isSubmitting || submitStarted.current) return;
+        submitStarted.current = true;
         setIsSubmitting(true);
-
         try {
-            // Save all checkout data + eventId to sessionStorage for payment page
-            sessionStorage.setItem('checkout-payment-data', JSON.stringify({
-                ...checkoutData,
-                eventId,
-                currency,
-                originApp,
-                returnTo,
-                websiteUrl: event?.websiteUrl || null,
-            }));
-
+            const data: CheckoutPaymentData = {
+                ...checkoutData, ...(flow.isFree ? FREE_CHECKOUT_DATA : {}),
+                promoCode: requestedPromo.code || checkoutData.promoCode,
+                promoApplied: Boolean(requestedPromo.code) && quoteState.quote.promoValid,
+                eventId, quotedTotal: quoteState.quote.total, currency,
+                originApp, returnTo, websiteUrl,
+            };
+            sessionStorage.setItem('checkout-payment-data', JSON.stringify(data));
             router.push('/checkout/payment');
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'กรุณาลองใหม่อีกครั้ง';
-            alert(`เกิดข้อผิดพลาด: ${errorMessage}`);
-        } finally {
+            submitStarted.current = false;
             setIsSubmitting(false);
+            alert(`เกิดข้อผิดพลาด: ${error instanceof Error ? error.message : 'กรุณาลองใหม่อีกครั้ง'}`);
         }
-    }, [canProceedToPayment, isSubmitting, checkoutData, eventId, currency, originApp, returnTo, event?.websiteUrl, router]);
+    }, [currentStep, quoteState, canProceedToPayment, flow, isSubmitting, checkoutData, requestedPromo.code,
+        eventId, currency, originApp, returnTo, websiteUrl, router]);
 
     // Loading states
     if (authLoading || eventLoading || (isLoggedIn && pricingLoading)) {
@@ -577,10 +633,23 @@ export default function CheckoutPage() {
                         <StepIndicator
                             steps={steps}
                             currentStep={currentStep}
-                            onStepClick={goToStep}
+                            onStepClick={(step) => goToStep(step, flow)}
                         />
                     </div>
 
+                    {quoteState.status === 'error' && (
+                        <div role="alert" className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                            <p>{quoteState.error.message}</p>
+                            <button type="button" onClick={() => { void retryQuote(); }} className="mt-3 rounded-lg border border-amber-300 px-4 py-2">
+                                ตรวจสอบราคาอีกครั้ง
+                            </button>
+                        </div>
+                    )}
+                    {isCheckoutRecoveryError(searchParams.get('checkoutError') || undefined) && (
+                        <div role="alert" className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                            รายการมีการเปลี่ยนแปลง กรุณาตรวจสอบราคาและส่วนลดอีกครั้งก่อนดำเนินการ
+                        </div>
+                    )}
                     <div className="ui-checkout-grid">
                         {/* Left: Wizard Steps */}
                         <div className="space-y-6">
@@ -661,8 +730,8 @@ export default function CheckoutPage() {
                                     <div className="ui-responsive-actions justify-end pt-2">
                                         <button
                                             type="button"
-                                            onClick={nextStep}
-                                            disabled={!isCurrentStepValid()}
+                                            onClick={() => nextStep(flow)}
+                                            disabled={!isCurrentStepValid(flow)}
                                             className="px-6 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             ถัดไป
@@ -744,15 +813,15 @@ export default function CheckoutPage() {
                                     <div className="ui-responsive-actions justify-between pt-2">
                                         <button
                                             type="button"
-                                            onClick={prevStep}
+                                            onClick={() => prevStep(flow)}
                                             className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
                                         >
                                             ย้อนกลับ
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={nextStep}
-                                            disabled={!isCurrentStepValid()}
+                                            onClick={() => nextStep(flow)}
+                                            disabled={!isCurrentStepValid(flow)}
                                             className="px-6 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             ถัดไป
@@ -762,7 +831,7 @@ export default function CheckoutPage() {
                             )}
 
                             {/* Step 3: Tax Invoice */}
-                            {currentStep === 3 && (
+                            {currentStep === 3 && !flow.isFree && (
                                 <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-5">
                                     <h3 className="text-lg font-bold text-gray-900">ใบกำกับภาษี</h3>
 
@@ -782,15 +851,15 @@ export default function CheckoutPage() {
                                     <div className="ui-responsive-actions justify-between pt-2">
                                         <button
                                             type="button"
-                                            onClick={prevStep}
+                                            onClick={() => prevStep(flow)}
                                             className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
                                         >
                                             ย้อนกลับ
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={nextStep}
-                                            disabled={!isCurrentStepValid()}
+                                            onClick={() => nextStep(flow)}
+                                            disabled={!isCurrentStepValid(flow)}
                                             className="px-6 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
                                             ถัดไป
@@ -802,18 +871,22 @@ export default function CheckoutPage() {
                             {/* Step 4: Payment Method */}
                             {currentStep === 4 && (
                                 <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-5">
-                                    <h3 className="text-lg font-bold text-gray-900">วิธีชำระเงิน</h3>
-
-                                    <PaymentMethodCard
-                                        paymentMethod={checkoutData.paymentMethod}
-                                        onSelect={(method) => updateCheckoutData({ paymentMethod: method })}
-                                        isThai={isThai}
-                                    />
+                                    <h3 className="text-lg font-bold text-gray-900">
+                                        {flow.isFree ? 'ยืนยันการลงทะเบียน' : 'วิธีชำระเงิน'}
+                                    </h3>
+                                    {flow.isFree ? (
+                                        <p className="text-sm text-gray-600">
+                                            {currency === 'THB' ? 'ยอดสุทธิ 0 บาท ไม่ต้องชำระเงิน' : 'ยอดสุทธิ $0.00 ไม่ต้องชำระเงิน'}
+                                        </p>
+                                    ) : (
+                                        <PaymentMethodCard paymentMethod={checkoutData.paymentMethod}
+                                            onSelect={(method) => updateCheckoutData({ paymentMethod: method })} isThai={isThai} />
+                                    )}
 
                                     <div className="ui-responsive-actions justify-between pt-2">
                                         <button
                                             type="button"
-                                            onClick={prevStep}
+                                            onClick={() => prevStep(flow)}
                                             className="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
                                         >
                                             ย้อนกลับ
@@ -832,19 +905,19 @@ export default function CheckoutPage() {
                                 packages={packageOptions}
                                 addons={addonOptions}
                                 currency={currency}
-                                paymentMethod={checkoutData.paymentMethod}
                                 isAddonOnly={checkoutData.isAddonOnly}
                                 promoCode={checkoutData.promoCode}
-                                promoApplied={checkoutData.promoApplied}
-                                onPromoCodeChange={(code) => updateCheckoutData({ promoCode: code })}
+                                promoApplied={Boolean(requestedPromo.code) && quoteState.status === 'ready' && quoteState.quote.promoValid}
+                                onPromoCodeChange={handlePromoCodeChange}
                                 onApplyPromo={handleApplyPromo}
                                 onRemovePromo={handleRemovePromo}
-                                promoError={promoError}
-                                promoDiscountAmount={promoDiscountAmount}
+                                promoError={quoteState.status === 'error' ? quoteState.error.message : promoError}
                                 promoDiscountText={promoDiscountText}
                                 onSubmit={handleSubmit}
                                 isSubmitting={isSubmitting}
-                                canSubmit={currentStep === 4 && canProceedToPayment()}
+                                quoteState={quoteState}
+                                showSubmit={currentStep === 4}
+                                canSubmit={currentStep === 4 && canProceedToPayment(flow)}
                             />
                         </div>
                     </div>

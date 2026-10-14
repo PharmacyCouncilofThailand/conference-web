@@ -1,10 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
 import type { PackageOption } from './PackageSelector';
 import type { AddonOption } from './AddonSelector';
 import { PromoCodeSection } from './PromoCodeSection';
+import type { CheckoutQuoteState } from '@/hooks/checkout/useCheckoutQuote';
 
 interface OrderSummaryProps {
     eventName: string;
@@ -13,7 +13,8 @@ interface OrderSummaryProps {
     packages: PackageOption[];
     addons: AddonOption[];
     currency: 'THB' | 'USD';
-    paymentMethod: 'qr' | 'card' | null;
+    quoteState: CheckoutQuoteState;
+    showSubmit: boolean;
     isAddonOnly?: boolean;
     // Promo
     promoCode: string;
@@ -22,7 +23,6 @@ interface OrderSummaryProps {
     onApplyPromo: () => Promise<void>;
     onRemovePromo: () => void;
     promoError?: string | null;
-    promoDiscountAmount?: number;
     promoDiscountText?: string | null;
     // Actions
     onSubmit: () => void;
@@ -37,7 +37,8 @@ export function OrderSummary({
     packages,
     addons,
     currency,
-    paymentMethod,
+    quoteState,
+    showSubmit,
     isAddonOnly,
     promoCode,
     promoApplied,
@@ -45,7 +46,6 @@ export function OrderSummary({
     onApplyPromo,
     onRemovePromo,
     promoError,
-    promoDiscountAmount = 0,
     promoDiscountText,
     onSubmit,
     isSubmitting,
@@ -57,15 +57,14 @@ export function OrderSummary({
         `${currencySymbol}${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     const selectedPkg = packages.find((p) => p.id === selectedPackage);
-    const selectedAddonItems = addons.filter((a) => selectedAddOns.includes(a.groupName));
+    const selectedAddonItems = addons.filter((a) => selectedAddOns.includes(a.groupName) && a.currency === currency);
 
-    const subtotal = useMemo(() => {
-        const pkgPrice = isAddonOnly ? 0 : (selectedPkg?.price || 0);
-        const addonsPrice = selectedAddonItems.reduce((sum, a) => sum + a.price, 0);
-        return pkgPrice + addonsPrice;
-    }, [isAddonOnly, selectedPkg, selectedAddonItems]);
-
-    const netAmount = Math.max(0, subtotal - promoDiscountAmount);
+    const quote = quoteState.status === 'ready' ? quoteState.quote : null;
+    const isFree = quote?.total === 0;
+    const isChecking = quoteState.status === 'loading';
+    const actionLabel = isSubmitting ? 'กำลังดำเนินการ...'
+        : !quote ? (isChecking ? 'กำลังตรวจสอบราคา...' : 'กรุณาตรวจสอบราคา')
+            : isFree ? 'ยืนยันการลงทะเบียน' : `ชำระเงิน ${formatPrice(quote.total)}`;
 
     const hasItems = isAddonOnly ? selectedAddOns.length > 0 : !!selectedPackage;
 
@@ -113,51 +112,49 @@ export function OrderSummary({
                         onPromoCodeChange={onPromoCodeChange}
                         onApply={onApplyPromo}
                         onRemove={onRemovePromo}
+                        isChecking={isChecking}
+                        disabled={isSubmitting}
                         error={promoError}
                         discountText={promoDiscountText}
                     />
                 )}
 
-                {/* Price breakdown */}
                 {hasItems && (
-                    <div className="space-y-2 pt-2 border-t border-gray-100">
-                        <div className="flex justify-between text-sm text-gray-500">
-                            <span>ราคาตั๋วและบริการ</span>
-                            <span>{formatPrice(subtotal)}</span>
-                        </div>
-
-                        {promoDiscountAmount > 0 && (
-                            <div className="flex justify-between text-sm text-green-600">
-                                <span>ส่วนลด</span>
-                                <span>-{formatPrice(promoDiscountAmount)}</span>
-                            </div>
+                    <div className="space-y-2 pt-2 border-t border-gray-100" aria-live="polite">
+                        {quote ? (
+                            <>
+                                <div className="flex justify-between text-sm text-gray-500">
+                                    <span>ราคาตั๋วและบริการ</span><span>{formatPrice(quote.subtotal)}</span>
+                                </div>
+                                {quote.discountAmount > 0 && (
+                                    <div className="flex justify-between text-sm text-green-600">
+                                        <span>ส่วนลด</span><span>-{formatPrice(quote.discountAmount)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between items-center text-lg font-bold text-[#8a8a00] pt-3 border-t border-[#8a8a00]/20">
+                                    <span>ยอดชำระสุทธิ</span><span>{formatPrice(quote.total)}</span>
+                                </div>
+                            </>
+                        ) : (
+                            <p className="text-sm text-gray-500">
+                                {isChecking ? 'กำลังตรวจสอบราคา...' : 'กรุณาตรวจสอบรายการและราคาอีกครั้ง'}
+                            </p>
                         )}
-
-                        <div className="flex justify-between items-center text-lg font-bold text-[#8a8a00] pt-3 border-t border-[#8a8a00]/20">
-                            <span>ยอดชำระสุทธิ</span>
-                            <span>{formatPrice(netAmount)}</span>
-                        </div>
                     </div>
                 )}
+
             </div>
 
-            <div className="p-5 pt-0">
-                <button
-                    type="button"
-                    onClick={onSubmit}
-                    disabled={!canSubmit || isSubmitting}
-                    className="w-full h-12 bg-[#8a8a00] hover:bg-[#456339] text-white font-semibold rounded-xl shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2"
-                >
-                    {isSubmitting ? (
-                        <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            กำลังดำเนินการ...
-                        </>
-                    ) : (
-                        `ชำระเงิน ${hasItems ? formatPrice(netAmount) : ''}`
-                    )}
-                </button>
-            </div>
+            {showSubmit && (
+                <div className="p-5 pt-0">
+                    <button type="button" onClick={onSubmit}
+                        disabled={!canSubmit || isSubmitting || !quote || !hasItems}
+                        className="w-full h-12 bg-[#8a8a00] hover:bg-[#456339] text-white font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                        {(isSubmitting || isChecking) && <Loader2 className="w-5 h-5 animate-spin" />}
+                        {actionLabel}
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

@@ -45,6 +45,7 @@ export interface CheckoutData {
     // Promo Code
     promoCode: string;
     promoApplied: boolean;
+    requestedPromoCode?: string;
 }
 
 const INITIAL_CHECKOUT_DATA: CheckoutData = {
@@ -74,6 +75,7 @@ const INITIAL_CHECKOUT_DATA: CheckoutData = {
     currency: 'THB',
     promoCode: '',
     promoApplied: false,
+    requestedPromoCode: '',
 };
 
 const STEPS = [
@@ -83,131 +85,110 @@ const STEPS = [
     { id: 4, label: 'วิธีชำระเงิน' },
 ] as const;
 
+export interface CheckoutFlow {
+    quoteReady: boolean;
+    isFree: boolean;
+}
+
+export const FREE_CHECKOUT_DATA = {
+    needTaxInvoice: false,
+    taxName: '', taxId: '', taxAddress: '', taxSubDistrict: '', taxDistrict: '', taxProvince: '', taxPostalCode: '',
+    paymentMethod: null,
+} satisfies Partial<CheckoutData>;
+
 export function useCheckoutWizard(eventId: string) {
     const storageKey = `checkout-wizard-${eventId}`;
     const [currentStep, setCurrentStep] = useState(1);
     const [checkoutData, setCheckoutData] = useState<CheckoutData>(INITIAL_CHECKOUT_DATA);
+    const [restoredStorageKey, setRestoredStorageKey] = useState<string | null>(null);
+    const isRestored = restoredStorageKey === storageKey;
 
-    // Restore from sessionStorage on mount
     useEffect(() => {
-        try {
-            const saved = sessionStorage.getItem(storageKey);
-            if (saved) {
-                const parsed = JSON.parse(saved);
-                if (parsed.checkoutData) {
-                    setCheckoutData({
-                        ...INITIAL_CHECKOUT_DATA,
-                        ...parsed.checkoutData,
-                        ownedSessionIds: [],
-                    });
+        let cancelled = false;
+        queueMicrotask(() => {
+            if (cancelled) return;
+            let data = INITIAL_CHECKOUT_DATA;
+            let step = 1;
+            try {
+                const saved = sessionStorage.getItem(storageKey);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.checkoutData) data = { ...INITIAL_CHECKOUT_DATA, ...parsed.checkoutData, ownedSessionIds: [] };
+                    if (Number.isInteger(parsed.currentStep) && parsed.currentStep >= 1 && parsed.currentStep <= 4) step = parsed.currentStep;
                 }
-                if (parsed.currentStep) {
-                    setCurrentStep(parsed.currentStep);
-                }
+            } catch {
+                data = INITIAL_CHECKOUT_DATA;
             }
-        } catch {
-            // ignore parse errors
-        }
+            setCheckoutData(data);
+            setCurrentStep(step);
+            setRestoredStorageKey(storageKey);
+        });
+        return () => { cancelled = true; };
     }, [storageKey]);
 
-    // Persist to sessionStorage on change
     useEffect(() => {
+        if (!isRestored) return;
         try {
-            const persistedCheckoutData = Object.fromEntries(
-                Object.entries(checkoutData).filter(([key]) => key !== 'ownedSessionIds'),
-            );
-            sessionStorage.setItem(storageKey, JSON.stringify({
-                checkoutData: persistedCheckoutData,
-                currentStep,
-            }));
+            const persisted = Object.fromEntries(Object.entries(checkoutData).filter(([key]) => key !== 'ownedSessionIds'));
+            sessionStorage.setItem(storageKey, JSON.stringify({ checkoutData: persisted, currentStep }));
         } catch {
-            // ignore storage errors
+            // The payment submission path reports storage errors before navigation.
         }
-    }, [checkoutData, currentStep, storageKey]);
+    }, [checkoutData, currentStep, isRestored, storageKey]);
 
     const updateCheckoutData = useCallback((updates: Partial<CheckoutData>) => {
-        setCheckoutData(prev => ({ ...prev, ...updates }));
+        setCheckoutData((prev) => ({ ...prev, ...updates }));
     }, []);
-
-    const nextStep = useCallback(() => {
-        setCurrentStep((prev) => {
-            const next = Math.min(prev + 1, STEPS.length);
-            // เข้าขั้นตอนที่ 4 จากขั้นที่ 3 — บังคับเลือกวิธีชำระใหม่ทุกครั้ง
-            if (next === 4 && prev === 3) {
-                setCheckoutData((d) => ({ ...d, paymentMethod: null }));
-            }
-            return next;
-        });
-    }, []);
-
-    const prevStep = useCallback(() => {
-        setCurrentStep(prev => Math.max(prev - 1, 1));
-    }, []);
-
-    const goToStep = useCallback((step: number) => {
-        if (step >= 1 && step <= STEPS.length) {
-            setCurrentStep(step);
+    const isStep1Valid = useCallback(() => {
+        const { firstName, lastName, email, phone } = checkoutData;
+        return Boolean(firstName.trim() && lastName.trim() && email.trim() && phone.trim());
+    }, [checkoutData]);
+    const isStep2Valid = useCallback(() => checkoutData.isAddonOnly
+        ? checkoutData.selectedAddOns.length > 0 : Boolean(checkoutData.selectedPackage), [checkoutData]);
+    const isStep3Valid = useCallback((flow: CheckoutFlow) => {
+        if (flow.isFree || !checkoutData.needTaxInvoice) return true;
+        const { taxName, taxId, taxAddress, taxSubDistrict, taxDistrict, taxProvince, taxPostalCode } = checkoutData;
+        return Boolean(taxName.trim() && /^\d{13}$/.test(taxId) && taxAddress.trim()
+            && taxSubDistrict.trim() && taxDistrict.trim() && taxProvince.trim() && /^\d{5}$/.test(taxPostalCode));
+    }, [checkoutData]);
+    const isStep4Valid = useCallback((flow: CheckoutFlow) => flow.quoteReady
+        && (flow.isFree || checkoutData.paymentMethod === 'qr' || checkoutData.paymentMethod === 'card'), [checkoutData.paymentMethod]);
+    const isCurrentStepValid = useCallback((flow: CheckoutFlow) => {
+        if (!isRestored) return false;
+        switch (currentStep) {
+            case 1: return isStep1Valid();
+            case 2: return flow.quoteReady && isStep2Valid();
+            case 3: return flow.quoteReady && isStep3Valid(flow);
+            case 4: return isStep4Valid(flow);
+            default: return false;
         }
-    }, []);
+    }, [currentStep, isRestored, isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid]);
+    const canProceedToPayment = useCallback((flow: CheckoutFlow) => isRestored && flow.quoteReady
+        && isStep1Valid() && isStep2Valid() && isStep3Valid(flow) && isStep4Valid(flow),
+        [isRestored, isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid]);
+    const getSteps = useCallback((flow: CheckoutFlow) => STEPS.filter((step) => !flow.isFree || step.id !== 3)
+        .map((step) => ({ id: step.id, label: step.id === 4 && flow.isFree ? 'ยืนยันการลงทะเบียน' : step.label })), []);
 
+    const nextStep = useCallback((flow: CheckoutFlow) => {
+        if (!isCurrentStepValid(flow)) return;
+        const next = currentStep === 2 && flow.isFree ? 4 : Math.min(currentStep + 1, 4);
+        if (next === 4 && currentStep !== 4) setCheckoutData((prev) => ({ ...prev, paymentMethod: null }));
+        setCurrentStep(next);
+    }, [currentStep, isCurrentStepValid]);
+    const prevStep = useCallback((flow: CheckoutFlow) => {
+        setCurrentStep((prev) => prev === 4 && (flow.isFree || !flow.quoteReady) ? 2 : Math.max(prev - 1, 1));
+    }, []);
+    const goToStep = useCallback((step: number, flow: CheckoutFlow) => {
+        if (step >= 1 && step <= 4 && (!flow.isFree || step !== 3)) setCurrentStep(step);
+    }, []);
     const resetWizard = useCallback(() => {
         setCheckoutData(INITIAL_CHECKOUT_DATA);
         setCurrentStep(1);
         sessionStorage.removeItem(storageKey);
     }, [storageKey]);
 
-    // Validation per step
-    const isStep1Valid = useCallback(() => {
-        const { firstName, lastName, email, phone } = checkoutData;
-        return !!firstName.trim() && !!lastName.trim() && !!email.trim() && !!phone.trim();
-    }, [checkoutData]);
-
-    const isStep2Valid = useCallback(() => {
-        if (checkoutData.isAddonOnly) {
-            return checkoutData.selectedAddOns.length > 0;
-        }
-        return !!checkoutData.selectedPackage;
-    }, [checkoutData]);
-
-    const isStep3Valid = useCallback(() => {
-        if (!checkoutData.needTaxInvoice) return true;
-        const { taxName, taxId, taxAddress, taxSubDistrict, taxDistrict, taxProvince, taxPostalCode } = checkoutData;
-        return !!taxName.trim() && !!taxId.trim() && !!taxAddress.trim() &&
-            !!taxSubDistrict.trim() && !!taxDistrict.trim() && !!taxProvince.trim() && !!taxPostalCode.trim();
-    }, [checkoutData]);
-
-    const isStep4Valid = useCallback(() => {
-        return checkoutData.paymentMethod === 'qr' || checkoutData.paymentMethod === 'card';
-    }, [checkoutData.paymentMethod]);
-
-    const isCurrentStepValid = useCallback(() => {
-        switch (currentStep) {
-            case 1: return isStep1Valid();
-            case 2: return isStep2Valid();
-            case 3: return isStep3Valid();
-            case 4: return isStep4Valid();
-            default: return false;
-        }
-    }, [currentStep, isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid]);
-
-    const canProceedToPayment = useCallback(() => {
-        return isStep1Valid() && isStep2Valid() && isStep3Valid() && isStep4Valid();
-    }, [isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid]);
-
     return {
-        currentStep,
-        checkoutData,
-        steps: STEPS,
-        updateCheckoutData,
-        nextStep,
-        prevStep,
-        goToStep,
-        resetWizard,
-        isCurrentStepValid,
-        canProceedToPayment,
-        isStep1Valid,
-        isStep2Valid,
-        isStep3Valid,
-        isStep4Valid,
+        currentStep, checkoutData, isRestored, getSteps, updateCheckoutData, nextStep, prevStep, goToStep, resetWizard,
+        isCurrentStepValid, canProceedToPayment, isStep1Valid, isStep2Valid, isStep3Valid, isStep4Valid,
     };
 }
