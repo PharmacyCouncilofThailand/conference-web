@@ -4,41 +4,12 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { paymentsApi } from '@/lib/api/payments';
 import type { ApiError } from '@/lib/api/client';
+import { buildCreateIntentRequest, isCheckoutRecoveryError, type CheckoutPaymentData } from '@/lib/checkout/paymentRequest';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
 import { clearPaymentProviderSessionForFreeResult } from '@/lib/paymentSession';
-
-interface CheckoutPaymentData {
-    eventId: string;
-    originApp?: string;
-    returnTo?: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    country: string;
-    selectedPackage: string;
-    selectedAddOns: string[];
-    isAddonOnly?: boolean;
-    dietaryRequirement: string;
-    dietaryOtherText: string;
-    selectedWorkshopTopic?: string;
-    selectedOptionalSessions?: string[];
-    promoCode: string;
-    promoApplied: boolean;
-    currency: 'THB' | 'USD';
-    paymentMethod: 'qr' | 'card';
-    needTaxInvoice: boolean;
-    taxName: string;
-    taxId: string;
-    taxAddress: string;
-    taxSubDistrict: string;
-    taxDistrict: string;
-    taxProvince: string;
-    taxPostalCode: string;
-}
 
 export default function PaymentPage() {
     const router = useRouter();
@@ -48,6 +19,7 @@ export default function PaymentPage() {
     const [, setGateway] = useState<'paysolutions' | 'ktb' | null>(null);
     const [errorMessage, setErrorMessage] = useState('');
     const [errorCode, setErrorCode] = useState<string | null>(null);
+    const [isFreeProcessing, setIsFreeProcessing] = useState(false);
     const [formData, setFormData] = useState<{ actionUrl: string; fields: Record<string, string> } | null>(null);
     const hasSubmitted = useRef(false);
     const hasStartedIntent = useRef(false);
@@ -66,50 +38,19 @@ export default function PaymentPage() {
                 setErrorCode(null);
                 const saved = sessionStorage.getItem('checkout-payment-data');
                 if (!saved) {
+                    setErrorCode('CHECKOUT_DATA_STALE');
                     setErrorMessage('ไม่พบข้อมูล checkout กรุณาเริ่มต้นใหม่');
                     setStatus('error');
                     return;
                 }
 
                 const data: CheckoutPaymentData = JSON.parse(saved);
-                const parsedEventId = Number(data.eventId);
-                const workshopSessionId = data.selectedWorkshopTopic
-                    ? Number(data.selectedWorkshopTopic)
-                    : undefined;
-
-                const optionalSessionIds = (data.selectedOptionalSessions || [])
-                    .map((id) => Number(id))
-                    .filter((id) => Number.isInteger(id) && id > 0);
-
-                // Build create-intent request body
-                const requestBody = {
-                    eventId: parsedEventId,
-                    packageId: data.isAddonOnly ? '' : data.selectedPackage,
-                    addOnIds: data.selectedAddOns,
-                    currency: data.currency || 'THB',
-                    paymentMethod: data.paymentMethod,
-                    promoCode: data.promoApplied ? data.promoCode : undefined,
-                    workshopSessionId: Number.isFinite(workshopSessionId) ? workshopSessionId : undefined,
-                    optionalSessionIds: optionalSessionIds.length > 0 ? optionalSessionIds : undefined,
-                    dietaryRequirement: data.dietaryRequirement === 'other'
-                        ? data.dietaryOtherText
-                        : data.dietaryRequirement || undefined,
-                    needTaxInvoice: data.needTaxInvoice,
-                    taxName: data.needTaxInvoice ? data.taxName : undefined,
-                    taxId: data.needTaxInvoice ? data.taxId : undefined,
-                    taxAddress: data.needTaxInvoice ? data.taxAddress : undefined,
-                    taxSubDistrict: data.needTaxInvoice ? data.taxSubDistrict : undefined,
-                    taxDistrict: data.needTaxInvoice ? data.taxDistrict : undefined,
-                    taxProvince: data.needTaxInvoice ? data.taxProvince : undefined,
-                    taxPostalCode: data.needTaxInvoice ? data.taxPostalCode : undefined,
-                };
-
-                if (!Number.isInteger(parsedEventId) || parsedEventId <= 0) {
-                    throw new Error('Invalid event context for checkout');
+                if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                    throw Object.assign(new Error('Checkout data must be refreshed'), { code: 'CHECKOUT_DATA_STALE' });
                 }
-
+                setIsFreeProcessing(data.quotedTotal === 0);
+                const requestBody = buildCreateIntentRequest(data);
                 setStatus('submitting');
-
                 const result = await paymentsApi.createIntent(requestBody);
 
                 if (result.success && result.free) {
@@ -123,6 +64,7 @@ export default function PaymentPage() {
                         free: '1',
                         orderNumber: result.orderNumber || '',
                         regCode: result.regCode || '',
+                        currency: result.currency || data.currency,
                     });
 
                     if (data.originApp) {
@@ -162,7 +104,10 @@ export default function PaymentPage() {
                 }
             } catch (error) {
                 const apiError = error as ApiError;
-                if (apiError.code === 'TICKET_NOT_ELIGIBLE') {
+                if (error instanceof SyntaxError) {
+                    setErrorCode('CHECKOUT_DATA_STALE');
+                    setErrorMessage('ข้อมูล checkout ไม่สมบูรณ์ กรุณาเริ่มต้นลงทะเบียนใหม่');
+                } else if (apiError.code === 'TICKET_NOT_ELIGIBLE') {
                     const saved = sessionStorage.getItem('checkout-payment-data');
                     const data = saved ? (JSON.parse(saved) as CheckoutPaymentData) : null;
 
@@ -184,6 +129,9 @@ export default function PaymentPage() {
                 } else if (apiError.code === 'STUDENT_ELIGIBILITY_REQUIRED') {
                     setErrorCode(apiError.code);
                     setErrorMessage('Postgraduate student-rate payment requires approved eligibility for this event. Please submit or review your document from Profile before trying again.');
+                } else if (isCheckoutRecoveryError(apiError.code)) {
+                    setErrorCode(apiError.code || null);
+                    setErrorMessage('ราคา ส่วนลด หรือสิทธิ์ของรายการมีการเปลี่ยนแปลง กรุณากลับไปตรวจสอบรายการและราคาอีกครั้ง');
                 } else {
                     const msg = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดในการสร้างรายการชำระเงิน';
                     setErrorCode(apiError.code || null);
@@ -207,6 +155,33 @@ export default function PaymentPage() {
         }
     }, [formData]);
 
+    const returnToCheckout = () => {
+        try {
+            const saved = sessionStorage.getItem('checkout-payment-data');
+            const data = saved ? JSON.parse(saved) as CheckoutPaymentData : null;
+            if (!data?.eventId) { router.push('/events'); return; }
+            const key = `checkout-wizard-${data.eventId}`;
+            const wizardRaw = sessionStorage.getItem(key);
+            const wizard = wizardRaw ? JSON.parse(wizardRaw) : { checkoutData: data };
+            const invalidatePackage = errorCode === 'TICKET_NOT_ELIGIBLE';
+            sessionStorage.setItem(key, JSON.stringify({
+                checkoutData: {
+                    ...wizard.checkoutData,
+                    paymentMethod: null,
+                    ...(invalidatePackage ? { selectedPackage: '', selectedOptionalSessions: [], promoCode: '', promoApplied: false, requestedPromoCode: '' } : {}),
+                },
+                currentStep: 2,
+            }));
+            const params = new URLSearchParams();
+            if (data.originApp) params.set('originApp', data.originApp);
+            if (data.returnTo) params.set('returnTo', data.returnTo);
+            if (errorCode) params.set('checkoutError', errorCode);
+            router.push(`/checkout/${data.eventId}?${params.toString()}`);
+        } catch {
+            router.push('/events');
+        }
+    };
+
     if (status === 'error') {
         return (
             <div className="min-h-screen bg-white flex flex-col">
@@ -217,24 +192,9 @@ export default function PaymentPage() {
                         <h2 className="text-xl font-bold text-gray-700">เกิดข้อผิดพลาด</h2>
                         <p className="text-gray-500 text-sm">{errorMessage}</p>
                         <div className="ui-responsive-actions pt-2">
-                            {errorCode === 'TICKET_NOT_ELIGIBLE' && (
-                                <button
-                                    onClick={() => {
-                                        const saved = sessionStorage.getItem('checkout-payment-data');
-                                        const data = saved ? (JSON.parse(saved) as CheckoutPaymentData) : null;
-                                        if (!data?.eventId) {
-                                            router.push('/events');
-                                            return;
-                                        }
-
-                                        const params = new URLSearchParams();
-                                        if (data.originApp) params.set('originApp', data.originApp);
-                                        if (data.returnTo) params.set('returnTo', data.returnTo);
-                                        const query = params.toString();
-                                        router.push(`/checkout/${data.eventId}${query ? `?${query}` : ''}`);
-                                    }}
-                                    className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm"
-                                >
+                            {(errorCode === 'TICKET_NOT_ELIGIBLE' || isCheckoutRecoveryError(errorCode || undefined)) && (
+                                <button type="button" onClick={returnToCheckout}
+                                    className="px-5 py-2.5 bg-[#8a8a00] text-white font-medium rounded-lg hover:bg-[#456339] transition-colors text-sm">
                                     กลับไปตรวจสอบราคา
                                 </button>
                             )}
@@ -252,7 +212,7 @@ export default function PaymentPage() {
                             >
                                 ย้อนกลับ
                             </button>
-                            {errorCode !== 'TICKET_NOT_ELIGIBLE' && (
+                            {errorCode !== 'TICKET_NOT_ELIGIBLE' && !isCheckoutRecoveryError(errorCode || undefined) && (
                                 <button
                                     onClick={() => {
                                         setStatus('loading');
@@ -282,8 +242,12 @@ export default function PaymentPage() {
                     <div className="w-20 h-20 mx-auto bg-[#8a8a00]/10 rounded-full flex items-center justify-center">
                         <ShieldCheck className="w-10 h-10 text-[#8a8a00]" />
                     </div>
-                    <h2 className="text-xl font-bold text-gray-800">กำลังนำคุณไปยังหน้าชำระเงิน</h2>
-                    <p className="text-gray-500 text-sm">ระบบกำลังเชื่อมต่อกับ payment gateway...</p>
+                    <h2 className="text-xl font-bold text-gray-800">
+                        {isFreeProcessing ? 'กำลังยืนยันการลงทะเบียน' : 'กำลังนำคุณไปยังหน้าชำระเงิน'}
+                    </h2>
+                    <p className="text-gray-500 text-sm">
+                        {isFreeProcessing ? 'ระบบกำลังตรวจสอบสิทธิ์และบันทึกการลงทะเบียน...' : 'ระบบกำลังเชื่อมต่อกับ payment gateway...'}
+                    </p>
                     <Loader2 className="w-8 h-8 animate-spin text-[#8a8a00] mx-auto" />
                     <p className="text-xs text-gray-400">กรุณาอย่าปิดหน้านี้</p>
                 </div>

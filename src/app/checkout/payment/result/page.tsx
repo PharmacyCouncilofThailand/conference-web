@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { paymentsApi } from '@/lib/api/payments';
+import { resolveFreeResultCurrency } from '@/lib/paymentSession';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -17,23 +18,24 @@ const POLL_INTERVAL_MS = 3000;
 
 function readCheckoutRedirectContext() {
     if (typeof window === 'undefined') {
-        return { originApp: null as string | null, returnTo: null as string | null, websiteUrl: null as string | null };
+        return { originApp: null as string | null, returnTo: null as string | null, websiteUrl: null as string | null, currency: null as string | null };
     }
 
     try {
         const raw = sessionStorage.getItem('checkout-payment-data');
         if (!raw) {
-            return { originApp: null, returnTo: null, websiteUrl: null };
+            return { originApp: null, returnTo: null, websiteUrl: null, currency: null };
         }
 
-        const parsed = JSON.parse(raw) as { originApp?: string; returnTo?: string; websiteUrl?: string };
+        const parsed = JSON.parse(raw) as { originApp?: string; returnTo?: string; websiteUrl?: string; currency?: string };
         return {
             originApp: parsed.originApp || null,
             returnTo: parsed.returnTo || null,
             websiteUrl: parsed.websiteUrl || null,
+            currency: parsed.currency === 'THB' || parsed.currency === 'USD' ? parsed.currency : null,
         };
     } catch {
-        return { originApp: null, returnTo: null, websiteUrl: null };
+        return { originApp: null, returnTo: null, websiteUrl: null, currency: null };
     }
 }
 
@@ -62,7 +64,7 @@ function buildExternalReturnUrl(returnTo: string | null, params: Record<string, 
 function PaymentResultInner() {
     const searchParams = useSearchParams();
     const router = useRouter();
-    const { isLoggedIn, isLoading: authLoading } = useAuth();
+    const { isLoading: authLoading } = useAuth();
 
     const [status, setStatus] = useState<PaymentStatus>('polling');
     const [regCode, setRegCode] = useState<string | null>(null);
@@ -86,6 +88,7 @@ function PaymentResultInner() {
             originApp: searchParams.get('originApp') || stored.originApp,
             returnTo: searchParams.get('returnTo') || stored.returnTo,
             websiteUrl: stored.websiteUrl,
+            currency: stored.currency,
         };
     });
     // Capture payment identity ONCE on mount. clearPaymentSession() wipes these
@@ -107,7 +110,7 @@ function PaymentResultInner() {
             eventId: ss?.getItem('payment-event-id') || null,
         };
     });
-    const { refno, orderRef, gateway, paymentRef, eventId } = paymentIdentity;
+    const { gateway, paymentRef, eventId } = paymentIdentity;
     const originApp = redirectContext.originApp
         || (typeof window !== 'undefined' ? sessionStorage.getItem('sso-origin-app') : null);
     const returnTo = redirectContext.returnTo;
@@ -127,7 +130,7 @@ function PaymentResultInner() {
         }
     }, [eventId]);
 
-    const pollVerify = useCallback(async () => {
+    const pollVerify = useCallback(async function pollPayment() {
         if (!paymentRef) {
             setErrorMessage('ไม่พบข้อมูลการชำระเงิน');
             setStatus('error');
@@ -170,13 +173,13 @@ function PaymentResultInner() {
                 return;
             }
 
-            pollTimer.current = setTimeout(pollVerify, POLL_INTERVAL_MS);
+            pollTimer.current = setTimeout(pollPayment, POLL_INTERVAL_MS);
         } catch (error) {
             const msg = error instanceof Error ? error.message : 'เกิดข้อผิดพลาด';
             // If 404 or network error, keep polling a few more times
             if (pollCount.current < 5) {
                 pollCount.current++;
-                pollTimer.current = setTimeout(pollVerify, POLL_INTERVAL_MS);
+                pollTimer.current = setTimeout(pollPayment, POLL_INTERVAL_MS);
                 return;
             }
             setErrorMessage(msg);
@@ -192,7 +195,7 @@ function PaymentResultInner() {
             setOrderNumber(searchParams.get('orderNumber') || null);
             setRegCode(searchParams.get('regCode') || null);
             setAmount('0');
-            setCurrency('THB');
+            setCurrency(resolveFreeResultCurrency(searchParams.get('currency'), redirectContext.currency));
             setStatus('paid');
             clearPaymentSession();
             return;
@@ -211,8 +214,7 @@ function PaymentResultInner() {
                 clearTimeout(pollTimer.current);
             }
         };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [authLoading, clearPaymentSession, isFreeRegistration, paymentRef, pollVerify, searchParams]);
+    }, [authLoading, clearPaymentSession, isFreeRegistration, paymentRef, pollVerify, searchParams, redirectContext.currency]);
 
     // SSO auto-redirect countdown: 10s after payment success
     useEffect(() => {
@@ -239,9 +241,10 @@ function PaymentResultInner() {
             });
         }, 1000);
 
+        const redirectTimeout = redirectTimer.current;
         return () => {
             if (countdownTimer.current) clearInterval(countdownTimer.current);
-            if (redirectTimer.current) clearTimeout(redirectTimer.current);
+            if (redirectTimeout) clearTimeout(redirectTimeout);
         };
     }, [status, isSsoUser, backToWebsiteUrl, regCode, orderNumber]);
 

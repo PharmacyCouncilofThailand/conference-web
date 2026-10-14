@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { clearPaymentProviderSessionForFreeResult } from './paymentSession';
+import { clearPaymentProviderSessionForFreeResult, resolveFreeResultCurrency } from './paymentSession';
 
 describe('clearPaymentProviderSessionForFreeResult', () => {
     beforeEach(() => {
@@ -25,4 +25,12 @@ describe('clearPaymentProviderSessionForFreeResult', () => {
         expect(sessionStorage.getItem('payment-orderRef')).toBeNull();
         expect(sessionStorage.getItem('payment-refno')).toBeNull();
     });
+});
+
+it('resolves only supported free-result currencies before storage cleanup', () => {
+    expect(resolveFreeResultCurrency('USD', 'THB')).toBe('USD');
+    expect(resolveFreeResultCurrency(null, 'USD')).toBe('USD');
+    expect(resolveFreeResultCurrency('INVALID', 'USD')).toBe('USD');
+    expect(resolveFreeResultCurrency('THB', 'USD')).toBe('THB');
+    expect(resolveFreeResultCurrency(null, null)).toBe('THB');
 });
