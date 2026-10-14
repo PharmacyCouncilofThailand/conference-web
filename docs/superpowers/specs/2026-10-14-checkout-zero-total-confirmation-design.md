@@ -1,7 +1,7 @@
 # Checkout final action and zero-total confirmation
 
 Date: 2026-10-14
-Status: Design choices approved in chat; written specification awaiting review.
+Status: Approved for detailed implementation planning on 2026-10-14; implementation is not authorized by this planning request.
 
 ## Approved requirements
 
