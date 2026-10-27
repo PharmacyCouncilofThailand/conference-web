@@ -21,6 +21,8 @@ export function getUserRoleLabel(role: string): string {
             return 'General';
         case 'healthhack':
             return 'HealthHack';
+        case 'speaker':
+            return 'Speaker';
         case 'booth':
             return 'Booth';
         case 'public':
@@ -42,6 +44,8 @@ export function getUserRoleBadgeColor(role: string): string {
             return 'bg-gray-100 text-gray-600';
         case 'healthhack':
             return 'bg-sky-100 text-sky-800';
+        case 'speaker':
+            return 'bg-violet-100 text-violet-800';
         case 'booth':
             return 'bg-amber-100 text-amber-800';
         case 'public':

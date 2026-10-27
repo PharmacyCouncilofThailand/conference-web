@@ -86,3 +86,17 @@ describe('special attendee identities', () => {
     expect(ticketAllowsUser({ allowedRoles: ['student'], allowedStudentLevels: ['undergraduate'] },role,null)).toBe(false);
   });
 });
+
+
+describe('Speaker ticket access', () => {
+    it('shows the Speaker label and restricts Speaker-only tickets', () => {
+        expect(getUserRoleLabel('speaker')).toBe('Speaker');
+        for (const allowedRoles of [['speaker'], '["speaker"]', 'speaker']) {
+            const ticket = { allowedRoles };
+            expect(ticketAllowsUser(ticket, 'speaker', null)).toBe(true);
+            for (const role of ['general', 'pharmacist', 'medical_professional', 'student', 'healthhack', 'booth']) {
+                expect(ticketAllowsUser(ticket, role, null)).toBe(false);
+            }
+        }
+    });
+});
