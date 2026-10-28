@@ -76,7 +76,7 @@ describe('effective ticket identity', () => {
 });
 
 describe('special attendee identities', () => {
-  it.each([['healthhack','HealthHack'],['booth','Booth']])('keeps %s identity, THB, labels and ticket restrictions', (role,label) => {
+  it.each([['healthhack','HealthHack'],['booth','Booth'],['media','Media']])('keeps %s identity, THB, labels and ticket restrictions', (role,label) => {
     expect(getUserRoleLabel(role)).toBe(label);
     expect(getUserCurrency({ role, country: 'Thailand', delegateType: role })).toBe('THB');
     expect(getEffectiveTicketIdentity(role, null, false)).toEqual({ role, studentLevel: null, source: 'account' });
@@ -94,8 +94,21 @@ describe('Speaker ticket access', () => {
         for (const allowedRoles of [['speaker'], '["speaker"]', 'speaker']) {
             const ticket = { allowedRoles };
             expect(ticketAllowsUser(ticket, 'speaker', null)).toBe(true);
-            for (const role of ['general', 'pharmacist', 'medical_professional', 'student', 'healthhack', 'booth']) {
+            for (const role of ['general', 'pharmacist', 'medical_professional', 'student', 'healthhack', 'booth', 'media']) {
                 expect(ticketAllowsUser(ticket, role, null)).toBe(false);
+            }
+        }
+    });
+});
+
+
+describe('Media ticket access', () => {
+    it('restricts Media tickets to media accounts for every stored role format', () => {
+        expect(getUserRoleLabel('media')).toBe('Media');
+        for (const allowedRoles of [['media'], '["media"]', 'media']) {
+            expect(ticketAllowsUser({ allowedRoles }, 'media', null)).toBe(true);
+            for (const role of ['general', 'pharmacist', 'medical_professional', 'student', 'healthhack', 'booth', 'speaker']) {
+                expect(ticketAllowsUser({ allowedRoles }, role, null)).toBe(false);
             }
         }
     });

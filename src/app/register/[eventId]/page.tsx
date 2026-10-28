@@ -102,6 +102,7 @@ export default function FreeRegisterPage() {
             healthhack: 'healthhack',
             booth: 'booth',
             speaker: 'speaker',
+            media: 'media',
         };
         return roleToPackage[effectiveTicketIdentity.role] || 'pharmacist';
     }, [effectiveTicketIdentity.role]);
